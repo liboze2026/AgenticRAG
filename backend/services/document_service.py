@@ -3,7 +3,7 @@ import uuid
 import shutil
 import sqlite3
 import logging
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from backend.models.schemas import DocumentInfo
 
@@ -34,9 +34,14 @@ class DocumentService:
                     pdf_path TEXT NOT NULL,
                     total_pages INTEGER NOT NULL DEFAULT 0,
                     indexed_pages INTEGER NOT NULL DEFAULT 0,
-                    status TEXT NOT NULL DEFAULT 'pending'
+                    status TEXT NOT NULL DEFAULT 'pending',
+                    dataset_id INTEGER
                 )
             """)
+            # Migration: add column if missing
+            cols = [r[1] for r in conn.execute("PRAGMA table_info(documents)").fetchall()]
+            if "dataset_id" not in cols:
+                conn.execute("ALTER TABLE documents ADD COLUMN dataset_id INTEGER")
             conn.commit()
 
     def _row_to_info(self, row) -> DocumentInfo:
@@ -46,6 +51,7 @@ class DocumentService:
             total_pages=row["total_pages"],
             indexed_pages=row["indexed_pages"],
             status=row["status"],
+            dataset_id=row["dataset_id"] if "dataset_id" in row.keys() else None,
         )
 
     def _get_pdf_path(self, doc_id: str) -> Optional[str]:
@@ -53,7 +59,7 @@ class DocumentService:
             row = conn.execute("SELECT pdf_path FROM documents WHERE id = ?", (doc_id,)).fetchone()
             return row["pdf_path"] if row else None
 
-    async def upload(self, filename: str, content: bytes) -> DocumentInfo:
+    async def upload(self, filename: str, content: bytes, dataset_id: Optional[int] = None) -> DocumentInfo:
         doc_id = str(uuid.uuid4())[:8]
         doc_dir = os.path.join(self.upload_dir, doc_id)
         os.makedirs(doc_dir, exist_ok=True)
@@ -62,12 +68,12 @@ class DocumentService:
             f.write(content)
         with self._connect() as conn:
             conn.execute(
-                "INSERT INTO documents (id, filename, pdf_path, total_pages, indexed_pages, status) "
-                "VALUES (?, ?, ?, 0, 0, 'pending')",
-                (doc_id, filename, pdf_path),
+                "INSERT INTO documents (id, filename, pdf_path, total_pages, indexed_pages, status, dataset_id) "
+                "VALUES (?, ?, ?, 0, 0, 'pending', ?)",
+                (doc_id, filename, pdf_path, dataset_id),
             )
             conn.commit()
-        return DocumentInfo(id=doc_id, filename=filename, total_pages=0, indexed_pages=0, status="pending")
+        return DocumentInfo(id=doc_id, filename=filename, total_pages=0, indexed_pages=0, status="pending", dataset_id=dataset_id)
 
     async def index_document(self, doc_id: str) -> DocumentInfo:
         pdf_path = self._get_pdf_path(doc_id)
@@ -100,10 +106,21 @@ class DocumentService:
             row = conn.execute("SELECT * FROM documents WHERE id = ?", (doc_id,)).fetchone()
             return self._row_to_info(row) if row else None
 
-    def list_documents(self) -> List[DocumentInfo]:
+    def list_documents(self, dataset_id: Optional[int] = None) -> List[DocumentInfo]:
         with self._connect() as conn:
-            rows = conn.execute("SELECT * FROM documents ORDER BY id").fetchall()
+            if dataset_id is not None:
+                rows = conn.execute("SELECT * FROM documents WHERE dataset_id = ? ORDER BY id", (dataset_id,)).fetchall()
+            else:
+                rows = conn.execute("SELECT * FROM documents ORDER BY id").fetchall()
             return [self._row_to_info(r) for r in rows]
+
+    def count_by_dataset(self) -> Dict[int, int]:
+        """Return {dataset_id: count} for documents grouped by dataset."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT dataset_id, COUNT(*) as cnt FROM documents WHERE dataset_id IS NOT NULL GROUP BY dataset_id"
+            ).fetchall()
+            return {r["dataset_id"]: r["cnt"] for r in rows}
 
     async def delete_document(self, doc_id: str) -> None:
         if not self.get_document(doc_id):

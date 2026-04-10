@@ -30,9 +30,13 @@ class ExperimentService:
                     pipeline_config TEXT NOT NULL,
                     metrics TEXT NOT NULL,
                     total_queries INTEGER NOT NULL,
-                    note TEXT DEFAULT ''
+                    note TEXT DEFAULT '',
+                    dataset_id INTEGER
                 )
             """)
+            cols = [r[1] for r in conn.execute("PRAGMA table_info(experiments)").fetchall()]
+            if "dataset_id" not in cols:
+                conn.execute("ALTER TABLE experiments ADD COLUMN dataset_id INTEGER")
             conn.commit()
 
     def record(
@@ -41,18 +45,20 @@ class ExperimentService:
         metrics: Dict[str, Any],
         total_queries: int,
         note: str = "",
+        dataset_id: Optional[int] = None,
     ) -> int:
         """Insert a new experiment record. Returns the new ID."""
         with self._connect() as conn:
             cursor = conn.execute(
-                "INSERT INTO experiments (created_at, pipeline_config, metrics, total_queries, note) "
-                "VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO experiments (created_at, pipeline_config, metrics, total_queries, note, dataset_id) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
                 (
                     datetime.utcnow().isoformat(timespec="seconds") + "Z",
                     json.dumps(pipeline_config, ensure_ascii=False),
                     json.dumps(metrics, ensure_ascii=False),
                     total_queries,
                     note,
+                    dataset_id,
                 ),
             )
             conn.commit()
@@ -61,7 +67,7 @@ class ExperimentService:
     def list_experiments(self, limit: int = 100) -> List[Dict[str, Any]]:
         with self._connect() as conn:
             rows = conn.execute(
-                "SELECT id, created_at, pipeline_config, metrics, total_queries, note "
+                "SELECT id, created_at, pipeline_config, metrics, total_queries, note, dataset_id "
                 "FROM experiments ORDER BY id DESC LIMIT ?",
                 (limit,),
             ).fetchall()
@@ -70,7 +76,7 @@ class ExperimentService:
     def get_experiment(self, exp_id: int) -> Optional[Dict[str, Any]]:
         with self._connect() as conn:
             row = conn.execute(
-                "SELECT id, created_at, pipeline_config, metrics, total_queries, note "
+                "SELECT id, created_at, pipeline_config, metrics, total_queries, note, dataset_id "
                 "FROM experiments WHERE id = ?",
                 (exp_id,),
             ).fetchone()
@@ -90,4 +96,5 @@ class ExperimentService:
             "metrics": json.loads(row["metrics"]),
             "total_queries": row["total_queries"],
             "note": row["note"],
+            "dataset_id": row["dataset_id"] if "dataset_id" in row.keys() else None,
         }

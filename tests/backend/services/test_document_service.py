@@ -45,6 +45,22 @@ def test_get_nonexistent(doc_service):
 
 
 @pytest.mark.asyncio
+async def test_filter_by_dataset(doc_service):
+    a = await doc_service.upload(filename="a.pdf", content=b"a", dataset_id=1)
+    b = await doc_service.upload(filename="b.pdf", content=b"b", dataset_id=2)
+    c = await doc_service.upload(filename="c.pdf", content=b"c", dataset_id=1)
+
+    list1 = doc_service.list_documents(dataset_id=1)
+    assert {d.id for d in list1} == {a.id, c.id}
+
+    list2 = doc_service.list_documents(dataset_id=2)
+    assert {d.id for d in list2} == {b.id}
+
+    counts = doc_service.count_by_dataset()
+    assert counts == {1: 2, 2: 1}
+
+
+@pytest.mark.asyncio
 async def test_persistence_across_instances(tmp_path):
     mock_pipeline = MagicMock()
     mock_pipeline.retriever = MagicMock()

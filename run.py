@@ -13,6 +13,7 @@ from qdrant_client import AsyncQdrantClient
 
 from backend.core.config import load_config, AppConfig
 from backend.core.pipeline import PipelineManager
+from backend.services.dataset_service import DatasetService
 from backend.services.document_service import DocumentService
 from backend.services.experiment_service import ExperimentService
 from backend.services.worker_client import WorkerClient
@@ -147,11 +148,16 @@ def main():
         db_path=os.path.join(config.storage.upload_dir, "experiments.db"),
     )
 
+    dataset_service = DatasetService(
+        db_path=os.path.join(config.storage.upload_dir, "datasets.db"),
+    )
+
     app = create_app(
         worker_client=worker_client,
         pipeline_manager=pipeline_manager,
         document_service=document_service,
         experiment_service=experiment_service,
+        dataset_service=dataset_service,
         qdrant_client=qdrant_client,
         cors_origins=config.server.cors_origins,
     )

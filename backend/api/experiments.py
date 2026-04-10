@@ -1,3 +1,4 @@
+import time
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from typing import List, Optional
@@ -37,34 +38,66 @@ class EvalRequest(BaseModel):
     queries: List[EvalQuery]
     top_k: int = 10
     note: str = ""
+    dataset_id: Optional[int] = None
 
 
 @router.post("/experiments/evaluate")
 async def evaluate(request: Request, body: EvalRequest):
-    pipeline = request.app.state.pipeline_manager.pipeline
+    manager = request.app.state.pipeline_manager
+    pipeline = manager.pipeline
+    exp_svc = request.app.state.experiment_service
+
     recall_sums = {1: 0.0, 5: 0.0, 10: 0.0}
     mrr_sum = 0.0
+    timing_sums = {}
+    per_query = []
     n = len(body.queries)
+
     for eq in body.queries:
-        results = await pipeline.retrieve(eq.query, top_k=body.top_k)
-        retrieved = [f"{r.document_id}:{r.page_number}" for r in results]
+        bundle = await pipeline.retrieve(eq.query, top_k=body.top_k)
+        retrieved = [f"{r.document_id}:{r.page_number}" for r in bundle.results]
         relevant_set = set(eq.relevant)
+
+        per_q_recall = {}
         for k in recall_sums:
-            recall_sums[k] += compute_recall_at_k(retrieved, relevant_set, k)
-        mrr_sum += compute_mrr(retrieved, relevant_set)
+            v = compute_recall_at_k(retrieved, relevant_set, k)
+            recall_sums[k] += v
+            per_q_recall[k] = v
+        rr = compute_mrr(retrieved, relevant_set)
+        mrr_sum += rr
+
+        # Aggregate timing
+        for tk, tv in bundle.timing.items():
+            timing_sums[tk] = timing_sums.get(tk, 0.0) + tv
+
+        per_query.append({
+            "query": eq.query,
+            "relevant": list(eq.relevant),
+            "retrieved": retrieved,
+            "rr": rr,
+            "recall_at_k": per_q_recall,
+            "timing_ms": bundle.timing,
+        })
 
     metrics = {
         "recall_at_k": {k: v / n for k, v in recall_sums.items()} if n > 0 else {},
         "mrr": mrr_sum / n if n > 0 else 0.0,
+        "total_queries": n,
+        "avg_timing_ms": {k: v / n for k, v in timing_sums.items()} if n > 0 else {},
+        "per_query": per_query,
     }
 
-    pipeline_config = request.app.state.pipeline_manager.get_current_config()
-    exp_svc = request.app.state.experiment_service
+    # Snapshot the FULL effective pipeline config (not just the YAML names)
+    full_config = pipeline.snapshot_config() if pipeline else {}
+    yaml_config = manager.get_current_config() or {}
+    snapshot = {"yaml": yaml_config, "effective": full_config}
+
     exp_id = exp_svc.record(
-        pipeline_config=pipeline_config,
+        pipeline_config=snapshot,
         metrics=metrics,
         total_queries=n,
-        note=body.note,
+        note=getattr(body, "note", ""),
+        dataset_id=getattr(body, "dataset_id", None),
     )
 
     return {
@@ -72,6 +105,7 @@ async def evaluate(request: Request, body: EvalRequest):
         "recall_at_k": metrics["recall_at_k"],
         "mrr": metrics["mrr"],
         "total_queries": n,
+        "avg_timing_ms": metrics["avg_timing_ms"],
     }
 
 

@@ -2,7 +2,7 @@ import pytest
 from backend.core.pipeline import Pipeline, PipelineManager
 from backend.core.registry import Registry
 from backend.interfaces import BaseProcessor, BaseEncoder, BaseRetriever, BaseReranker, BaseGenerator
-from backend.models.schemas import PageImage, Embedding, RetrievalResult, Answer
+from backend.models.schemas import PageImage, Embedding, RetrievalResult, Answer, RetrievalBundle
 
 
 class FakeProcessor(BaseProcessor):
@@ -69,6 +69,7 @@ async def test_pipeline_query():
     answer = await pipeline.query("test question", top_k=3)
     assert answer.text == "fake answer"
     assert len(answer.sources) == 1
+    assert "total_ms" in answer.timing
 
 
 @pytest.mark.asyncio
@@ -77,9 +78,21 @@ async def test_pipeline_retrieve_only():
     config = {"processor": "fake", "document_encoder": "fake", "query_encoder": "fake",
               "retriever": "fake", "reranker": None, "generator": "fake"}
     pipeline = Pipeline.from_config(config, registries)
-    results = await pipeline.retrieve("test question", top_k=3)
+    bundle = await pipeline.retrieve("test question", top_k=3)
+    results = bundle.results
     assert len(results) == 1
     assert results[0].score == 0.95
+
+
+def test_snapshot_config():
+    registries = _make_registries()
+    config = {"processor": "fake", "document_encoder": "fake", "query_encoder": "fake",
+              "retriever": "fake", "reranker": None, "generator": "fake"}
+    pipeline = Pipeline.from_config(config, registries)
+    snap = pipeline.snapshot_config()
+    assert snap["processor"]["class"] == "FakeProcessor"
+    assert snap["generator"]["class"] == "FakeGenerator"
+    assert snap["reranker"] is None
 
 
 def test_pipeline_manager_switch():

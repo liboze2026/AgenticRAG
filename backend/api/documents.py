@@ -1,21 +1,27 @@
-from fastapi import APIRouter, Request, UploadFile, File, BackgroundTasks, HTTPException
+from typing import Optional
+from fastapi import APIRouter, Request, UploadFile, File, BackgroundTasks, HTTPException, Query
 
 router = APIRouter()
 
 
 @router.post("/upload")
-async def upload_document(request: Request, background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+async def upload_document(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    dataset_id: Optional[int] = Query(None),
+):
     doc_service = request.app.state.document_service
     content = await file.read()
-    doc_info = await doc_service.upload(filename=file.filename, content=content)
+    doc_info = await doc_service.upload(filename=file.filename, content=content, dataset_id=dataset_id)
     background_tasks.add_task(doc_service.index_document, doc_info.id)
     return doc_info.model_dump()
 
 
 @router.get("")
-async def list_documents(request: Request):
+async def list_documents(request: Request, dataset_id: Optional[int] = Query(None)):
     doc_service = request.app.state.document_service
-    return [d.model_dump() for d in doc_service.list_documents()]
+    return [d.model_dump() for d in doc_service.list_documents(dataset_id=dataset_id)]
 
 
 @router.get("/{doc_id}/status")
