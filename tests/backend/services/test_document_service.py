@@ -61,6 +61,29 @@ async def test_filter_by_dataset(doc_service):
 
 
 @pytest.mark.asyncio
+async def test_recover_orphaned(doc_service):
+    a = await doc_service.upload(filename="a.pdf", content=b"a")
+    b = await doc_service.upload(filename="b.pdf", content=b"b")
+    # Manually mark them as 'indexing' to simulate a crash
+    with doc_service._connect() as conn:
+        conn.execute("UPDATE documents SET status='indexing'")
+        conn.commit()
+
+    recovered = doc_service.recover_orphaned()
+    assert set(recovered) == {a.id, b.id}
+    for doc_id in recovered:
+        assert doc_service.get_document(doc_id).status == "failed"
+
+
+@pytest.mark.asyncio
+async def test_recover_orphaned_empty(doc_service):
+    await doc_service.upload(filename="a.pdf", content=b"a")
+    # No 'indexing' rows present
+    recovered = doc_service.recover_orphaned()
+    assert recovered == []
+
+
+@pytest.mark.asyncio
 async def test_persistence_across_instances(tmp_path):
     mock_pipeline = MagicMock()
     mock_pipeline.retriever = MagicMock()

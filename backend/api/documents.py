@@ -41,3 +41,15 @@ async def delete_document(request: Request, doc_id: str):
         raise HTTPException(status_code=404, detail="Document not found")
     await doc_service.delete_document(doc_id)
     return {"status": "deleted"}
+
+
+@router.post("/{doc_id}/retry")
+async def retry_indexing(request: Request, doc_id: str, background_tasks: BackgroundTasks):
+    doc_service = request.app.state.document_service
+    doc = doc_service.get_document(doc_id)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    if doc.status not in ("failed", "pending"):
+        raise HTTPException(status_code=400, detail=f"Cannot retry document in status: {doc.status}")
+    background_tasks.add_task(doc_service.index_document, doc_id)
+    return {"status": "queued"}

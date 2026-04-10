@@ -46,6 +46,12 @@ class ApiKeysConfig(BaseModel):
     anthropic: str = ""
 
 
+class CacheConfig(BaseModel):
+    enabled: bool = False
+    query_cache_dir: str = "data/cache/query"
+    generation_cache_dir: str = "data/cache/generation"
+
+
 class AppConfig(BaseModel):
     server: ServerConfig = ServerConfig()
     worker: WorkerConfig = WorkerConfig()
@@ -53,6 +59,7 @@ class AppConfig(BaseModel):
     storage: StorageConfig = StorageConfig()
     pipeline: PipelineConfig = PipelineConfig()
     api_keys: ApiKeysConfig = ApiKeysConfig()
+    cache: CacheConfig = CacheConfig()
 
 
 def _substitute_env_vars(text: str) -> str:

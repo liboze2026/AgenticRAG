@@ -75,3 +75,40 @@ api_keys:
 def test_load_config_missing_file():
     with pytest.raises(FileNotFoundError):
         load_config("/nonexistent/path.yaml")
+
+
+def test_load_config_with_cache_section(tmp_path):
+    config_file = tmp_path / "test.yaml"
+    config_file.write_text("""
+server:
+  host: "0.0.0.0"
+  port: 8000
+worker:
+  host: "localhost"
+  port: 8001
+  timeout: 120
+qdrant:
+  host: "localhost"
+  port: 6333
+  collection_name: "documents"
+storage:
+  upload_dir: "data/uploads"
+  images_dir: "data/images"
+pipeline:
+  processor: "page_screenshot"
+  document_encoder: "colpali"
+  query_encoder: "colpali"
+  retriever: "multi_vector"
+  reranker: null
+  generator: "openai_gpt4o"
+api_keys:
+  openai: ""
+  anthropic: ""
+cache:
+  enabled: true
+  query_cache_dir: "/tmp/q"
+  generation_cache_dir: "/tmp/g"
+""")
+    config = load_config(str(config_file))
+    assert config.cache.enabled is True
+    assert config.cache.query_cache_dir == "/tmp/q"

@@ -114,6 +114,21 @@ class DocumentService:
                 rows = conn.execute("SELECT * FROM documents ORDER BY id").fetchall()
             return [self._row_to_info(r) for r in rows]
 
+    def recover_orphaned(self) -> List[str]:
+        """Find documents stuck in 'indexing' state (orphaned by crash) and mark them failed.
+        Returns the list of recovered document IDs.
+        """
+        with self._connect() as conn:
+            rows = conn.execute("SELECT id FROM documents WHERE status = 'indexing'").fetchall()
+            ids = [r["id"] for r in rows]
+            if ids:
+                conn.execute(
+                    "UPDATE documents SET status = 'failed' WHERE status = 'indexing'"
+                )
+                conn.commit()
+                logger.warning("Recovered %d orphaned indexing documents: %s", len(ids), ids)
+        return ids
+
     def count_by_dataset(self) -> Dict[int, int]:
         """Return {dataset_id: count} for documents grouped by dataset."""
         with self._connect() as conn:

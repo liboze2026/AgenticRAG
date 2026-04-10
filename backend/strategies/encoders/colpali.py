@@ -70,12 +70,14 @@ class ColPaliEncoder(BaseEncoder):
         model_name: str = "vidore/colpali-v1.2",
         pool_strategy: Optional[str] = None,
         num_clusters: int = 32,
+        query_cache=None,  # optional DiskCache
     ):
         self.worker_client = worker_client
         self.batch_size = batch_size
         self.model_name = model_name
         self.pool_strategy = pool_strategy
         self.num_clusters = num_clusters
+        self.query_cache = query_cache
 
     def _pool(self, vectors):
         if self.pool_strategy == "mean":
@@ -102,4 +104,11 @@ class ColPaliEncoder(BaseEncoder):
         return embeddings
 
     async def encode_query(self, query: str) -> List[List[float]]:
-        return await self.worker_client.encode_query(query)
+        if self.query_cache is not None:
+            cached = self.query_cache.get(f"colpali:{self.model_name}:{query}")
+            if cached is not None:
+                return cached
+        vectors = await self.worker_client.encode_query(query)
+        if self.query_cache is not None:
+            self.query_cache.set(f"colpali:{self.model_name}:{query}", vectors)
+        return vectors

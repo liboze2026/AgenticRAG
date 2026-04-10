@@ -82,3 +82,17 @@ async def test_no_pool_preserves_vectors():
     pages = [PageImage(document_id="d", page_number=1, image_path="/a.png")]
     embeddings = await encoder.encode_documents(pages)
     assert len(embeddings[0].vectors) == 2
+
+
+@pytest.mark.asyncio
+async def test_query_cache_hit_skips_worker(tmp_path):
+    from backend.services.cache import DiskCache
+    cache = DiskCache(path=str(tmp_path / "qc"), enabled=True)
+    mock_client = MagicMock()
+    mock_client.encode_query = AsyncMock(return_value=[[0.1, 0.2]])
+
+    encoder = ColPaliEncoder(worker_client=mock_client, query_cache=cache)
+    v1 = await encoder.encode_query("hello")
+    v2 = await encoder.encode_query("hello")
+    assert v1 == v2
+    assert mock_client.encode_query.call_count == 1  # second call hit cache

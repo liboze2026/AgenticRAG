@@ -31,3 +31,41 @@ async def test_claude_generator():
     answer = await generator.generate("What is the answer?", _make_context())
     assert answer.text == "Claude says 42."
     assert len(answer.sources) == 1
+
+
+@pytest.mark.asyncio
+async def test_openai_generator_cache(tmp_path):
+    from backend.services.cache import DiskCache
+    cache = DiskCache(path=str(tmp_path / "gc"), enabled=True)
+
+    mock_response = MagicMock()
+    mock_response.choices = [MagicMock(message=MagicMock(content="cached answer"))]
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+
+    gen = OpenAIGPT4oGenerator(client=mock_client, model="gpt-4o", generation_cache=cache)
+    ctx = _make_context()
+    a1 = await gen.generate("Q?", ctx)
+    a2 = await gen.generate("Q?", ctx)
+    assert a1.text == "cached answer"
+    assert a2.text == "cached answer"
+    assert mock_client.chat.completions.create.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_claude_generator_cache(tmp_path):
+    from backend.services.cache import DiskCache
+    cache = DiskCache(path=str(tmp_path / "gc"), enabled=True)
+
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text="cached claude answer")]
+    mock_client = MagicMock()
+    mock_client.messages.create = AsyncMock(return_value=mock_response)
+
+    gen = ClaudeGenerator(client=mock_client, model="claude-sonnet-4-6-20250514", generation_cache=cache)
+    ctx = _make_context()
+    a1 = await gen.generate("Q?", ctx)
+    a2 = await gen.generate("Q?", ctx)
+    assert a1.text == "cached claude answer"
+    assert a2.text == "cached claude answer"
+    assert mock_client.messages.create.call_count == 1

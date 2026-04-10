@@ -41,3 +41,8 @@ ssh_tunnel:
 api_keys:
   openai: "${OPENAI_API_KEY}"
   anthropic: "${ANTHROPIC_API_KEY}"
+
+cache:
+  enabled: false
+  query_cache_dir: "data/cache/query"
+  generation_cache_dir: "data/cache/generation"

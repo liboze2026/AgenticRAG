@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.api import documents, query, experiments, system, datasets
+from backend.api import documents, query, experiments, system, datasets, cache as cache_api
 
 
 def create_app(
@@ -15,6 +15,8 @@ def create_app(
     dataset_service=None,
     qdrant_client=None,
     cors_origins=None,
+    query_cache=None,
+    generation_cache=None,
 ) -> FastAPI:
     app = FastAPI(title="Multimodal Retrieval System")
     app.add_middleware(
@@ -30,12 +32,15 @@ def create_app(
     app.state.experiment_service = experiment_service
     app.state.dataset_service = dataset_service
     app.state.qdrant_client = qdrant_client
+    app.state.query_cache = query_cache
+    app.state.generation_cache = generation_cache
 
     app.include_router(system.router, prefix="/api")
     app.include_router(documents.router, prefix="/api/documents")
     app.include_router(query.router, prefix="/api")
     app.include_router(experiments.router, prefix="/api")
     app.include_router(datasets.router, prefix="/api/datasets")
+    app.include_router(cache_api.router, prefix="/api/cache")
 
     # Serve page images for frontend evidence panel
     images_dir = "data/images"

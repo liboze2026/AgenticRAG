@@ -13,6 +13,7 @@ from qdrant_client import AsyncQdrantClient
 
 from backend.core.config import load_config, AppConfig
 from backend.core.pipeline import PipelineManager
+from backend.services.cache import DiskCache
 from backend.services.dataset_service import DatasetService
 from backend.services.document_service import DocumentService
 from backend.services.experiment_service import ExperimentService
@@ -126,6 +127,10 @@ def main():
     except Exception as e:
         logger.warning("Could not ensure Qdrant collection: %s", e)
 
+    # Build caches
+    query_cache = DiskCache(path=config.cache.query_cache_dir, enabled=config.cache.enabled)
+    generation_cache = DiskCache(path=config.cache.generation_cache_dir, enabled=config.cache.enabled)
+
     # Build deps for strategy DI
     deps = {
         "worker_client": worker_client,
@@ -134,6 +139,8 @@ def main():
         "images_dir": config.storage.images_dir,
         "openai_api_key": config.api_keys.openai,
         "anthropic_api_key": config.api_keys.anthropic,
+        "query_cache": query_cache,
+        "generation_cache": generation_cache,
     }
 
     pipeline_manager = PipelineManager(ALL_REGISTRIES, deps=deps)
@@ -143,6 +150,11 @@ def main():
         upload_dir=config.storage.upload_dir,
         pipeline=pipeline_manager.pipeline,
     )
+
+    # Recover orphaned indexing tasks from previous crash
+    recovered = document_service.recover_orphaned()
+    if recovered:
+        logger.warning("Marked %d orphaned documents as failed: %s", len(recovered), recovered)
 
     experiment_service = ExperimentService(
         db_path=os.path.join(config.storage.upload_dir, "experiments.db"),
@@ -160,6 +172,8 @@ def main():
         dataset_service=dataset_service,
         qdrant_client=qdrant_client,
         cors_origins=config.server.cors_origins,
+        query_cache=query_cache,
+        generation_cache=generation_cache,
     )
 
     uvicorn.run(app, host=config.server.host, port=config.server.port)
