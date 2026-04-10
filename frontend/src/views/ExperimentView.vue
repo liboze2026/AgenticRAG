@@ -8,9 +8,11 @@
         <el-button>上传评测数据 (JSON)</el-button>
       </el-upload>
       <div style="margin-top: 8px; font-size: 12px; color: #999">格式: [{"query": "...", "relevant": ["doc_id:page"]}]</div>
-      <el-button type="primary" :loading="evaluating" :disabled="!evalData" @click="runEval" style="margin-top: 12px">运行评测</el-button>
+      <el-input v-model="note" placeholder="备注（可选，用于区分实验）" style="margin-top: 12px; max-width: 400px" />
+      <el-button type="primary" :loading="evaluating" :disabled="!evalData" @click="runEval" style="margin-top: 12px; margin-left: 12px">运行评测</el-button>
     </el-card>
     <EvalResults :metrics="metrics" />
+    <ExperimentHistory ref="historyRef" />
   </div>
 </template>
 
@@ -18,11 +20,14 @@
 import { ref } from 'vue'
 import PipelineSelector from '../components/PipelineSelector.vue'
 import EvalResults from '../components/EvalResults.vue'
+import ExperimentHistory from '../components/ExperimentHistory.vue'
 import { experimentsApi, type EvalMetrics } from '../api/client'
 
 const evalData = ref<Array<{ query: string; relevant: string[] }> | null>(null)
 const evaluating = ref(false)
 const metrics = ref<EvalMetrics | null>(null)
+const note = ref('')
+const historyRef = ref<any>(null)
 
 function handleFileChange(uploadFile: any) {
   const reader = new FileReader()
@@ -33,7 +38,10 @@ function handleFileChange(uploadFile: any) {
 async function runEval() {
   if (!evalData.value) return
   evaluating.value = true; metrics.value = null
-  try { const resp = await experimentsApi.evaluate(evalData.value); metrics.value = resp.data }
-  finally { evaluating.value = false }
+  try {
+    const resp = await experimentsApi.evaluate(evalData.value, 10, note.value)
+    metrics.value = resp.data
+    await historyRef.value?.refresh()
+  } finally { evaluating.value = false }
 }
 </script>

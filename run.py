@@ -14,6 +14,7 @@ from qdrant_client import AsyncQdrantClient
 from backend.core.config import load_config, AppConfig
 from backend.core.pipeline import PipelineManager
 from backend.services.document_service import DocumentService
+from backend.services.experiment_service import ExperimentService
 from backend.services.worker_client import WorkerClient
 from backend.strategies import ALL_REGISTRIES, import_all_strategies
 from backend.main import create_app
@@ -142,10 +143,15 @@ def main():
         pipeline=pipeline_manager.pipeline,
     )
 
+    experiment_service = ExperimentService(
+        db_path=os.path.join(config.storage.upload_dir, "experiments.db"),
+    )
+
     app = create_app(
         worker_client=worker_client,
         pipeline_manager=pipeline_manager,
         document_service=document_service,
+        experiment_service=experiment_service,
         qdrant_client=qdrant_client,
         cors_origins=config.server.cors_origins,
     )
