@@ -1,15 +1,18 @@
 import os
 import re
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, List, Optional, Union
 
 import yaml
 from pydantic import BaseModel
+
+StrategySpec = Union[str, Dict[str, Any]]
 
 
 class ServerConfig(BaseModel):
     host: str = "0.0.0.0"
     port: int = 8000
+    cors_origins: List[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
 
 class WorkerConfig(BaseModel):
@@ -30,12 +33,12 @@ class StorageConfig(BaseModel):
 
 
 class PipelineConfig(BaseModel):
-    processor: str = "page_screenshot"
-    document_encoder: str = "colpali"
-    query_encoder: str = "colpali"
-    retriever: str = "multi_vector"
-    reranker: Optional[str] = None
-    generator: str = "openai_gpt4o"
+    processor: StrategySpec = "page_screenshot"
+    document_encoder: StrategySpec = "colpali"
+    query_encoder: StrategySpec = "colpali"
+    retriever: StrategySpec = "multi_vector"
+    reranker: Optional[StrategySpec] = None
+    generator: StrategySpec = "openai_gpt4o"
 
 
 class ApiKeysConfig(BaseModel):

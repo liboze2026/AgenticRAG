@@ -7,10 +7,10 @@ from backend.strategies import generator_registry
 
 @generator_registry.register("claude")
 class ClaudeGenerator(BaseGenerator):
-    def __init__(self, client=None, model: str = "claude-sonnet-4-6-20250514", api_key: str = ""):
+    def __init__(self, client=None, model: str = "claude-sonnet-4-6-20250514", anthropic_api_key: str = ""):
         if client is None:
             from anthropic import AsyncAnthropic
-            client = AsyncAnthropic(api_key=api_key)
+            client = AsyncAnthropic(api_key=anthropic_api_key)
         self.client = client
         self.model = model
 

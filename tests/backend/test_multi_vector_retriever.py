@@ -4,6 +4,26 @@ from backend.strategies.retrievers.multi_vector import MultiVectorRetriever
 
 
 @pytest.mark.asyncio
+async def test_ensure_collection_creates_when_missing():
+    mock_qdrant = MagicMock()
+    mock_qdrant.get_collection = AsyncMock(side_effect=Exception("not found"))
+    mock_qdrant.create_collection = AsyncMock()
+    retriever = MultiVectorRetriever(qdrant_client=mock_qdrant, collection_name="test", vector_size=128)
+    await retriever.ensure_collection()
+    mock_qdrant.create_collection.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_ensure_collection_skips_when_exists():
+    mock_qdrant = MagicMock()
+    mock_qdrant.get_collection = AsyncMock(return_value=MagicMock())
+    mock_qdrant.create_collection = AsyncMock()
+    retriever = MultiVectorRetriever(qdrant_client=mock_qdrant, collection_name="test")
+    await retriever.ensure_collection()
+    mock_qdrant.create_collection.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_index_page():
     mock_qdrant = MagicMock()
     mock_qdrant.upsert = AsyncMock()

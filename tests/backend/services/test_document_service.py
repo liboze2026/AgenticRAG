@@ -42,3 +42,20 @@ async def test_delete_document(doc_service):
 
 def test_get_nonexistent(doc_service):
     assert doc_service.get_document("nonexistent") is None
+
+
+@pytest.mark.asyncio
+async def test_persistence_across_instances(tmp_path):
+    mock_pipeline = MagicMock()
+    mock_pipeline.retriever = MagicMock()
+    mock_pipeline.retriever.delete = AsyncMock()
+    upload_dir = str(tmp_path / "uploads")
+
+    svc1 = DocumentService(upload_dir=upload_dir, pipeline=mock_pipeline)
+    info = await svc1.upload(filename="persistent.pdf", content=b"data")
+
+    svc2 = DocumentService(upload_dir=upload_dir, pipeline=mock_pipeline)
+    docs = svc2.list_documents()
+    assert len(docs) == 1
+    assert docs[0].id == info.id
+    assert docs[0].filename == "persistent.pdf"

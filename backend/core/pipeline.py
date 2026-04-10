@@ -1,10 +1,35 @@
-from typing import Dict, List, Optional
+import inspect
+from typing import Any, Dict, List, Optional
 
 from backend.core.registry import Registry
 from backend.interfaces import (
     BaseProcessor, BaseEncoder, BaseRetriever, BaseReranker, BaseGenerator,
 )
 from backend.models.schemas import Answer, PageImage, Embedding, RetrievalResult
+
+
+def _parse_strategy_spec(value):
+    """Parse a strategy spec which can be string or {name, options} dict."""
+    if value is None:
+        return None, {}
+    if isinstance(value, str):
+        return value, {}
+    return value["name"], value.get("options", {})
+
+
+def _instantiate(cls, options: Dict[str, Any], deps: Dict[str, Any]):
+    """Instantiate cls passing only kwargs that match its __init__ signature.
+    Options take priority over deps for the same parameter name."""
+    sig = inspect.signature(cls.__init__)
+    kwargs = {}
+    for pname, _ in sig.parameters.items():
+        if pname == "self":
+            continue
+        if pname in options:
+            kwargs[pname] = options[pname]
+        elif pname in deps:
+            kwargs[pname] = deps[pname]
+    return cls(**kwargs)
 
 
 class Pipeline:
@@ -25,17 +50,24 @@ class Pipeline:
         self.generator = generator
 
     @classmethod
-    def from_config(cls, config: dict, registries: Dict[str, Registry]) -> "Pipeline":
-        processor = registries["processor"].get(config["processor"])()
-        doc_encoder = registries["document_encoder"].get(config["document_encoder"])()
-        query_encoder = registries["query_encoder"].get(config["query_encoder"])()
-        retriever = registries["retriever"].get(config["retriever"])()
-        reranker = None
-        if config.get("reranker"):
-            reranker = registries["reranker"].get(config["reranker"])()
-        generator = registries["generator"].get(config["generator"])()
-        return cls(processor=processor, document_encoder=doc_encoder, query_encoder=query_encoder,
-                   retriever=retriever, reranker=reranker, generator=generator)
+    def from_config(cls, config: dict, registries: Dict[str, Registry], deps: Optional[Dict[str, Any]] = None) -> "Pipeline":
+        deps = deps or {}
+
+        def build(category: str, value):
+            name, options = _parse_strategy_spec(value)
+            if name is None:
+                return None
+            strategy_cls = registries[category].get(name)
+            return _instantiate(strategy_cls, options, deps)
+
+        return cls(
+            processor=build("processor", config["processor"]),
+            document_encoder=build("document_encoder", config["document_encoder"]),
+            query_encoder=build("query_encoder", config["query_encoder"]),
+            retriever=build("retriever", config["retriever"]),
+            reranker=build("reranker", config.get("reranker")),
+            generator=build("generator", config["generator"]),
+        )
 
     async def index_document(self, pdf_path: str, document_id: str) -> List[PageImage]:
         pages = await self.processor.process(pdf_path, document_id)
@@ -61,13 +93,14 @@ class Pipeline:
 
 
 class PipelineManager:
-    def __init__(self, registries: Dict[str, Registry]):
+    def __init__(self, registries: Dict[str, Registry], deps: Optional[Dict[str, Any]] = None):
         self.registries = registries
+        self.deps = deps or {}
         self.pipeline: Optional[Pipeline] = None
         self._current_config: Optional[dict] = None
 
     def set_pipeline(self, config: dict) -> Pipeline:
-        self.pipeline = Pipeline.from_config(config, self.registries)
+        self.pipeline = Pipeline.from_config(config, self.registries, self.deps)
         self._current_config = config
         return self.pipeline
 

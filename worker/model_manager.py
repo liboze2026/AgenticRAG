@@ -20,10 +20,7 @@ class ModelManager:
         inputs = {k: v.to(self._model.device) for k, v in inputs.items()}
         with __import__("torch").no_grad():
             embeddings = self._model(**inputs)
-        results = []
-        for i, emb in enumerate(embeddings):
-            results.append({"document_id": "", "page_number": 0, "vectors": emb.cpu().tolist()})
-        return results
+        return [{"vectors": emb.cpu().tolist()} for emb in embeddings]
 
     def encode_query(self, query: str) -> List[List[float]]:
         inputs = self._processor.process_queries([query])

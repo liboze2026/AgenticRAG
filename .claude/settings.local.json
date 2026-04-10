@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(python:*)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(where python:*)",
+      "Bash(where pip:*)",
+      "Bash(py:*)",
+      "Bash(pip install:*)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(python3:*)",
+      "Bash(ls /c/bzli/paper/agent/*.cfg /c/bzli/paper/agent/*.ini /c/bzli/paper/agent/*.toml)",
+      "Bash(npm --version)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}

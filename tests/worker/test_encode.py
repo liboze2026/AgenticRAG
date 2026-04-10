@@ -7,7 +7,7 @@ from worker.main import create_worker_app
 @pytest.fixture
 def mock_model_manager():
     manager = MagicMock()
-    manager.encode_images.return_value = [{"document_id": "", "page_number": 0, "vectors": [[0.1, 0.2, 0.3]]}]
+    manager.encode_images.return_value = [{"vectors": [[0.1, 0.2, 0.3]]}]
     manager.encode_query.return_value = [[0.4, 0.5, 0.6]]
     manager.model_name.return_value = "colpali-v1.2"
     return manager

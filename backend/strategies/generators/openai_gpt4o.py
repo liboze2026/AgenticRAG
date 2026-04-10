@@ -7,10 +7,10 @@ from backend.strategies import generator_registry
 
 @generator_registry.register("openai_gpt4o")
 class OpenAIGPT4oGenerator(BaseGenerator):
-    def __init__(self, client=None, model: str = "gpt-4o", api_key: str = ""):
+    def __init__(self, client=None, model: str = "gpt-4o", openai_api_key: str = ""):
         if client is None:
             from openai import AsyncOpenAI
-            client = AsyncOpenAI(api_key=api_key)
+            client = AsyncOpenAI(api_key=openai_api_key)
         self.client = client
         self.model = model
 
