@@ -1,0 +1,10 @@
+[
+  {
+    "query": "What is the attention mechanism in Transformers?",
+    "relevant": ["abc12345:3", "abc12345:4"]
+  },
+  {
+    "query": "How does self-attention differ from cross-attention?",
+    "relevant": ["def67890:2"]
+  }
+]
