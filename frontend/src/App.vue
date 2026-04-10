@@ -5,6 +5,9 @@
         <el-menu-item index="/documents">
           <span>文档管理</span>
         </el-menu-item>
+        <el-menu-item index="/datasets">
+          <span>数据集</span>
+        </el-menu-item>
         <el-menu-item index="/query">
           <span>检索问答</span>
         </el-menu-item>

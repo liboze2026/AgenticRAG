@@ -14,7 +14,51 @@ api.interceptors.response.use(
 )
 
 export interface DocumentInfo {
-  id: string; filename: string; total_pages: number; status: string; indexed_pages: number
+  id: string
+  filename: string
+  total_pages: number
+  status: string
+  indexed_pages: number
+  dataset_id: number | null
+}
+
+export interface DatasetInfo {
+  id: number
+  name: string
+  description: string
+  created_at: string
+  document_count: number
+}
+
+export interface PerQueryResult {
+  query: string
+  relevant: string[]
+  retrieved: string[]
+  rr: number
+  recall_at_k: Record<number, number>
+  timing_ms: Record<string, number>
+}
+
+export interface ExperimentRecord {
+  id: number
+  created_at: string
+  pipeline_config: { yaml?: Record<string, any>; effective?: Record<string, any> }
+  metrics: {
+    recall_at_k: Record<number, number>
+    mrr: number
+    total_queries: number
+    avg_timing_ms?: Record<string, number>
+    per_query?: PerQueryResult[]
+  }
+  total_queries: number
+  note: string
+  dataset_id: number | null
+}
+
+export interface CacheStats {
+  enabled: boolean
+  entries: number
+  size_bytes: number
 }
 
 export interface RetrievalResult {
@@ -22,31 +66,42 @@ export interface RetrievalResult {
 }
 
 export interface QueryResponse {
-  answer: string; sources: RetrievalResult[]
+  answer: string
+  sources: RetrievalResult[]
+  timing?: Record<string, number>
 }
 
 export interface EvalMetrics {
-  recall_at_k: Record<number, number>; mrr: number; total_queries: number
+  recall_at_k: Record<number, number>
+  mrr: number
+  total_queries: number
+  avg_timing_ms?: Record<string, number>
 }
 
 export interface PipelineInfo {
   available: Record<string, string[]>; current: Record<string, string | null>
 }
 
-export interface ExperimentRecord {
-  id: number
-  created_at: string
-  pipeline_config: Record<string, any>
-  metrics: { recall_at_k: Record<number, number>; mrr: number }
-  total_queries: number
-  note: string
-}
-
 export const documentsApi = {
-  upload: (file: File) => { const form = new FormData(); form.append('file', file); return api.post<DocumentInfo>('/documents/upload', form) },
-  list: () => api.get<DocumentInfo[]>('/documents'),
+  upload: (file: File, datasetId?: number) => {
+    const form = new FormData()
+    form.append('file', file)
+    const params = datasetId !== undefined ? { dataset_id: datasetId } : {}
+    return api.post<DocumentInfo>('/documents/upload', form, { params })
+  },
+  list: (datasetId?: number) => {
+    const params = datasetId !== undefined ? { dataset_id: datasetId } : {}
+    return api.get<DocumentInfo[]>('/documents', { params })
+  },
   status: (id: string) => api.get<DocumentInfo>(`/documents/${id}/status`),
   delete: (id: string) => api.delete(`/documents/${id}`),
+  retry: (id: string) => api.post(`/documents/${id}/retry`),
+}
+
+export const datasetsApi = {
+  list: () => api.get<DatasetInfo[]>('/datasets'),
+  create: (name: string, description = '') => api.post<DatasetInfo>('/datasets', { name, description }),
+  delete: (id: number) => api.delete(`/datasets/${id}`),
 }
 
 export const queryApi = {
@@ -57,11 +112,25 @@ export const queryApi = {
 export const experimentsApi = {
   getPipelines: () => api.get<PipelineInfo>('/pipelines'),
   switchPipeline: (config: Record<string, string | null>) => api.put('/pipelines/active', config),
-  evaluate: (queries: Array<{ query: string; relevant: string[] }>, topK = 10, note = '') =>
-    api.post<EvalMetrics & { experiment_id: number }>('/experiments/evaluate', { queries, top_k: topK, note }),
+  evaluate: (queries: Array<{ query: string; relevant: string[] }>, topK = 10, note = '', datasetId?: number) =>
+    api.post<EvalMetrics & { experiment_id: number; avg_timing_ms?: Record<string, number> }>(
+      '/experiments/evaluate',
+      { queries, top_k: topK, note, dataset_id: datasetId }
+    ),
   listHistory: (limit = 100) => api.get<ExperimentRecord[]>('/experiments/history', { params: { limit } }),
   getHistory: (id: number) => api.get<ExperimentRecord>(`/experiments/${id}`),
   deleteHistory: (id: number) => api.delete(`/experiments/${id}`),
+  generateHardNegatives: (evalData: Array<{ query: string; relevant: string[] }>, window = 2) =>
+    api.post<{ eval_data: Array<{ query: string; relevant: string[]; hard_negatives: string[] }> }>(
+      '/experiments/hard_negatives',
+      { eval_data: evalData, window }
+    ),
+}
+
+export const cacheApi = {
+  stats: () => api.get<{ query_cache: CacheStats; generation_cache: CacheStats }>('/cache/stats'),
+  clearQuery: () => api.delete('/cache/query'),
+  clearGeneration: () => api.delete('/cache/generation'),
 }
 
 export const systemApi = {

@@ -3,6 +3,7 @@
     <h2>检索问答</h2>
     <QueryInput :loading="loading" @submit="handleQuery" @retrieve="handleRetrieve" />
     <AnswerDisplay :answer="answer" />
+    <TimingPanel :timing="timing" />
     <EvidencePanel :results="results" />
   </div>
 </template>
@@ -12,21 +13,30 @@ import { ref } from 'vue'
 import QueryInput from '../components/QueryInput.vue'
 import AnswerDisplay from '../components/AnswerDisplay.vue'
 import EvidencePanel from '../components/EvidencePanel.vue'
+import TimingPanel from '../components/TimingPanel.vue'
 import { queryApi, type RetrievalResult } from '../api/client'
 
 const loading = ref(false)
 const answer = ref('')
 const results = ref<RetrievalResult[]>([])
+const timing = ref<Record<string, number>>({})
 
 async function handleQuery(query: string, topK = 5) {
-  loading.value = true; answer.value = ''; results.value = []
-  try { const resp = await queryApi.query(query, topK); answer.value = resp.data.answer; results.value = resp.data.sources }
-  finally { loading.value = false }
+  loading.value = true; answer.value = ''; results.value = []; timing.value = {}
+  try {
+    const resp = await queryApi.query(query, topK)
+    answer.value = resp.data.answer
+    results.value = resp.data.sources
+    timing.value = resp.data.timing || {}
+  } finally { loading.value = false }
 }
 
 async function handleRetrieve(query: string, topK = 5) {
-  loading.value = true; answer.value = ''; results.value = []
-  try { const resp = await queryApi.retrieve(query, topK); results.value = resp.data.results }
-  finally { loading.value = false }
+  loading.value = true; answer.value = ''; results.value = []; timing.value = {}
+  try {
+    const resp = await queryApi.retrieve(query, topK)
+    results.value = resp.data.results
+    timing.value = (resp.data as any).timing || {}
+  } finally { loading.value = false }
 }
 </script>
