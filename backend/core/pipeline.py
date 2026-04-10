@@ -77,13 +77,18 @@ class Pipeline:
             if p.pdf_path is None:
                 p.pdf_path = pdf_path
         embeddings = await self.document_encoder.encode_documents(pages)
+        sig = inspect.signature(self.retriever.index)
+        accepts_pdf = "pdf_path" in sig.parameters
         for page, emb in zip(pages, embeddings):
-            await self.retriever.index(
-                document_id=emb.document_id,
-                page_number=emb.page_number,
-                vectors=emb.vectors,
-                image_path=page.image_path,
-            )
+            kwargs = {
+                "document_id": emb.document_id,
+                "page_number": emb.page_number,
+                "vectors": emb.vectors,
+                "image_path": page.image_path,
+            }
+            if accepts_pdf:
+                kwargs["pdf_path"] = pdf_path
+            await self.retriever.index(**kwargs)
         return pages
 
     async def retrieve(self, query: str, top_k: int = 5) -> RetrievalBundle:
@@ -91,6 +96,10 @@ class Pipeline:
         t0 = time.perf_counter()
         query_vectors = await self.query_encoder.encode_query(query)
         timing["encode_query_ms"] = (time.perf_counter() - t0) * 1000
+
+        # Allow retrievers that need the raw query (e.g., hybrid) to receive it
+        if hasattr(self.retriever, "set_query"):
+            self.retriever.set_query(query)
 
         t1 = time.perf_counter()
         results = await self.retriever.retrieve(query_vectors, top_k=top_k)

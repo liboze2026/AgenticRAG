@@ -45,3 +45,40 @@ async def test_encode_documents_batching():
     assert len(embeddings) == 3
     assert mock_client.encode_documents.call_count == 2
     assert embeddings[2].page_number == 3
+
+
+@pytest.mark.asyncio
+async def test_mean_pool_reduces_to_single_vector():
+    mock_client = MagicMock()
+    mock_client.encode_documents = AsyncMock(return_value=[
+        {"vectors": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]},
+    ])
+    encoder = ColPaliEncoder(worker_client=mock_client, pool_strategy="mean")
+    pages = [PageImage(document_id="d", page_number=1, image_path="/a.png")]
+    embeddings = await encoder.encode_documents(pages)
+    assert len(embeddings[0].vectors) == 1
+    assert embeddings[0].vectors[0] == [3.0, 4.0]
+
+
+@pytest.mark.asyncio
+async def test_kmeans_pool_reduces_to_k_clusters():
+    mock_client = MagicMock()
+    mock_client.encode_documents = AsyncMock(return_value=[
+        {"vectors": [[float(i), 0.0] for i in range(10)]},
+    ])
+    encoder = ColPaliEncoder(worker_client=mock_client, pool_strategy="kmeans", num_clusters=3)
+    pages = [PageImage(document_id="d", page_number=1, image_path="/a.png")]
+    embeddings = await encoder.encode_documents(pages)
+    assert len(embeddings[0].vectors) == 3
+
+
+@pytest.mark.asyncio
+async def test_no_pool_preserves_vectors():
+    mock_client = MagicMock()
+    mock_client.encode_documents = AsyncMock(return_value=[
+        {"vectors": [[1.0, 2.0], [3.0, 4.0]]},
+    ])
+    encoder = ColPaliEncoder(worker_client=mock_client)  # default pool_strategy=None
+    pages = [PageImage(document_id="d", page_number=1, image_path="/a.png")]
+    embeddings = await encoder.encode_documents(pages)
+    assert len(embeddings[0].vectors) == 2

@@ -2,7 +2,7 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 from unittest.mock import AsyncMock, MagicMock
 from backend.main import create_app
-from backend.models.schemas import RetrievalResult, RetrievalBundle
+from backend.models.schemas import RetrievalResult, RetrievalBundle, DocumentInfo
 
 
 @pytest.mark.asyncio
@@ -104,3 +104,29 @@ async def test_evaluate_includes_per_query_and_timing(tmp_path):
     assert len(rows[0]["metrics"]["per_query"]) == 1
     assert rows[0]["metrics"]["per_query"][0]["query"] == "q1"
     assert rows[0]["pipeline_config"]["effective"]["processor"]["class"] == "Stub"
+
+
+@pytest.mark.asyncio
+async def test_hard_negatives_endpoint(tmp_path):
+    from backend.services.experiment_service import ExperimentService
+    exp_svc = ExperimentService(db_path=str(tmp_path / "exp.db"))
+
+    mock_doc = MagicMock()
+    mock_doc.list_documents.return_value = [
+        DocumentInfo(id="doc1", filename="a.pdf", total_pages=10, indexed_pages=10, status="completed"),
+    ]
+
+    app = create_app(
+        worker_client=MagicMock(),
+        pipeline_manager=MagicMock(),
+        document_service=mock_doc,
+        experiment_service=exp_svc,
+    )
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.post("/api/experiments/hard_negatives", json={
+            "eval_data": [{"query": "q", "relevant": ["doc1:5"]}],
+            "window": 1,
+        })
+    assert resp.status_code == 200
+    assert "hard_negatives" in resp.json()["eval_data"][0]

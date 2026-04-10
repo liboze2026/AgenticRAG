@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from typing import List, Optional
 from backend.services.evaluation import compute_recall_at_k, compute_mrr
+from backend.services.hard_negatives import augment_eval_set
 
 router = APIRouter()
 
@@ -131,3 +132,17 @@ async def delete_experiment(request: Request, exp_id: int):
     if not ok:
         raise HTTPException(status_code=404, detail="Experiment not found")
     return {"status": "deleted"}
+
+
+class HardNegRequest(BaseModel):
+    eval_data: List[dict]
+    window: int = 2
+
+
+@router.post("/experiments/hard_negatives")
+async def generate_hard_negatives(request: Request, body: HardNegRequest):
+    doc_svc = request.app.state.document_service
+    docs = doc_svc.list_documents()
+    all_doc_pages = {d.id: d.total_pages for d in docs if d.total_pages > 0}
+    augmented = augment_eval_set(body.eval_data, all_doc_pages, window=body.window)
+    return {"eval_data": augmented}

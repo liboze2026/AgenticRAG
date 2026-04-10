@@ -29,7 +29,7 @@ class MultiVectorRetriever(BaseRetriever):
                 ),
             )
 
-    async def index(self, document_id: str, page_number: int, vectors: List[List[float]], image_path: str) -> None:
+    async def index(self, document_id: str, page_number: int, vectors: List[List[float]], image_path: str, pdf_path=None) -> None:
         point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{document_id}:{page_number}"))
         point = models.PointStruct(
             id=point_id, vector=vectors,
