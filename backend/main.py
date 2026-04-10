@@ -1,0 +1,16 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from backend.api import documents, query, experiments, system
+
+
+def create_app(worker_client=None, pipeline_manager=None, document_service=None) -> FastAPI:
+    app = FastAPI(title="Multimodal Retrieval System")
+    app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+    app.state.worker_client = worker_client
+    app.state.pipeline_manager = pipeline_manager
+    app.state.document_service = document_service
+    app.include_router(system.router, prefix="/api")
+    app.include_router(documents.router, prefix="/api/documents")
+    app.include_router(query.router, prefix="/api")
+    app.include_router(experiments.router, prefix="/api")
+    return app
