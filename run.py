@@ -3,11 +3,13 @@ import asyncio
 import atexit
 import logging
 import os
+import re
 import socket
-import subprocess
+import threading
 import time
 from typing import Optional
 
+import paramiko
 import uvicorn
 from qdrant_client import AsyncQdrantClient
 
@@ -42,35 +44,126 @@ def _read_raw_yaml(path: str) -> dict:
         return yaml.safe_load(f) or {}
 
 
-def _start_ssh_tunnel(config: AppConfig) -> Optional[subprocess.Popen]:
-    """Start SSH tunnel as subprocess if enabled in config."""
+def _resolve_env(value: str) -> str:
+    """Resolve ${VAR} references in a string."""
+    if not isinstance(value, str):
+        return value
+    pattern = re.compile(r"\$\{(\w+)\}")
+    def replacer(m):
+        return os.environ.get(m.group(1), m.group(0))
+    return pattern.sub(replacer, value)
+
+
+def _forward_tunnel(local_port: int, remote_port: int, transport: paramiko.Transport):
+    """Accept local connections and forward them through the SSH transport."""
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind(("127.0.0.1", local_port))
+    server.listen(5)
+    server.settimeout(1.0)
+    logger.info("Forwarding 127.0.0.1:%d -> remote:localhost:%d", local_port, remote_port)
+
+    def handle_client(client_sock):
+        try:
+            chan = transport.open_channel(
+                "direct-tcpip", ("localhost", remote_port),
+                client_sock.getpeername(),
+            )
+        except Exception as e:
+            logger.error("Forward channel open failed: %s", e)
+            client_sock.close()
+            return
+        while True:
+            import select
+            r, _, _ = select.select([client_sock, chan], [], [], 1.0)
+            if client_sock in r:
+                data = client_sock.recv(32768)
+                if not data:
+                    break
+                chan.sendall(data)
+            if chan in r:
+                data = chan.recv(32768)
+                if not data:
+                    break
+                client_sock.sendall(data)
+        chan.close()
+        client_sock.close()
+
+    def accept_loop():
+        while True:
+            try:
+                client_sock, addr = server.accept()
+                t = threading.Thread(target=handle_client, args=(client_sock,), daemon=True)
+                t.start()
+            except socket.timeout:
+                continue
+            except OSError:
+                break
+
+    t = threading.Thread(target=accept_loop, daemon=True)
+    t.start()
+    return server
+
+
+def _start_ssh_tunnel(config: AppConfig):
+    """Start SSH tunnel via paramiko (supports password auth to target)."""
     raw = _read_raw_yaml(os.environ.get("CONFIG_PATH", "config/default.yaml"))
     ssh = raw.get("ssh_tunnel") or {}
     if not ssh.get("enabled"):
         return None
 
-    pem = os.path.expanduser(ssh.get("pem_path", ""))
-    bastion = ssh.get("bastion", "")
-    target = ssh.get("target", "")
+    bastion_host = ssh.get("bastion_host", "")
+    bastion_port = ssh.get("bastion_port", 22)
+    bastion_user = ssh.get("bastion_user", "")
+    bastion_key = os.path.expanduser(ssh.get("bastion_key", ""))
+    target_host = ssh.get("target_host", "")
+    target_port = ssh.get("target_port", 22)
+    target_user = ssh.get("target_user", "")
+    target_password = _resolve_env(ssh.get("target_password", ""))
     forwards = ssh.get("forwards", [])
 
-    if not (pem and bastion and target and forwards):
+    if not (bastion_host and target_host and forwards):
         logger.warning("SSH tunnel enabled but config is incomplete; skipping")
         return None
-    if not os.path.exists(pem):
-        logger.warning("SSH pem file not found at %s; skipping tunnel", pem)
-        return None
 
-    cmd = ["ssh", "-i", pem, "-J", bastion, target, "-N",
-           "-o", "ServerAliveInterval=60", "-o", "ServerAliveCountMax=3",
-           "-o", "StrictHostKeyChecking=no"]
+    # Connect to bastion
+    logger.info("Connecting to bastion %s@%s:%d", bastion_user, bastion_host, bastion_port)
+    bastion = paramiko.SSHClient()
+    bastion.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    bastion.connect(bastion_host, port=bastion_port, username=bastion_user,
+                    key_filename=bastion_key if os.path.exists(bastion_key) else None)
+
+    # Open channel to target through bastion
+    bastion_transport = bastion.get_transport()
+    channel = bastion_transport.open_channel(
+        "direct-tcpip", (target_host, target_port), ("127.0.0.1", 0)
+    )
+
+    # Connect to target via channel
+    logger.info("Connecting to target %s@%s:%d via bastion", target_user, target_host, target_port)
+    target = paramiko.SSHClient()
+    target.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    target.connect(target_host, port=target_port, username=target_user,
+                   password=target_password, sock=channel)
+
+    target_transport = target.get_transport()
+    servers = []
     for fwd in forwards:
-        cmd += ["-L", f"{fwd['local']}:localhost:{fwd['remote']}"]
+        srv = _forward_tunnel(fwd["local"], fwd["remote"], target_transport)
+        servers.append(srv)
 
-    logger.info("Starting SSH tunnel: %s -> %s", bastion, target)
-    proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    atexit.register(lambda: proc.terminate() if proc.poll() is None else None)
-    return proc
+    def cleanup():
+        for srv in servers:
+            try:
+                srv.close()
+            except Exception:
+                pass
+        target.close()
+        bastion.close()
+
+    atexit.register(cleanup)
+    logger.info("SSH tunnel established with %d port forwards", len(forwards))
+    return (bastion, target, servers)
 
 
 async def _ensure_qdrant_collection(qdrant_client, collection_name: str, vector_size: int = 128):
@@ -100,6 +193,7 @@ def main():
     # Optionally start SSH tunnel
     tunnel = _start_ssh_tunnel(config)
     if tunnel:
+        time.sleep(1)  # give tunnel threads time to bind
         logger.info("Waiting for worker port %d...", config.worker.port)
         if not _wait_for_port(config.worker.host, config.worker.port, timeout=30):
             logger.warning("Worker port %d not reachable; continuing anyway", config.worker.port)

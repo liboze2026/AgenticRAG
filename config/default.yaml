@@ -28,10 +28,15 @@ pipeline:
   generator: "openai_gpt4o"
 
 ssh_tunnel:
-  enabled: true
-  pem_path: "~/.ssh/key.pem"
-  bastion: "user@bastion-host"
-  target: "user@gpu-server"
+  enabled: false
+  bastion_host: "${SSH_BASTION_HOST}"
+  bastion_port: 22
+  bastion_user: "${SSH_BASTION_USER}"
+  bastion_key: "${SSH_BASTION_KEY}"
+  target_host: "${SSH_TARGET_HOST}"
+  target_port: 22
+  target_user: "${SSH_TARGET_USER}"
+  target_password: "${SSH_TARGET_PASSWORD}"
   forwards:
     - local: 8001
       remote: 8001
