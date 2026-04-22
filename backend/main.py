@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from backend.api import documents, query, experiments, system, datasets, cache as cache_api
+from backend.api import chat as chat_api
 
 
 def create_app(
@@ -13,6 +14,7 @@ def create_app(
     document_service=None,
     experiment_service=None,
     dataset_service=None,
+    chat_service=None,
     qdrant_client=None,
     cors_origins=None,
     query_cache=None,
@@ -31,6 +33,7 @@ def create_app(
     app.state.document_service = document_service
     app.state.experiment_service = experiment_service
     app.state.dataset_service = dataset_service
+    app.state.chat_service = chat_service
     app.state.qdrant_client = qdrant_client
     app.state.query_cache = query_cache
     app.state.generation_cache = generation_cache
@@ -41,10 +44,11 @@ def create_app(
     app.include_router(experiments.router, prefix="/api")
     app.include_router(datasets.router, prefix="/api/datasets")
     app.include_router(cache_api.router, prefix="/api/cache")
+    app.include_router(chat_api.router, prefix="/api")
 
     # Serve page images for frontend evidence panel
     images_dir = "data/images"
-    if os.path.isdir(images_dir):
-        app.mount("/api/images", StaticFiles(directory=images_dir), name="images")
+    os.makedirs(images_dir, exist_ok=True)
+    app.mount("/api/images", StaticFiles(directory=images_dir), name="images")
 
     return app
