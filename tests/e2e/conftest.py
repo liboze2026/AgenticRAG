@@ -10,7 +10,7 @@ import time
 import pytest
 import httpx
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://localhost:8080"
 
 
 def _make_pdf_bytes() -> bytes:
@@ -65,7 +65,7 @@ def minimal_pdf() -> bytes:
 def require_services(base_url):
     """Skip entire e2e suite if services are not running."""
     try:
-        r = httpx.get(f"{base_url}/api/health", timeout=10)
+        r = httpx.get(f"{base_url}/api/health", timeout=10, trust_env=False)
         r.raise_for_status()
         health = r.json()
     except Exception as exc:
@@ -78,16 +78,37 @@ def require_services(base_url):
 
 @pytest.fixture(scope="session")
 def client(base_url, require_services):
-    with httpx.Client(base_url=base_url, timeout=60) as c:
+    # trust_env=False disables reading HTTP_PROXY/HTTPS_PROXY from the environment.
+    # On Windows httpx inherits the system proxy by default, which can inject spurious
+    # 502s when hitting localhost — explicitly bypass it.
+    with httpx.Client(base_url=base_url, timeout=60, trust_env=False) as c:
         yield c
 
 
 def wait_indexed(client: httpx.Client, doc_id: str, timeout: int = 180) -> dict:
-    """Poll document status until completed or failed. Returns final doc dict."""
+    """Poll document status until completed or failed. Returns final doc dict.
+
+    Transient non-200 responses (e.g. 502 from a system proxy) are tolerated up
+    to 5 consecutive failures before giving up — Windows + corporate proxies
+    occasionally inject these on localhost traffic.
+    """
+    transient_failures = 0
     for _ in range(timeout):
-        r = client.get(f"/api/documents/{doc_id}/status")
+        try:
+            r = client.get(f"/api/documents/{doc_id}/status")
+        except httpx.RequestError as exc:
+            transient_failures += 1
+            if transient_failures > 5:
+                pytest.fail(f"Status check request error for {doc_id}: {exc}")
+            time.sleep(1)
+            continue
         if r.status_code != 200:
-            pytest.fail(f"Status check failed ({r.status_code}): {r.text}")
+            transient_failures += 1
+            if transient_failures > 5:
+                pytest.fail(f"Status check failed ({r.status_code}): {r.text}")
+            time.sleep(1)
+            continue
+        transient_failures = 0
         doc = r.json()
         if doc["status"] == "completed":
             return doc

@@ -1,4 +1,5 @@
 import os
+import time
 import uuid
 import shutil
 import sqlite3
@@ -8,6 +9,23 @@ from typing import Dict, List, Optional
 from backend.models.schemas import DocumentInfo
 
 logger = logging.getLogger(__name__)
+
+
+def _rmtree_with_retry(path: str, attempts: int = 5, delay: float = 0.3) -> None:
+    """shutil.rmtree with retry — on Windows, PDF files can remain locked by
+    pdf2image/poppler child processes for a short window after indexing. Retry
+    a few times before giving up.
+    """
+    for i in range(attempts):
+        try:
+            shutil.rmtree(path)
+            return
+        except PermissionError:
+            if i == attempts - 1:
+                raise
+            time.sleep(delay * (2 ** i))
+        except FileNotFoundError:
+            return
 
 
 class DocumentService:
@@ -147,7 +165,17 @@ class DocumentService:
                 logger.exception("Failed to delete vectors for %s", doc_id)
         doc_dir = os.path.join(self.upload_dir, doc_id)
         if os.path.exists(doc_dir):
-            shutil.rmtree(doc_dir)
+            try:
+                _rmtree_with_retry(doc_dir)
+            except PermissionError as exc:
+                # On Windows, the PDF may still be held open by a lingering
+                # child process. Log but don't fail the whole delete — the DB
+                # row is still removed so the document is functionally gone;
+                # the orphaned directory can be cleaned up later.
+                logger.warning(
+                    "Could not remove %s (will be orphaned on disk): %s",
+                    doc_dir, exc,
+                )
         with self._connect() as conn:
             conn.execute("DELETE FROM documents WHERE id = ?", (doc_id,))
             conn.commit()
