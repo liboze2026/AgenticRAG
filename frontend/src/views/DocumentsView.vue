@@ -1,6 +1,9 @@
 <template>
-  <div>
-    <h2>文档管理</h2>
+  <div class="documents-view">
+    <div class="page-header">
+      <h2>文档管理</h2>
+      <p>上传 PDF 文档，自动版面分析与多模态向量索引</p>
+    </div>
     <DocumentUpload @uploaded="loadDocuments" />
     <el-divider />
     <div style="margin-bottom: 12px">
@@ -51,3 +54,10 @@ onMounted(() => {
   loadDatasets()
 })
 </script>
+
+<style scoped>
+.documents-view { max-width: 1100px; margin: 0 auto; }
+.page-header { margin-bottom: 20px; }
+.page-header h2 { font-size: 22px; font-weight: 800; color: var(--text-primary); margin: 0 0 4px; }
+.page-header p { font-size: 13px; color: var(--text-muted); margin: 0; }
+</style>

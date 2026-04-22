@@ -1,6 +1,9 @@
 <template>
-  <div>
-    <h2>系统状态</h2>
+  <div class="system-view">
+    <div class="page-header">
+      <h2>系统状态</h2>
+      <p>服务健康状态、向量库与缓存统计</p>
+    </div>
     <el-button @click="refresh" :loading="loading" style="margin-bottom: 16px">刷新</el-button>
     <el-descriptions v-if="health" :column="1" border>
       <el-descriptions-item label="系统状态">
@@ -91,3 +94,10 @@ function formatBytes(b: number): string {
 
 onMounted(refresh)
 </script>
+
+<style scoped>
+.system-view { max-width: 900px; margin: 0 auto; }
+.page-header { margin-bottom: 20px; }
+.page-header h2 { font-size: 22px; font-weight: 800; color: var(--text-primary); margin: 0 0 4px; }
+.page-header p { font-size: 13px; color: var(--text-muted); margin: 0; }
+</style>

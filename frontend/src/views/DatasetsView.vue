@@ -1,6 +1,9 @@
 <template>
-  <div>
-    <h2>数据集管理</h2>
+  <div class="datasets-view">
+    <div class="page-header">
+      <h2>数据集管理</h2>
+      <p>管理评测数据集，用于实验复现与对比</p>
+    </div>
     <el-card>
       <template #header>新建数据集</template>
       <el-form :inline="true">
@@ -82,3 +85,10 @@ async function handleDelete(id: number) {
 
 onMounted(refresh)
 </script>
+
+<style scoped>
+.datasets-view { max-width: 1000px; margin: 0 auto; }
+.page-header { margin-bottom: 20px; }
+.page-header h2 { font-size: 22px; font-weight: 800; color: var(--text-primary); margin: 0 0 4px; }
+.page-header p { font-size: 13px; color: var(--text-muted); margin: 0; }
+</style>
