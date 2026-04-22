@@ -12,7 +12,13 @@ async def upload_document(
     dataset_id: Optional[int] = Query(None),
 ):
     doc_service = request.app.state.document_service
+    # Fix A: reject empty files
     content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="File is empty")
+    # Fix B: reject non-PDF files
+    if not (file.filename or "").lower().endswith(".pdf") and file.content_type not in ("application/pdf",):
+        raise HTTPException(status_code=400, detail="Only PDF files are supported")
     doc_info = await doc_service.upload(filename=file.filename, content=content, dataset_id=dataset_id)
     background_tasks.add_task(doc_service.index_document, doc_info.id)
     return doc_info.model_dump()
@@ -24,6 +30,7 @@ async def list_documents(request: Request, dataset_id: Optional[int] = Query(Non
     return [d.model_dump() for d in doc_service.list_documents(dataset_id=dataset_id)]
 
 
+@router.get("/{doc_id}")
 @router.get("/{doc_id}/status")
 async def get_document_status(request: Request, doc_id: str):
     doc_service = request.app.state.document_service
