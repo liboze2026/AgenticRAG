@@ -168,14 +168,16 @@ class DocumentService:
             try:
                 _rmtree_with_retry(doc_dir)
             except PermissionError as exc:
-                # On Windows, the PDF may still be held open by a lingering
-                # child process. Log but don't fail the whole delete — the DB
-                # row is still removed so the document is functionally gone;
-                # the orphaned directory can be cleaned up later.
                 logger.warning(
                     "Could not remove %s (will be orphaned on disk): %s",
                     doc_dir, exc,
                 )
+        images_dir = os.path.join("data/images", doc_id)
+        if os.path.exists(images_dir):
+            try:
+                _rmtree_with_retry(images_dir)
+            except Exception as exc:
+                logger.warning("Could not remove images dir %s: %s", images_dir, exc)
         with self._connect() as conn:
             conn.execute("DELETE FROM documents WHERE id = ?", (doc_id,))
             conn.commit()

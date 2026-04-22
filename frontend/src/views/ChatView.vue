@@ -92,7 +92,7 @@
                     @click="openPageViewer(src, si)"
                   >
                     <div class="chat-source-thumb__badge">[{{ si + 1 }}]</div>
-                    <img :src="`/api/images/${src.document_id}/page_${src.page_number}.png`" alt="" />
+                    <img :src="`/api/images/${src.document_id}/page_${src.page_number}.png`" alt="" @error="onThumbError" />
                     <div class="chat-source-thumb__page">第{{ src.page_number }}页</div>
                   </div>
                 </div>
@@ -252,6 +252,12 @@ function formatTime(iso: string): string {
 
 function highlightSource(msgIdx: number, srcIdx: number) {
   highlightedSource.value = `${msgIdx}-${srcIdx}`
+}
+
+function onThumbError(e: Event) {
+  const img = e.target as HTMLImageElement
+  img.style.cssText = 'opacity:.35;filter:grayscale(1)'
+  img.title = '图片文件不存在'
 }
 
 function openPageViewer(src: RetrievalResult, _idx: number) {
