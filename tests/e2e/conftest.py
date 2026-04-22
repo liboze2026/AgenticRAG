@@ -66,6 +66,7 @@ def require_services(base_url):
     """Skip entire e2e suite if services are not running."""
     try:
         r = httpx.get(f"{base_url}/api/health", timeout=10)
+        r.raise_for_status()
         health = r.json()
     except Exception as exc:
         pytest.skip(f"Backend not reachable at {base_url}: {exc}")
@@ -76,7 +77,7 @@ def require_services(base_url):
 
 
 @pytest.fixture(scope="session")
-def client(base_url):
+def client(base_url, require_services):
     with httpx.Client(base_url=base_url, timeout=60) as c:
         yield c
 
@@ -85,7 +86,8 @@ def wait_indexed(client: httpx.Client, doc_id: str, timeout: int = 180) -> dict:
     """Poll document status until completed or failed. Returns final doc dict."""
     for _ in range(timeout):
         r = client.get(f"/api/documents/{doc_id}/status")
-        assert r.status_code == 200, f"Status check failed: {r.text}"
+        if r.status_code != 200:
+            pytest.fail(f"Status check failed ({r.status_code}): {r.text}")
         doc = r.json()
         if doc["status"] == "completed":
             return doc
@@ -107,4 +109,8 @@ def indexed_doc(client, minimal_pdf):
     wait_indexed(client, doc_id)
     yield doc_id
     # Cleanup
-    client.delete(f"/api/documents/{doc_id}")
+    try:
+        client.delete(f"/api/documents/{doc_id}")
+    except Exception as exc:
+        import warnings
+        warnings.warn(f"indexed_doc cleanup failed for {doc_id}: {exc}")
