@@ -12,16 +12,24 @@ _CITATION_SYSTEM_PROMPT = (
     "Be concise and accurate."
 )
 
+# GLM-4V models (e.g. glm-4v-flash, glm-4v-plus) support vision.
+# Text-only models (e.g. glm-4.5-air) will fall back to page-reference text only.
+_VISION_MODEL_PREFIXES = ("glm-4v",)
 
-@generator_registry.register("openai_gpt4o")
-class OpenAIGPT4oGenerator(BaseGenerator):
-    def __init__(self, client=None, model: str = "gpt-4o", openai_api_key: str = "", generation_cache=None):
+
+@generator_registry.register("zhipu")
+class ZhipuGenerator(BaseGenerator):
+    def __init__(self, client=None, model: str = "glm-4.5-air", zhipu_api_key: str = "", generation_cache=None):
         if client is None:
             from openai import AsyncOpenAI
-            client = AsyncOpenAI(api_key=openai_api_key)
+            client = AsyncOpenAI(
+                api_key=zhipu_api_key,
+                base_url="https://open.bigmodel.cn/api/paas/v4/",
+            )
         self.client = client
         self.model = model
         self.generation_cache = generation_cache
+        self._vision = any(model.startswith(p) for p in _VISION_MODEL_PREFIXES)
 
     async def generate(self, query: str, context: List[RetrievalResult]) -> Answer:
         cache_key = self._cache_key(query, context)
@@ -35,7 +43,7 @@ class OpenAIGPT4oGenerator(BaseGenerator):
             {"role": "user", "content": self._build_content(query, context)},
         ]
         response = await self.client.chat.completions.create(
-            model=self.model, messages=messages, max_tokens=2048
+            model=self.model, messages=messages, max_tokens=1024
         )
         text = response.choices[0].message.content
 
@@ -44,30 +52,26 @@ class OpenAIGPT4oGenerator(BaseGenerator):
         return Answer(text=text, sources=context)
 
     async def generate_chat(self, messages: List[dict], context: List[RetrievalResult]) -> Answer:
-        """Multi-turn chat: inject retrieved pages into the last user message."""
         if not messages:
             return Answer(text="", sources=context)
 
-        openai_messages = [{"role": "system", "content": _CITATION_SYSTEM_PROMPT}]
-
-        # All messages except the last user turn pass through as text
+        chat_messages = [{"role": "system", "content": _CITATION_SYSTEM_PROMPT}]
         for msg in messages[:-1]:
-            openai_messages.append({"role": msg["role"], "content": msg["content"]})
+            chat_messages.append({"role": msg["role"], "content": msg["content"]})
 
-        # Last user message gets the retrieved page images injected
         last = messages[-1]
         content = self._build_content(last.get("content", ""), context)
-        openai_messages.append({"role": "user", "content": content})
+        chat_messages.append({"role": "user", "content": content})
 
         response = await self.client.chat.completions.create(
-            model=self.model, messages=openai_messages, max_tokens=2048
+            model=self.model, messages=chat_messages, max_tokens=1024
         )
         text = response.choices[0].message.content
         return Answer(text=text, sources=context)
 
     def _cache_key(self, query: str, context: List[RetrievalResult]) -> str:
         sources = [f"{r.document_id}:{r.page_number}" for r in context]
-        return f"openai:{self.model}:{query}:{json.dumps(sources)}"
+        return f"zhipu:{self.model}:{query}:{json.dumps(sources)}"
 
     def _build_content(self, query: str, context: List[RetrievalResult]) -> list:
         content = [{"type": "text", "text": (
@@ -76,10 +80,13 @@ class OpenAIGPT4oGenerator(BaseGenerator):
         )}]
         for i, result in enumerate(context, 1):
             content.append({"type": "text", "text": f"[Page {i}]"})
-            try:
-                with open(result.image_path, "rb") as f:
-                    b64 = base64.b64encode(f.read()).decode()
-                content.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}})
-            except FileNotFoundError:
-                pass
+            if self._vision:
+                try:
+                    with open(result.image_path, "rb") as f:
+                        b64 = base64.b64encode(f.read()).decode()
+                    content.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}})
+                except FileNotFoundError:
+                    pass
+            else:
+                content.append({"type": "text", "text": f"(doc: {result.document_id}, page: {result.page_number})"})
         return content

@@ -1,7 +1,7 @@
 import time
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Union
 from backend.services.evaluation import compute_recall_at_k, compute_mrr
 from backend.services.hard_negatives import augment_eval_set
 
@@ -20,14 +20,21 @@ class PipelineSwitch(BaseModel):
     query_encoder: str
     retriever: str
     reranker: Optional[str] = None
-    generator: str
+    generator: Union[str, dict]  # string name or {name, options} dict
 
 
 @router.put("/pipelines/active")
 async def switch_pipeline(request: Request, body: PipelineSwitch):
     manager = request.app.state.pipeline_manager
-    manager.set_pipeline(body.model_dump())
-    return {"status": "switched", "config": body.model_dump()}
+    config = body.model_dump()
+    # If generator is a string name, try to inherit options from current config
+    if isinstance(config.get("generator"), str):
+        cur = manager.get_current_config() or {}
+        cur_gen = cur.get("generator")
+        if isinstance(cur_gen, dict) and cur_gen.get("name") == config["generator"]:
+            config["generator"] = cur_gen  # preserve options
+    manager.set_pipeline(config)
+    return {"status": "switched", "config": config}
 
 
 class EvalQuery(BaseModel):
