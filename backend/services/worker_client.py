@@ -1,3 +1,4 @@
+import base64
 from typing import List
 import httpx
 
@@ -8,7 +9,11 @@ class WorkerClient:
         self._client = httpx.AsyncClient(base_url=self.base_url, timeout=httpx.Timeout(timeout))
 
     async def encode_documents(self, image_paths: List[str]) -> List[dict]:
-        response = await self._client.post("/encode/documents", json={"image_paths": image_paths})
+        images_b64 = []
+        for p in image_paths:
+            with open(p, "rb") as f:
+                images_b64.append(base64.b64encode(f.read()).decode())
+        response = await self._client.post("/encode/documents", json={"images_b64": images_b64})
         response.raise_for_status()
         return response.json()["embeddings"]
 
