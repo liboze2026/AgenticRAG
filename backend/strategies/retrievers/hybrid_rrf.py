@@ -33,11 +33,11 @@ class HybridRRFRetriever(BaseRetriever):
     def set_query(self, query: str):
         self._last_query = query
 
-    async def index(self, document_id: str, page_number: int, vectors, image_path: str, pdf_path=None) -> None:
+    async def index(self, document_id: str, page_number: int, vectors, image_path: str, pdf_path=None, layout_metadata=None) -> None:
         if self.dense_retriever:
-            await _safe_index(self.dense_retriever, document_id, page_number, vectors, image_path, pdf_path)
+            await _safe_index(self.dense_retriever, document_id, page_number, vectors, image_path, pdf_path, layout_metadata)
         if self.sparse_retriever:
-            await _safe_index(self.sparse_retriever, document_id, page_number, vectors, image_path, pdf_path)
+            await _safe_index(self.sparse_retriever, document_id, page_number, vectors, image_path, pdf_path, layout_metadata)
 
     async def retrieve(self, query_vectors, top_k: int = 5) -> List[RetrievalResult]:
         dense_results = []
@@ -56,13 +56,15 @@ class HybridRRFRetriever(BaseRetriever):
             await self.sparse_retriever.delete(document_id)
 
 
-async def _safe_index(retriever, document_id, page_number, vectors, image_path, pdf_path):
-    """Call retriever.index passing pdf_path only if accepted."""
+async def _safe_index(retriever, document_id, page_number, vectors, image_path, pdf_path, layout_metadata=None):
+    """Call retriever.index passing optional kwargs only when accepted."""
     import inspect
     sig = inspect.signature(retriever.index)
     kwargs = {"document_id": document_id, "page_number": page_number, "vectors": vectors, "image_path": image_path}
     if "pdf_path" in sig.parameters:
         kwargs["pdf_path"] = pdf_path
+    if "layout_metadata" in sig.parameters:
+        kwargs["layout_metadata"] = layout_metadata
     await retriever.index(**kwargs)
 
 
@@ -87,6 +89,7 @@ def _rrf_fuse(dense, sparse, k: int, top_k: int) -> List[RetrievalResult]:
             page_number=info[k_].page_number,
             score=score,
             image_path=info[k_].image_path,
+            layout=info[k_].layout,
         )
         for k_, score in fused
     ]

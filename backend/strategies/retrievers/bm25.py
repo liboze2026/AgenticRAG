@@ -71,20 +71,35 @@ class BM25Retriever(BaseRetriever):
         if not _BM25_AVAILABLE or not self._docs:
             self._bm25 = None
             return
+        # BM25Okapi raises ZeroDivisionError when every document has empty tokens
+        if not any(d["tokens"] for d in self._docs):
+            self._bm25 = None
+            return
         self._bm25 = BM25Okapi([d["tokens"] for d in self._docs])
 
-    async def index(self, document_id: str, page_number: int, vectors, image_path: str, pdf_path: Optional[str] = None) -> None:
+    async def index(
+        self,
+        document_id: str,
+        page_number: int,
+        vectors,
+        image_path: str,
+        pdf_path: Optional[str] = None,
+        layout_metadata=None,
+    ) -> None:
         # vectors are ignored for BM25; we extract text from the PDF
         text = ""
         if pdf_path:
             text = _extract_page_text(pdf_path, page_number)
         tokens = _tokenize(text)
-        self._docs.append({
+        entry = {
             "doc_id": document_id,
             "page_number": page_number,
             "image_path": image_path,
             "tokens": tokens,
-        })
+        }
+        if layout_metadata is not None:
+            entry["layout"] = layout_metadata
+        self._docs.append(entry)
         self._rebuild_index()
         self._save()
 
@@ -104,16 +119,25 @@ class BM25Retriever(BaseRetriever):
     def _retrieve_with_tokens(self, tokens: List[str], top_k: int) -> List[RetrievalResult]:
         if not tokens or not self._bm25:
             return []
+        from backend.models.schemas import PageLayout
         scores = self._bm25.get_scores(tokens)
         ranked = sorted(enumerate(scores), key=lambda x: x[1], reverse=True)[:top_k]
         results = []
         for idx, score in ranked:
             d = self._docs[idx]
+            layout = None
+            if "layout" in d and d["layout"] is not None:
+                try:
+                    raw = d["layout"]
+                    layout = raw if isinstance(raw, PageLayout) else PageLayout(**raw)
+                except Exception:
+                    pass
             results.append(RetrievalResult(
                 document_id=d["doc_id"],
                 page_number=d["page_number"],
                 score=float(score),
                 image_path=d["image_path"],
+                layout=layout,
             ))
         return results
 
