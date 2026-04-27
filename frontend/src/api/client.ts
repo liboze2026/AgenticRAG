@@ -13,6 +13,78 @@ api.interceptors.response.use(
   }
 )
 
+// ---------------------------------------------------------------------------
+// Layout / Provenance types
+// ---------------------------------------------------------------------------
+
+export interface BoundingBox {
+  x0: number; y0: number; x1: number; y1: number
+}
+
+export interface LayoutElement {
+  element_type: string       // "text_block" | "table" | "figure" | "heading"
+  bbox: BoundingBox
+  text?: string
+  image_path?: string
+  confidence: number
+}
+
+export interface PageLayout {
+  document_id: string
+  page_number: number
+  page_width: number
+  page_height: number
+  elements: LayoutElement[]
+}
+
+// ---------------------------------------------------------------------------
+// Core retrieval / query types
+// ---------------------------------------------------------------------------
+
+export interface RetrievalResult {
+  document_id: string
+  page_number: number
+  score: number
+  image_path: string
+  layout?: PageLayout
+}
+
+export interface QueryResponse {
+  answer: string
+  sources: RetrievalResult[]
+  timing?: Record<string, number>
+}
+
+// ---------------------------------------------------------------------------
+// Chat / Session types
+// ---------------------------------------------------------------------------
+
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+  sources: RetrievalResult[]
+  timestamp: string
+}
+
+export interface ChatSession {
+  session_id: string
+  document_ids: string[]
+  messages: ChatMessage[]
+  created_at: string
+  updated_at: string
+}
+
+export interface ChatResponse {
+  message: { role: string; content: string }
+  sources: RetrievalResult[]
+  session_id: string
+  timing: Record<string, number>
+}
+
+// ---------------------------------------------------------------------------
+// Document / Dataset / Experiment types
+// ---------------------------------------------------------------------------
+
 export interface DocumentInfo {
   id: string
   filename: string
@@ -61,16 +133,6 @@ export interface CacheStats {
   size_bytes: number
 }
 
-export interface RetrievalResult {
-  document_id: string; page_number: number; score: number; image_path: string
-}
-
-export interface QueryResponse {
-  answer: string
-  sources: RetrievalResult[]
-  timing?: Record<string, number>
-}
-
 export interface EvalMetrics {
   recall_at_k: Record<number, number>
   mrr: number
@@ -81,6 +143,10 @@ export interface EvalMetrics {
 export interface PipelineInfo {
   available: Record<string, string[]>; current: Record<string, string | null>
 }
+
+// ---------------------------------------------------------------------------
+// API methods
+// ---------------------------------------------------------------------------
 
 export const documentsApi = {
   upload: (file: File, datasetId?: number) => {
@@ -96,6 +162,7 @@ export const documentsApi = {
   status: (id: string) => api.get<DocumentInfo>(`/documents/${id}/status`),
   delete: (id: string) => api.delete(`/documents/${id}`),
   retry: (id: string) => api.post(`/documents/${id}/retry`),
+  layout: (id: string, page: number) => api.get<PageLayout>(`/documents/${id}/layout/${page}`),
 }
 
 export const datasetsApi = {
@@ -106,7 +173,20 @@ export const datasetsApi = {
 
 export const queryApi = {
   query: (query: string, topK = 5) => api.post<QueryResponse>('/query', { query, top_k: topK }),
-  retrieve: (query: string, topK = 5) => api.post<{ results: RetrievalResult[] }>('/retrieve', { query, top_k: topK }),
+  retrieve: (query: string, topK = 5) => api.post<{ results: RetrievalResult[]; timing?: Record<string, number> }>('/retrieve', { query, top_k: topK }),
+}
+
+export const chatApi = {
+  send: (messages: Array<{ role: string; content: string }>, documentIds: string[] = [], sessionId?: string, topK = 5) =>
+    api.post<ChatResponse>('/chat', {
+      messages,
+      document_ids: documentIds,
+      session_id: sessionId,
+      top_k: topK,
+    }),
+  listSessions: () => api.get<ChatSession[]>('/chat/sessions'),
+  getSession: (id: string) => api.get<ChatSession>(`/chat/sessions/${id}`),
+  deleteSession: (id: string) => api.delete(`/chat/sessions/${id}`),
 }
 
 export const experimentsApi = {

@@ -25,7 +25,14 @@ const switching = ref(false)
 async function loadPipelines() {
   const resp = await experimentsApi.getPipelines()
   available.value = resp.data.available
-  if (resp.data.current) selected.value = { ...resp.data.current }
+  if (resp.data.current) {
+    const cur = { ...resp.data.current }
+    // generator may be {name, options} dict from backend — flatten to string name
+    if (cur.generator && typeof cur.generator === 'object') {
+      cur.generator = (cur.generator as Record<string, unknown>).name as string
+    }
+    selected.value = cur
+  }
 }
 
 async function handleSwitch() {
