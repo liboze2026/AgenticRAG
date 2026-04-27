@@ -79,6 +79,7 @@ class Pipeline:
         embeddings = await self.document_encoder.encode_documents(pages)
         sig = inspect.signature(self.retriever.index)
         accepts_pdf = "pdf_path" in sig.parameters
+        accepts_layout = "layout_metadata" in sig.parameters
         for page, emb in zip(pages, embeddings):
             kwargs = {
                 "document_id": emb.document_id,
@@ -88,6 +89,8 @@ class Pipeline:
             }
             if accepts_pdf:
                 kwargs["pdf_path"] = pdf_path
+            if accepts_layout and page.layout_metadata is not None:
+                kwargs["layout_metadata"] = page.layout_metadata
             await self.retriever.index(**kwargs)
         return pages
 

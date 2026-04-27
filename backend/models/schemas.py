@@ -2,11 +2,43 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 
 
+# ---------------------------------------------------------------------------
+# Layout Analysis Models
+# ---------------------------------------------------------------------------
+
+class BoundingBox(BaseModel):
+    x0: float
+    y0: float
+    x1: float
+    y1: float
+
+
+class LayoutElement(BaseModel):
+    element_type: str          # "text_block" | "table" | "figure" | "heading"
+    bbox: BoundingBox
+    text: Optional[str] = None
+    image_path: Optional[str] = None   # for figures: path to cropped image
+    confidence: float = 1.0
+
+
+class PageLayout(BaseModel):
+    document_id: str
+    page_number: int
+    page_width: float
+    page_height: float
+    elements: List[LayoutElement] = []
+
+
+# ---------------------------------------------------------------------------
+# Core Pipeline Models
+# ---------------------------------------------------------------------------
+
 class PageImage(BaseModel):
     document_id: str
     page_number: int
     image_path: str
-    pdf_path: Optional[str] = None  # needed by text-based retrievers in Batch 2
+    pdf_path: Optional[str] = None
+    layout_metadata: Optional[PageLayout] = None
 
 
 class Embedding(BaseModel):
@@ -20,6 +52,7 @@ class RetrievalResult(BaseModel):
     page_number: int
     score: float
     image_path: str
+    layout: Optional[PageLayout] = None
 
 
 class RetrievalBundle(BaseModel):
@@ -31,8 +64,31 @@ class RetrievalBundle(BaseModel):
 class Answer(BaseModel):
     text: str
     sources: List[RetrievalResult]
-    timing: Dict[str, float] = {}  # per-stage latency
+    timing: Dict[str, float] = {}
 
+
+# ---------------------------------------------------------------------------
+# Chat / Session Models
+# ---------------------------------------------------------------------------
+
+class ChatMessage(BaseModel):
+    role: str                              # "user" | "assistant"
+    content: str
+    sources: List[RetrievalResult] = []   # assistant messages carry retrieval sources
+    timestamp: str = ""
+
+
+class ChatSession(BaseModel):
+    session_id: str
+    document_ids: List[str] = []
+    messages: List[ChatMessage] = []
+    created_at: str
+    updated_at: str
+
+
+# ---------------------------------------------------------------------------
+# Document / Dataset / Evaluation Models
+# ---------------------------------------------------------------------------
 
 class DocumentInfo(BaseModel):
     id: str
