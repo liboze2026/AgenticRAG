@@ -1,4 +1,6 @@
-from typing import List
+import base64
+import io
+from typing import List, Optional
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
@@ -6,7 +8,8 @@ router = APIRouter()
 
 
 class EncodeDocumentsRequest(BaseModel):
-    image_paths: List[str]
+    images_b64: Optional[List[str]] = None  # base64-encoded PNG/JPEG
+    image_paths: Optional[List[str]] = None  # legacy: local paths (only works if worker is local)
 
 
 class EncodeQueryRequest(BaseModel):
@@ -15,8 +18,13 @@ class EncodeQueryRequest(BaseModel):
 
 @router.post("/documents")
 async def encode_documents(request: Request, body: EncodeDocumentsRequest):
+    from PIL import Image
     manager = request.app.state.model_manager
-    embeddings = manager.encode_images(body.image_paths)
+    if body.images_b64 is not None:
+        images = [Image.open(io.BytesIO(base64.b64decode(b))).convert("RGB") for b in body.images_b64]
+        embeddings = manager.encode_images_pil(images)
+    else:
+        embeddings = manager.encode_images(body.image_paths or [])
     return {"embeddings": embeddings}
 
 
