@@ -44,6 +44,7 @@ class PipelineConfig(BaseModel):
 class ApiKeysConfig(BaseModel):
     openai: str = ""
     anthropic: str = ""
+    zhipu: str = ""
 
 
 class CacheConfig(BaseModel):

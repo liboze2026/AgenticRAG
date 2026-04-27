@@ -1,6 +1,6 @@
 server:
   host: "0.0.0.0"
-  port: 8000
+  port: 8080
   cors_origins:
     - "http://localhost:5173"
     - "http://127.0.0.1:5173"
@@ -8,7 +8,7 @@ server:
 worker:
   host: "localhost"
   port: 8001
-  timeout: 120
+  timeout: 300
 
 qdrant:
   host: "localhost"
@@ -20,22 +20,25 @@ storage:
   images_dir: "data/images"
 
 pipeline:
-  processor: "page_screenshot"
+  processor: "layout_analysis"
   document_encoder: "colpali"
   query_encoder: "colpali"
   retriever: "multi_vector"
   reranker: null
-  generator: "openai_gpt4o"
+  generator:
+    name: "zhipu"
+    options:
+      model: "glm-4v-flash"
 
 ssh_tunnel:
-  enabled: false
-  bastion_host: "${SSH_BASTION_HOST}"
+  enabled: true
+  bastion_host: "2001:da8:d800:336::15cb"
   bastion_port: 22
-  bastion_user: "${SSH_BASTION_USER}"
-  bastion_key: "${SSH_BASTION_KEY}"
-  target_host: "${SSH_TARGET_HOST}"
-  target_port: 22
-  target_user: "${SSH_TARGET_USER}"
+  bastion_user: "ubuntu"
+  bastion_key: '${SSH_BASTION_KEY}'
+  target_host: "202.38.68.70"
+  target_port: 2266
+  target_user: "bzli"
   target_password: "${SSH_TARGET_PASSWORD}"
   forwards:
     - local: 8001
@@ -43,9 +46,17 @@ ssh_tunnel:
     - local: 6333
       remote: 6333
 
+ssh_deployment:
+  remote_base: "/home/bzli/mrag_app"
+  conda_env: "mrag_worker"
+  qdrant_path: "~/qdrant"
+  qdrant_storage: "~/qdrant/storage"
+  gpu_devices: "0"
+
 api_keys:
   openai: "${OPENAI_API_KEY}"
   anthropic: "${ANTHROPIC_API_KEY}"
+  zhipu: "${ZHIPU_API_KEY}"
 
 cache:
   enabled: false

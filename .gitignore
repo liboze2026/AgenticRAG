@@ -38,3 +38,9 @@ node_modules/
 
 # Claude
 .claude/
+
+# TeamAgent
+.teamagent/
+
+# Temp/scratch
+.tmp_*
