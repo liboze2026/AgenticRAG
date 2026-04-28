@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 from backend.strategies.generators.openai_gpt4o import OpenAIGPT4oGenerator
 from backend.strategies.generators.claude import ClaudeGenerator
+from backend.strategies.generators.zhipu import ZhipuGenerator
 from backend.models.schemas import RetrievalResult
 
 
@@ -69,3 +70,31 @@ async def test_claude_generator_cache(tmp_path):
     assert a1.text == "cached claude answer"
     assert a2.text == "cached claude answer"
     assert mock_client.messages.create.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_zhipu_chat_folds_history_into_single_user_message():
+    mock_response = MagicMock()
+    mock_response.choices = [MagicMock(message=MagicMock(content="Zhipu answer."))]
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+
+    gen = ZhipuGenerator(client=mock_client, model="glm-4v-flash")
+    answer = await gen.generate_chat(
+        [
+            {"role": "user", "content": "第一轮问题"},
+            {"role": "assistant", "content": "第一轮回答"},
+            {"role": "user", "content": "第二轮问题"},
+        ],
+        _make_context(),
+    )
+
+    assert answer.text == "Zhipu answer."
+    kwargs = mock_client.chat.completions.create.call_args.kwargs
+    assert len(kwargs["messages"]) == 2
+    assert kwargs["messages"][1]["role"] == "user"
+    prompt_text = kwargs["messages"][1]["content"][0]["text"]
+    assert "Conversation history:" in prompt_text
+    assert "第一轮问题" in prompt_text
+    assert "第一轮回答" in prompt_text
+    assert "Current question: 第二轮问题" in prompt_text

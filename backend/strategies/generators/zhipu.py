@@ -55,13 +55,14 @@ class ZhipuGenerator(BaseGenerator):
         if not messages:
             return Answer(text="", sources=context)
 
-        chat_messages = [{"role": "system", "content": _CITATION_SYSTEM_PROMPT}]
-        for msg in messages[:-1]:
-            chat_messages.append({"role": msg["role"], "content": msg["content"]})
-
-        last = messages[-1]
-        content = self._build_content(last.get("content", ""), context)
-        chat_messages.append({"role": "user", "content": content})
+        # Zhipu GLM-4V rejects some mixed multi-turn + multimodal payloads with
+        # code 1210. Preserve conversation context by folding prior turns into
+        # the current user prompt, then attach retrieved pages only once.
+        content = self._build_content(self._build_chat_query(messages), context)
+        chat_messages = [
+            {"role": "system", "content": _CITATION_SYSTEM_PROMPT},
+            {"role": "user", "content": content},
+        ]
 
         response = await self.client.chat.completions.create(
             model=self.model, messages=chat_messages, max_tokens=1024
@@ -72,6 +73,31 @@ class ZhipuGenerator(BaseGenerator):
     def _cache_key(self, query: str, context: List[RetrievalResult]) -> str:
         sources = [f"{r.document_id}:{r.page_number}" for r in context]
         return f"zhipu:{self.model}:{query}:{json.dumps(sources)}"
+
+    def _build_chat_query(self, messages: List[dict]) -> str:
+        turns = [
+            (msg.get("role"), str(msg.get("content", "")).strip())
+            for msg in messages
+            if msg.get("role") in {"user", "assistant"} and str(msg.get("content", "")).strip()
+        ]
+        last_user_idx = next((idx for idx in range(len(turns) - 1, -1, -1) if turns[idx][0] == "user"), None)
+        if last_user_idx is None:
+            return ""
+        last_user = turns[last_user_idx][1]
+        if not last_user:
+            return ""
+
+        history = turns[:last_user_idx]
+        if not history:
+            return last_user
+
+        lines = ["Conversation history:"]
+        for role, content in history[-8:]:
+            label = "User" if role == "user" else "Assistant"
+            lines.append(f"{label}: {content}")
+        lines.append("")
+        lines.append(f"Current question: {last_user}")
+        return "\n".join(lines)
 
     def _build_content(self, query: str, context: List[RetrievalResult]) -> list:
         content = [{"type": "text", "text": (
