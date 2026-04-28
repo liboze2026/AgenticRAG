@@ -1,61 +1,13 @@
-<template>
-  <div class="system-view">
-    <div class="page-header">
-      <h2>系统状态</h2>
-      <p>服务健康状态、向量库与缓存统计</p>
-    </div>
-    <el-button @click="refresh" :loading="loading" style="margin-bottom: 16px">刷新</el-button>
-    <el-descriptions v-if="health" :column="1" border>
-      <el-descriptions-item label="系统状态">
-        <el-tag :type="health.status === 'ok' ? 'success' : 'danger'">{{ health.status }}</el-tag>
-      </el-descriptions-item>
-      <el-descriptions-item label="Worker 状态">
-        <el-tag :type="health.worker?.status === 'ok' ? 'success' : 'danger'">{{ health.worker?.status || 'unknown' }}</el-tag>
-        <span v-if="health.worker?.model" style="margin-left: 8px">模型: {{ health.worker.model }}</span>
-      </el-descriptions-item>
-      <el-descriptions-item label="Qdrant 状态">
-        <el-tag :type="health.qdrant?.status === 'ok' ? 'success' : 'danger'">{{ health.qdrant?.status || 'unknown' }}</el-tag>
-      </el-descriptions-item>
-    </el-descriptions>
-
-    <el-card style="margin-top: 16px" v-if="cacheStats">
-      <template #header>
-        <div style="display: flex; justify-content: space-between; align-items: center">
-          <span>缓存状态</span>
-          <el-button size="small" @click="loadCacheStats">刷新</el-button>
-        </div>
-      </template>
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="Query 缓存">
-          <el-tag :type="cacheStats.query_cache.enabled ? 'success' : 'info'">
-            {{ cacheStats.query_cache.enabled ? '已启用' : '已禁用' }}
-          </el-tag>
-          条目: {{ cacheStats.query_cache.entries }} ·
-          大小: {{ formatBytes(cacheStats.query_cache.size_bytes) }}
-        </el-descriptions-item>
-        <el-descriptions-item label="Generation 缓存">
-          <el-tag :type="cacheStats.generation_cache.enabled ? 'success' : 'info'">
-            {{ cacheStats.generation_cache.enabled ? '已启用' : '已禁用' }}
-          </el-tag>
-          条目: {{ cacheStats.generation_cache.entries }} ·
-          大小: {{ formatBytes(cacheStats.generation_cache.size_bytes) }}
-        </el-descriptions-item>
-      </el-descriptions>
-      <div style="margin-top: 12px">
-        <el-button type="warning" size="small" @click="clearQueryCache">清空 Query 缓存</el-button>
-        <el-button type="warning" size="small" @click="clearGenCache">清空 Generation 缓存</el-button>
-      </div>
-    </el-card>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { systemApi, cacheApi } from '../api/client'
-import { ElMessage } from 'element-plus'
+import { ref, onMounted, computed } from 'vue'
+import { systemApi, cacheApi, type CacheStats } from '../api/client'
+import {
+  AppPageHead, AppCard, AppButton, AppTag, msg,
+} from '../design/primitives'
+import Icon from '../design/Icons.vue'
 
 const health = ref<any>(null)
-const cacheStats = ref<any>(null)
+const cacheData = ref<{ query_cache: CacheStats; generation_cache: CacheStats } | null>(null)
 const loading = ref(false)
 
 async function refresh() {
@@ -63,26 +15,27 @@ async function refresh() {
   try {
     const resp = await systemApi.health()
     health.value = resp.data
-    await loadCacheStats()
-  } finally { loading.value = false }
+  } catch {}
+  try { await loadCacheStats() } catch {}
+  loading.value = false
 }
 
 async function loadCacheStats() {
   try {
     const resp = await cacheApi.stats()
-    cacheStats.value = resp.data
+    cacheData.value = resp.data
   } catch {}
 }
 
 async function clearQueryCache() {
   await cacheApi.clearQuery()
-  ElMessage.success('Query 缓存已清空')
+  msg.success('问询缓存已清空')
   await loadCacheStats()
 }
 
 async function clearGenCache() {
   await cacheApi.clearGeneration()
-  ElMessage.success('Generation 缓存已清空')
+  msg.success('生成缓存已清空')
   await loadCacheStats()
 }
 
@@ -92,12 +45,228 @@ function formatBytes(b: number): string {
   return `${(b / 1024 / 1024).toFixed(2)} MB`
 }
 
+const services = computed(() => [
+  {
+    name: '后 端 服 务',
+    en: 'Backend API',
+    state: health.value ? 'ok' : 'unknown',
+    detail: health.value ? `状态 · ${health.value.status || 'ok'}` : '检测中⋯',
+  },
+  {
+    name: '工 作 节 点',
+    en: 'Worker · ColPali',
+    state: health.value?.worker?.status === 'ok' ? 'ok' : (health.value ? 'error' : 'unknown'),
+    detail: health.value?.worker?.model || (health.value?.worker?.status === 'ok' ? '就 绪' : (health.value ? '未 连 接' : '检测中⋯')),
+  },
+  {
+    name: '向 量 数 据 库',
+    en: 'Qdrant',
+    state: health.value?.qdrant?.status === 'ok' ? 'ok' : (health.value ? 'error' : 'unknown'),
+    detail: health.value?.qdrant?.status === 'ok' ? '就 绪' : (health.value ? '未 连 接' : '检测中⋯'),
+  },
+])
+
+function stateLabel(s: string) {
+  return ({ ok: '运 行', error: '故 障', unknown: '检 测' } as Record<string,string>)[s] || s
+}
+function stateVar(s: string): 'ok' | 'red' | 'mute' {
+  return ({ ok: 'ok', error: 'red', unknown: 'mute' } as const)[s as 'ok'] || 'mute'
+}
+
 onMounted(refresh)
 </script>
 
+<template>
+  <div class="sv">
+    <AppPageHead
+      chapter="6"
+      kicker="custodia · 运 行"
+      title="运 行 志"
+      subtitle="系统健康 · 服务状态 · 缓存统计"
+      stamp="运行&#10;监测"
+    />
+
+    <AppCard title="服 务 健 康" subtitle="health snapshot" :num="'A'">
+      <template #extra>
+        <AppButton variant="ghost" size="sm" :loading="loading" @click="refresh">
+          <Icon name="reload" :size="13" />
+          刷 新
+        </AppButton>
+      </template>
+
+      <ul class="sv-svc">
+        <li v-for="(s, i) in services" :key="i" class="sv-svc__item" :class="`sv-svc__item--${s.state}`">
+          <div class="sv-svc__no">{{ String(i + 1).padStart(2, '0') }}</div>
+          <div class="sv-svc__main">
+            <div class="sv-svc__name">{{ s.name }}</div>
+            <div class="sv-svc__en">{{ s.en }}</div>
+          </div>
+          <div class="sv-svc__detail">{{ s.detail }}</div>
+          <AppTag :variant="stateVar(s.state)" size="md">{{ stateLabel(s.state) }}</AppTag>
+        </li>
+      </ul>
+    </AppCard>
+
+    <AppCard
+      v-if="cacheData"
+      title="缓 存 统 计"
+      subtitle="cache stats"
+      :num="'B'"
+      class="sv-cache"
+    >
+      <template #extra>
+        <AppButton variant="ghost" size="sm" @click="loadCacheStats">
+          <Icon name="reload" :size="13" />
+          刷 新
+        </AppButton>
+      </template>
+
+      <div class="sv-cache__grid">
+        <div class="sv-cache__cell">
+          <div class="sv-cache__head">
+            <span class="sv-cache__zh">问 询 缓 存</span>
+            <AppTag :variant="cacheData.query_cache.enabled ? 'ok' : 'mute'" size="sm">
+              {{ cacheData.query_cache.enabled ? '启 用' : '关 闭' }}
+            </AppTag>
+          </div>
+          <dl class="sv-cache__meta">
+            <div><dt>条目</dt><dd>{{ cacheData.query_cache.entries }}<small> 项</small></dd></div>
+            <div><dt>占用</dt><dd>{{ formatBytes(cacheData.query_cache.size_bytes) }}</dd></div>
+          </dl>
+          <AppButton variant="red" size="sm" @click="clearQueryCache">
+            <Icon name="trash" :size="13" />
+            清空 query
+          </AppButton>
+        </div>
+
+        <div class="sv-cache__cell">
+          <div class="sv-cache__head">
+            <span class="sv-cache__zh">生 成 缓 存</span>
+            <AppTag :variant="cacheData.generation_cache.enabled ? 'ok' : 'mute'" size="sm">
+              {{ cacheData.generation_cache.enabled ? '启 用' : '关 闭' }}
+            </AppTag>
+          </div>
+          <dl class="sv-cache__meta">
+            <div><dt>条目</dt><dd>{{ cacheData.generation_cache.entries }}<small> 项</small></dd></div>
+            <div><dt>占用</dt><dd>{{ formatBytes(cacheData.generation_cache.size_bytes) }}</dd></div>
+          </dl>
+          <AppButton variant="red" size="sm" @click="clearGenCache">
+            <Icon name="trash" :size="13" />
+            清空 generation
+          </AppButton>
+        </div>
+      </div>
+    </AppCard>
+  </div>
+</template>
+
 <style scoped>
-.system-view { max-width: 900px; margin: 0 auto; }
-.page-header { margin-bottom: 20px; }
-.page-header h2 { font-size: 22px; font-weight: 800; color: var(--text-primary); margin: 0 0 4px; }
-.page-header p { font-size: 13px; color: var(--text-muted); margin: 0; }
+.sv { max-width: 980px; margin: 0 auto; }
+
+.sv-svc {
+  list-style: none;
+  margin: 0; padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--rule);
+}
+.sv-svc__item {
+  display: grid;
+  grid-template-columns: 50px 1fr auto auto;
+  gap: var(--gap-4);
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+  border-left: 3px solid transparent;
+  padding-left: 12px;
+  margin-left: -12px;
+}
+.sv-svc__item--ok { border-left-color: var(--ok); }
+.sv-svc__item--error { border-left-color: var(--red); }
+.sv-svc__item--unknown { border-left-color: var(--rule); }
+
+.sv-svc__no {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: var(--fz-h4);
+  color: var(--red);
+  font-variant-numeric: tabular-nums;
+}
+.sv-svc__main {}
+.sv-svc__name {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: var(--fz-h4);
+  color: var(--ink);
+  letter-spacing: 0.15em;
+}
+.sv-svc__en {
+  font-family: var(--mono);
+  font-size: var(--fz-mono-sm);
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  margin-top: 2px;
+}
+.sv-svc__detail {
+  font-family: var(--mono);
+  font-size: var(--fz-mono-sm);
+  color: var(--ink-soft);
+  letter-spacing: 0.05em;
+}
+
+.sv-cache { margin-top: var(--gap-5); }
+
+.sv-cache__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap-5);
+}
+.sv-cache__cell {
+  border: 1px solid var(--rule);
+  padding: var(--gap-4);
+  background: var(--paper-deep);
+}
+.sv-cache__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px dashed var(--rule);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+.sv-cache__zh {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: var(--fz-h4);
+  color: var(--ink);
+  letter-spacing: 0.18em;
+}
+.sv-cache__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 var(--gap-3);
+}
+.sv-cache__meta > div {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dotted var(--rule-fine);
+  padding: 4px 0;
+}
+.sv-cache__meta dt {
+  font-family: var(--serif);
+  font-size: var(--fz-sm);
+  color: var(--ink-mute);
+  letter-spacing: 0.15em;
+}
+.sv-cache__meta dd {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--blue);
+  margin: 0;
+}
+.sv-cache__meta dd small { color: var(--ink-mute); font-weight: 400; margin-left: 2px; }
 </style>

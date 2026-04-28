@@ -1,0 +1,24 @@
+/* =====================================================================
+   字体本地引入 · 通过 @fontsource 包加载（woff2 自动 subset）
+   ===================================================================== */
+
+/* 思源宋体 SC = Noto Serif SC */
+@import '@fontsource/noto-serif-sc/400.css';
+@import '@fontsource/noto-serif-sc/500.css';
+@import '@fontsource/noto-serif-sc/700.css';
+@import '@fontsource/noto-serif-sc/900.css';
+
+/* 思源黑体 SC = Noto Sans SC */
+@import '@fontsource/noto-sans-sc/300.css';
+@import '@fontsource/noto-sans-sc/400.css';
+@import '@fontsource/noto-sans-sc/500.css';
+@import '@fontsource/noto-sans-sc/700.css';
+
+/* 等宽 · 数据 */
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/700.css';
+
+/* 拉丁衬线 · 罕用 */
+@import '@fontsource/eb-garamond/400.css';
+@import '@fontsource/eb-garamond/500-italic.css';

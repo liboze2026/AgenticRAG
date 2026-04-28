@@ -1,28 +1,12 @@
-<template>
-  <div>
-    <el-select v-model="selectedDataset" placeholder="选择数据集 (可选)" clearable style="width: 250px; margin-bottom: 12px">
-      <el-option v-for="d in datasets" :key="d.id" :label="d.name" :value="d.id" />
-    </el-select>
-    <el-upload drag multiple action="" :auto-upload="false" :on-change="handleFileChange" accept=".pdf">
-      <el-icon :size="60"><upload-filled /></el-icon>
-      <div>拖拽 PDF 文件到此处，或 <em>点击上传</em></div>
-    </el-upload>
-    <el-button type="primary" :loading="uploading" :disabled="!files.length" @click="uploadAll" style="margin-top: 12px">
-      上传 {{ files.length }} 个文件
-    </el-button>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { UploadFilled } from '@element-plus/icons-vue'
 import { documentsApi, datasetsApi, type DatasetInfo } from '../api/client'
+import { AppUpload, AppSelect, msg } from '../design/primitives'
 
 const emit = defineEmits<{ (e: 'uploaded'): void }>()
-const files = ref<File[]>([])
 const uploading = ref(false)
 const datasets = ref<DatasetInfo[]>([])
-const selectedDataset = ref<number | undefined>(undefined)
+const selectedDataset = ref<number | null>(null)
 
 async function loadDatasets() {
   try {
@@ -31,18 +15,64 @@ async function loadDatasets() {
   } catch {}
 }
 
-function handleFileChange(uploadFile: any) {
-  if (uploadFile.raw) files.value.push(uploadFile.raw)
-}
-
-async function uploadAll() {
+async function onSelect(files: File[]) {
+  if (uploading.value) return
   uploading.value = true
   try {
-    for (const file of files.value) await documentsApi.upload(file, selectedDataset.value)
-    files.value = []
+    let ok = 0
+    for (const file of files) {
+      try {
+        await documentsApi.upload(file, selectedDataset.value ?? undefined)
+        ok++
+      } catch {
+        msg.error(`${file.name} · 提交失败`)
+      }
+    }
+    if (ok) msg.success(`提交 ${ok} 件至编目`)
     emit('uploaded')
-  } finally { uploading.value = false }
+  } finally {
+    uploading.value = false
+  }
 }
 
 onMounted(loadDatasets)
 </script>
+
+<template>
+  <div class="du">
+    <div class="du__row">
+      <label class="du__label">归 入 集 录</label>
+      <div class="du__field">
+        <AppSelect
+          v-model="selectedDataset"
+          :options="datasets.map(d => ({ label: d.name, value: d.id, tag: `${d.document_count}件` }))"
+          placeholder="可选 · 留空则归入默认"
+        />
+      </div>
+    </div>
+    <AppUpload
+      accept=".pdf"
+      multiple
+      :disabled="uploading"
+      :hint="uploading ? '编目中⋯' : '点击或拖入 PDF 文献'"
+      @select="onSelect"
+    />
+  </div>
+</template>
+
+<style scoped>
+.du { display: flex; flex-direction: column; gap: var(--gap-4); }
+.du__row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: var(--gap-4);
+  align-items: center;
+}
+.du__label {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: var(--fz-sm);
+  color: var(--ink);
+  letter-spacing: 0.18em;
+}
+</style>

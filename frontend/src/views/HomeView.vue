@@ -1,123 +1,59 @@
-<template>
-  <div class="home-view">
-    <!-- Hero -->
-    <div class="home-hero">
-      <div class="home-hero__badge">硕士学位论文系统演示</div>
-      <div class="home-hero__title">多模态 Agentic RAG 系统</div>
-      <div class="home-hero__subtitle">基于版面理解的检索增强生成平台 · 支持多策略检索与多模型生成</div>
-    </div>
-
-    <!-- Architecture Flow -->
-    <div class="arch-flow">
-      <div class="arch-flow__label">系统架构</div>
-      <div class="arch-flow__steps">
-        <div class="arch-step" v-for="(step, i) in archSteps" :key="step.name">
-          <div class="arch-step__box">
-            <svg class="arch-step__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" v-html="step.svg" />
-            <span class="arch-step__name">{{ step.name }}</span>
-          </div>
-          <div v-if="i < archSteps.length - 1" class="arch-step__arrow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="home-stats-row">
-      <div class="stat-card" v-for="stat in stats" :key="stat.label">
-        <div class="stat-card__value" :style="{ color: stat.color }">{{ stat.value }}</div>
-        <div class="stat-card__label">{{ stat.label }}</div>
-        <div class="stat-card__desc">{{ stat.desc }}</div>
-      </div>
-    </div>
-
-    <!-- Service Status -->
-    <div class="home-section-title">服务状态</div>
-    <div class="home-status-row">
-      <div v-for="svc in services" :key="svc.label" class="status-card" :class="`status-card--${svc.state}`">
-        <div class="status-dot" :class="`dot--${svc.state}`" />
-        <div class="status-card__body">
-          <div class="status-card__label">{{ svc.label }}</div>
-          <div class="status-card__state">{{ svc.stateText }}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="home-section-title">快速操作</div>
-    <div class="home-actions__grid">
-      <router-link to="/documents" class="action-card">
-        <div class="action-card__header">
-          <svg class="action-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <span class="action-card__label">上传文档</span>
-        </div>
-        <div class="action-card__desc">上传 PDF，自动版面分析与向量索引</div>
-      </router-link>
-      <router-link to="/chat" class="action-card action-card--primary">
-        <div class="action-card__header">
-          <svg class="action-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          <span class="action-card__label">智能对话</span>
-        </div>
-        <div class="action-card__desc">多轮对话，RAG 检索增强生成</div>
-      </router-link>
-      <router-link to="/query" class="action-card">
-        <div class="action-card__header">
-          <svg class="action-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <span class="action-card__label">检索问答</span>
-        </div>
-        <div class="action-card__desc">单次问答，查看检索溯源链路</div>
-      </router-link>
-      <router-link to="/experiments" class="action-card">
-        <div class="action-card__header">
-          <svg class="action-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          <span class="action-card__label">实验评测</span>
-        </div>
-        <div class="action-card__desc">切换检索策略，评估 Recall / MRR</div>
-      </router-link>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { systemApi, documentsApi } from '../api/client'
+import {
+  AppPageHead, AppMetricGrid, AppTag,
+} from '../design/primitives'
+import Icon from '../design/Icons.vue'
 
 const health = ref<any>(null)
 const docs = ref<any[]>([])
 
+const stats = computed(() => [
+  { label: '在 编 文 献', value: docs.value.length, unit: '件' },
+  { label: '总 页 面', value: docs.value.reduce((s, d) => s + (d.total_pages || 0), 0), unit: '页' },
+  { label: '编 目 完 成', value: docs.value.filter(d => d.status === 'completed').length, unit: '件' },
+  { label: '处 理 失 败', value: docs.value.filter(d => d.status === 'failed').length, unit: '件' },
+])
+
 const archSteps = [
-  { name: '文档上传', svg: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>' },
-  { name: '版面分析', svg: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/>' },
-  { name: '向量索引', svg: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>' },
-  { name: 'Agentic 检索', svg: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>' },
-  { name: '智能生成', svg: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>' },
+  { id: '1', name: '呈　送', en: 'INGEST', icon: 'upload', desc: 'PDF 文献入库 · 自动版面分析' },
+  { id: '2', name: '编　目', en: 'INDEX', icon: 'archive', desc: '页面切片 · 多模态向量化' },
+  { id: '3', name: '检　索', en: 'RETRIEVE', icon: 'search', desc: 'ColPali 视觉检索 · 重排序' },
+  { id: '4', name: '答　对', en: 'GENERATE', icon: 'chat', desc: 'LLM 生成 · 引用回填' },
 ]
 
 const services = computed(() => [
   {
-    label: 'Backend API',
+    name: '后端服务',
     state: health.value ? 'ok' : 'unknown',
-    stateText: health.value ? '运行中' : '检测中…',
+    detail: health.value ? '运 行' : '检 测',
   },
   {
-    label: 'Worker (ColPali)',
-    state: health.value?.worker?.status === 'ok' ? 'ok' : 'error',
-    stateText: health.value?.worker?.model || (health.value?.worker?.status === 'ok' ? '就绪' : '未连接'),
+    name: '工作节点',
+    state: health.value?.worker?.status === 'ok' ? 'ok' : (health.value ? 'error' : 'unknown'),
+    detail: health.value?.worker?.model ? '就 绪' : (health.value?.worker?.status === 'ok' ? '就 绪' : (health.value ? '未 连' : '检 测')),
   },
   {
-    label: 'Qdrant 向量库',
-    state: health.value?.qdrant?.status === 'ok' ? 'ok' : 'error',
-    stateText: health.value?.qdrant?.status === 'ok' ? '就绪' : '未连接',
+    name: 'Qdrant 向量库',
+    state: health.value?.qdrant?.status === 'ok' ? 'ok' : (health.value ? 'error' : 'unknown'),
+    detail: health.value?.qdrant?.status === 'ok' ? '就 绪' : (health.value ? '未 连' : '检 测'),
   },
 ])
 
-const stats = computed(() => [
-  { value: docs.value.length, label: '已上传文档', desc: 'PDF 文档总数', color: 'var(--accent)' },
-  { value: docs.value.reduce((s, d) => s + (d.total_pages || 0), 0), label: '总页面数', desc: '已索引页面', color: '#0891b2' },
-  { value: docs.value.filter(d => d.status === 'completed').length, label: '完成索引', desc: '可供检索', color: 'var(--success)' },
-  { value: docs.value.filter(d => d.status === 'failed').length, label: '索引失败', desc: '需重试', color: 'var(--danger)' },
-])
+function stateVar(s: string): 'ok' | 'red' | 'mute' {
+  return ({ ok: 'ok', error: 'red', unknown: 'mute' } as const)[s as 'ok'] || 'mute'
+}
+function stateLabel(s: string) {
+  return ({ ok: '正 常', error: '异 常', unknown: '待 检' } as Record<string,string>)[s] || s
+}
+
+const actions = [
+  { to: '/chat', icon: 'chat', label: '智 能 对 话', en: 'Multi-turn dialogue', desc: '保留上下文 · 多轮追问 · 引用回填', primary: true, chap: '1' },
+  { to: '/query', icon: 'search', label: '检 索 问 答', en: 'Single-shot query', desc: '一次问询 · 完整链路 · 证据呈交', chap: '2' },
+  { to: '/documents', icon: 'doc', label: '文 献 管 理', en: 'Document corpus', desc: '呈送 PDF · 编目 · 注销', chap: '3' },
+  { to: '/experiments', icon: 'flask', label: '评 测 录', en: 'Experiment & evaluation', desc: '切换流水线 · 评估指标', chap: '5' },
+]
 
 onMounted(async () => {
   try { const r = await systemApi.health(); health.value = r.data } catch {}
@@ -125,178 +61,354 @@ onMounted(async () => {
 })
 </script>
 
+<template>
+  <div class="hv">
+    <AppPageHead
+      chapter="0"
+      kicker="prologus · 论 著 总 纲"
+      title="智 能 体 检 索 增 强 系 统"
+      subtitle="面向多模态学术文献的版式感知检索与多轮对话框架 · 论文学位演示版"
+      :meta="[
+        { label: '系统', value: 'AGENTIC-RAG' },
+        { label: '版本', value: 'v1.0' },
+      ]"
+      stamp="论著&#10;演示"
+    />
+
+    <AppMetricGrid :metrics="stats" :cols="4" class="hv__grid" />
+
+    <section class="hv__sec">
+      <header class="hv__sec-head">
+        <span class="hv__sec-num">壹</span>
+        <h2 class="hv__sec-title">系 统 架 构</h2>
+        <p class="hv__sec-en">SYSTEM ARCHITECTURE · FLOW DIAGRAM</p>
+      </header>
+      <ol class="hv__arch">
+        <template v-for="(s, i) in archSteps" :key="s.id">
+          <li class="hv__arch-step">
+            <div class="hv__arch-no">{{ s.id }}</div>
+            <div class="hv__arch-icon">
+              <Icon :name="s.icon" :size="22" />
+            </div>
+            <div class="hv__arch-name">{{ s.name }}</div>
+            <div class="hv__arch-en">{{ s.en }}</div>
+            <p class="hv__arch-desc">{{ s.desc }}</p>
+          </li>
+          <li v-if="i < archSteps.length - 1" class="hv__arch-sep" aria-hidden="true">
+            <span class="hv__arch-line"></span>
+            <Icon name="chevron-right" :size="14" class="hv__arch-arrow" />
+            <span class="hv__arch-line"></span>
+          </li>
+        </template>
+      </ol>
+    </section>
+
+    <section class="hv__sec hv__sec--two">
+      <div>
+        <header class="hv__sec-head">
+          <span class="hv__sec-num">貳</span>
+          <h2 class="hv__sec-title">服 务 状 态</h2>
+        </header>
+        <ul class="hv__svc">
+          <li v-for="(s, i) in services" :key="i" class="hv__svc-item">
+            <span class="hv__svc-no">{{ String(i + 1).padStart(2, '0') }}</span>
+            <span class="hv__svc-name">{{ s.name }}</span>
+            <span class="hv__svc-detail">{{ s.detail }}</span>
+            <AppTag :variant="stateVar(s.state)" size="sm">{{ stateLabel(s.state) }}</AppTag>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <header class="hv__sec-head">
+          <span class="hv__sec-num">叁</span>
+          <h2 class="hv__sec-title">速 入 章 节</h2>
+        </header>
+        <div class="hv__act">
+          <RouterLink
+            v-for="a in actions"
+            :key="a.to"
+            :to="a.to"
+            class="hv-act-card"
+            :class="{ 'hv-act-card--primary': a.primary }"
+          >
+            <span class="hv-act-card__chap">第 {{ a.chap }} 编</span>
+            <Icon :name="a.icon" :size="22" class="hv-act-card__icon" />
+            <span class="hv-act-card__label">{{ a.label }}</span>
+            <span class="hv-act-card__en">{{ a.en }}</span>
+            <p class="hv-act-card__desc">{{ a.desc }}</p>
+            <span class="hv-act-card__arrow"><Icon name="arrow-right" :size="13" /></span>
+          </RouterLink>
+        </div>
+      </div>
+    </section>
+
+    <footer class="hv__foot">
+      <span>AGENTIC-RAG · 论 文 学 位 演 示</span>
+      <span class="hv__foot-mono">FOLIO 00 · v1.0 · MMXXVI</span>
+    </footer>
+  </div>
+</template>
+
 <style scoped>
-.home-view { max-width: 1100px; margin: 0 auto; }
+.hv { max-width: 1280px; margin: 0 auto; }
 
-/* Hero */
-.home-hero { text-align: center; padding: 32px 0 28px; }
-.home-hero__badge {
-  display: inline-block;
-  background: var(--accent-light);
-  color: var(--accent);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 12px;
-  border-radius: 20px;
-  border: 1px solid #bfdbfe;
-  margin-bottom: 14px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.home-hero__title {
-  font-size: 30px;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-  margin-bottom: 10px;
-}
-.home-hero__subtitle {
-  font-size: 14px;
-  color: var(--text-muted);
-}
+.hv__grid { margin-bottom: var(--gap-7); }
 
-/* Architecture flow */
-.arch-flow {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px 20px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-sm);
+.hv__sec {
+  margin-top: var(--gap-7);
 }
-.arch-flow__label {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 12px;
-}
-.arch-flow__steps {
+.hv__sec-head {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 14px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 8px;
+  margin-bottom: var(--gap-5);
 }
-.arch-step { display: flex; align-items: center; gap: 6px; }
-.arch-step__box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--accent-light);
-  border: 1px solid #bfdbfe;
-  border-radius: 6px;
-  padding: 8px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent);
-  white-space: nowrap;
-}
-.arch-step__icon { width: 16px; height: 16px; flex-shrink: 0; }
-.arch-step__arrow { width: 20px; color: var(--text-muted); }
-.arch-step__arrow svg { width: 16px; height: 16px; }
-
-/* Stats */
-.home-stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 24px;
-}
-.stat-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
-  box-shadow: var(--shadow-sm);
-}
-.stat-card__value {
-  font-size: 36px;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
+.hv__sec-num {
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: var(--fz-h2);
+  color: var(--red);
   line-height: 1;
 }
-.stat-card__label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-top: 6px;
-}
-.stat-card__desc {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-/* Section titles */
-.home-section-title {
-  font-size: 11px;
+.hv__sec-title {
+  flex: 1;
+  font-family: var(--serif);
   font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 10px;
-  margin-top: 4px;
+  font-size: var(--fz-h2);
+  color: var(--blue);
+  margin: 0;
+  letter-spacing: 0.05em;
+}
+.hv__sec-en {
+  font-family: var(--mono);
+  font-size: var(--fz-mono-sm);
+  color: var(--ink-mute);
+  letter-spacing: 0.18em;
+  margin: 0;
 }
 
-/* Service status */
-.home-status-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 24px;
+/* Arch flow */
+.hv__arch {
+  list-style: none;
+  margin: 0; padding: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
 }
-.status-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px 16px;
+.hv__arch-step {
+  flex: 1;
+  background: var(--paper-deep);
+  border: 1px solid var(--rule);
+  padding: 18px 18px 14px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.hv__arch-no {
+  position: absolute;
+  top: 8px; right: 10px;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: var(--fz-mono);
+  color: var(--red);
+}
+.hv__arch-icon {
+  width: 44px; height: 44px;
+  background: var(--blue);
+  color: var(--paper);
   display: flex;
   align-items: center;
-  gap: 12px;
-  box-shadow: var(--shadow-sm);
+  justify-content: center;
+  margin-bottom: 12px;
+  flex-shrink: 0;
 }
-.status-card--ok { border-left: 3px solid var(--success); }
-.status-card--error { border-left: 3px solid var(--danger); }
-.status-card--unknown { border-left: 3px solid var(--text-muted); }
+.hv__arch-name {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: var(--fz-h4);
+  color: var(--ink);
+  letter-spacing: 0.2em;
+  margin-bottom: 4px;
+}
+.hv__arch-en {
+  font-family: var(--mono);
+  font-size: var(--fz-mono-sm);
+  color: var(--ink-mute);
+  letter-spacing: 0.2em;
+  margin-bottom: 8px;
+}
+.hv__arch-desc {
+  font-family: var(--serif);
+  font-size: var(--fz-sm);
+  color: var(--ink-soft);
+  margin: 0;
+  line-height: 1.6;
+  font-style: italic;
+}
 
-.status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.dot--ok { background: var(--success); box-shadow: 0 0 0 3px var(--success-light); }
-.dot--error { background: var(--danger); box-shadow: 0 0 0 3px var(--danger-light); }
-.dot--unknown { background: var(--text-muted); }
+.hv__arch-sep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  flex-shrink: 0;
+}
+.hv__arch-line {
+  width: 1px;
+  flex: 1;
+  background: var(--rule);
+}
+.hv__arch-arrow {
+  color: var(--red);
+  margin: 8px 0;
+  transform: rotate(0deg);
+}
 
-.status-card__label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-.status-card__state { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+/* Two-col */
+.hv__sec--two {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: var(--gap-7);
+}
+
+/* Services */
+.hv__svc { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+.hv__svc-item {
+  display: grid;
+  grid-template-columns: 36px 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px dotted var(--rule);
+}
+.hv__svc-no {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: var(--fz-mono-sm);
+  color: var(--red);
+}
+.hv__svc-name {
+  font-family: var(--serif);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.1em;
+}
+.hv__svc-detail {
+  font-family: var(--mono);
+  font-size: var(--fz-mono-sm);
+  color: var(--ink-mute);
+  letter-spacing: 0.1em;
+}
 
 /* Actions */
-.home-actions__grid {
+.hv__act {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap-3);
 }
-.action-card {
-  background: var(--bg-surface);
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  padding: 18px 16px;
-  text-decoration: none;
+.hv-act-card {
+  position: relative;
   display: block;
-  transition: border-color .2s, transform .15s, box-shadow .2s;
-  box-shadow: var(--shadow-sm);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 14px 16px 16px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: all var(--dur-fast) var(--ease-paper);
+  border-bottom: none;
 }
-.action-card:hover {
-  border-color: var(--accent);
+.hv-act-card::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 4px;
+  background:
+    linear-gradient(to bottom,
+      var(--ink) 0, var(--ink) 1px,
+      transparent 1px, transparent 3px,
+      var(--rule) 3px, var(--rule) 4px);
+}
+.hv-act-card:hover {
+  border-color: var(--red);
+  background: var(--paper-deep);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
 }
-.action-card--primary {
-  border-color: var(--accent);
-  background: var(--accent-light);
+.hv-act-card--primary { border-color: var(--blue); border-width: 2px; }
+.hv-act-card--primary::after {
+  background:
+    linear-gradient(to bottom,
+      var(--blue) 0, var(--blue) 2px,
+      transparent 2px, transparent 3px,
+      var(--rule) 3px, var(--rule) 4px);
 }
-.action-card__header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.action-card__icon { width: 20px; height: 20px; color: var(--accent); flex-shrink: 0; }
-.action-card__label { font-size: 14px; font-weight: 700; color: var(--text-primary); }
-.action-card__desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+.hv-act-card__chap {
+  font-family: var(--mono);
+  font-size: var(--fz-mono-sm);
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: 0.15em;
+  display: block;
+  margin-bottom: 4px;
+}
+.hv-act-card__icon {
+  display: block;
+  color: var(--blue);
+  margin-bottom: 6px;
+}
+.hv-act-card--primary .hv-act-card__icon { color: var(--blue); }
+.hv-act-card__label {
+  display: block;
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: var(--fz-h4);
+  color: var(--ink);
+  letter-spacing: 0.18em;
+  margin-bottom: 2px;
+}
+.hv-act-card__en {
+  display: block;
+  font-family: var(--mono);
+  font-size: var(--fz-mono-sm);
+  color: var(--ink-mute);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.hv-act-card__desc {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: var(--fz-sm);
+  color: var(--ink-soft);
+  line-height: 1.5;
+  text-indent: 0;
+}
+.hv-act-card__arrow {
+  position: absolute;
+  top: 16px; right: 16px;
+  color: var(--ink-mute);
+  transition: color var(--dur-fast), transform var(--dur-fast);
+}
+.hv-act-card:hover .hv-act-card__arrow {
+  color: var(--red);
+  transform: translateX(3px);
+}
+
+.hv__foot {
+  margin-top: var(--gap-8);
+  padding: var(--gap-4) 0;
+  border-top: 2px solid var(--ink);
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: var(--fz-mono-sm);
+  color: var(--ink-mute);
+  letter-spacing: 0.18em;
+}
+.hv__foot-mono { font-variant-numeric: tabular-nums; }
 </style>

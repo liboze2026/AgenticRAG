@@ -1,119 +1,152 @@
-<template>
-  <div v-if="stages.length" class="prov-panel">
-    <div class="prov-panel__header">
-      <span class="prov-panel__title">Pipeline 执行链路</span>
-      <span class="prov-panel__total">总耗时 {{ totalMs.toFixed(0) }} ms</span>
-    </div>
-    <div class="prov-panel__steps">
-      <template v-for="(stage, i) in stages" :key="stage.name">
-        <div class="prov-step">
-          <div class="prov-step__pill">
-            <svg class="prov-step__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" v-html="stageIcon(stage.name)" />
-            <span class="prov-step__label">{{ stageLabel(stage.name) }}</span>
-          </div>
-          <span class="prov-step__badge">{{ stage.ms.toFixed(1) }} ms</span>
-        </div>
-        <div v-if="i < stages.length - 1" class="prov-connector">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </div>
-      </template>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { computed } from 'vue'
+import Icon from '../design/Icons.vue'
 
 const props = defineProps<{ timing: Record<string, number> }>()
 
 const STAGE_ORDER = ['encode_query_ms', 'retrieve_ms', 'rerank_ms', 'generate_ms']
 const STAGE_LABELS: Record<string, string> = {
-  encode_query_ms: '查询编码',
-  retrieve_ms: '向量检索',
-  rerank_ms: '重排序',
-  generate_ms: '答案生成',
+  encode_query_ms: '问询编码',
+  retrieve_ms:     '向量检索',
+  rerank_ms:       '重排序',
+  generate_ms:     '答案生成',
 }
 const STAGE_ICONS: Record<string, string> = {
-  encode_query_ms: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
-  retrieve_ms: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>',
-  rerank_ms: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
-  generate_ms: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  encode_query_ms: 'search',
+  retrieve_ms:     'database',
+  rerank_ms:       'filter',
+  generate_ms:     'chat',
 }
 
 const stages = computed(() =>
   STAGE_ORDER
     .filter(k => k in props.timing && k !== 'total_ms')
-    .map(k => ({ name: k, ms: props.timing[k] }))
+    .map((k, i) => ({ name: k, ms: props.timing[k], idx: i + 1 }))
 )
 const totalMs = computed(() => props.timing['total_ms'] ?? stages.value.reduce((s, x) => s + x.ms, 0))
-function stageLabel(name: string) { return STAGE_LABELS[name] || name }
-function stageIcon(name: string) { return STAGE_ICONS[name] || '<circle cx="12" cy="12" r="10"/>' }
 </script>
 
+<template>
+  <div v-if="stages.length" class="pp">
+    <div class="pp__head">
+      <span class="pp__l">流 水 线 链 路</span>
+      <span class="pp__t">合计 <b>{{ totalMs.toFixed(0) }}</b><small> ms</small></span>
+    </div>
+    <ol class="pp__chain">
+      <template v-for="(s, i) in stages" :key="s.name">
+        <li class="pp__step">
+          <span class="pp__no">{{ String(s.idx).padStart(2, '0') }}</span>
+          <span class="pp__icon"><Icon :name="STAGE_ICONS[s.name]" :size="13" /></span>
+          <span class="pp__name">{{ STAGE_LABELS[s.name] || s.name }}</span>
+          <span class="pp__ms">{{ s.ms.toFixed(1) }}<small> ms</small></span>
+        </li>
+        <li v-if="i < stages.length - 1" class="pp__sep" aria-hidden="true">
+          <span class="pp__sep-line"></span>
+          <Icon name="chevron-right" :size="12" class="pp__sep-arrow" />
+          <span class="pp__sep-line"></span>
+        </li>
+      </template>
+    </ol>
+  </div>
+</template>
+
 <style scoped>
-.prov-panel {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px 20px;
-  margin: 12px 0;
-  box-shadow: var(--shadow-sm);
+.pp {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 14px 18px;
 }
-.prov-panel__header {
+.pp__head {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  align-items: center;
+  border-bottom: 1px dashed var(--rule);
+  padding-bottom: 8px;
   margin-bottom: 12px;
 }
-.prov-panel__title {
-  font-size: 11px;
+.pp__l {
+  font-family: var(--serif);
   font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: var(--fz-sm);
+  color: var(--ink);
+  letter-spacing: 0.18em;
 }
-.prov-panel__total {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--accent);
+.pp__t {
+  font-family: var(--mono);
+  font-size: var(--fz-mono-sm);
+  color: var(--ink-mute);
+  letter-spacing: 0.1em;
 }
-.prov-panel__steps {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.prov-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-.prov-step__pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--accent-light);
-  border: 1px solid #bfdbfe;
-  border-radius: 20px;
-  padding: 5px 12px;
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 600;
-}
-.prov-step__icon { width: 13px; height: 13px; flex-shrink: 0; }
-.prov-step__badge {
-  font-size: 10px;
+.pp__t b {
+  color: var(--blue);
   font-weight: 700;
-  color: var(--text-muted);
+  font-size: var(--fz-base);
   font-variant-numeric: tabular-nums;
-  font-family: 'JetBrains Mono', monospace;
 }
-.prov-connector {
-  color: var(--text-muted);
+.pp__t small { color: var(--ink-mute); font-weight: 400; }
+
+.pp__chain {
+  list-style: none;
+  margin: 0; padding: 0;
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.pp__step {
   display: flex;
   align-items: center;
-  margin-bottom: 16px;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--rule);
+  background: var(--paper-deep);
+  font-family: var(--serif);
+  flex-shrink: 0;
 }
-.prov-connector svg { width: 16px; height: 16px; }
+.pp__no {
+  font-family: var(--mono);
+  font-size: var(--fz-mono-sm);
+  font-weight: 700;
+  color: var(--red);
+}
+.pp__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  background: var(--blue);
+  color: var(--paper);
+}
+.pp__name {
+  font-size: var(--fz-sm);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.1em;
+}
+.pp__ms {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: var(--fz-mono);
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.pp__ms small { color: var(--ink-mute); font-weight: 400; font-size: 9px; }
+
+.pp__sep {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 30px;
+  padding: 0 4px;
+}
+.pp__sep-line {
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+.pp__sep-arrow {
+  color: var(--red);
+  margin: 0 4px;
+}
 </style>

@@ -1,0 +1,97 @@
+/* =====================================================================
+   设计令牌 · 学术档案
+   ===================================================================== */
+
+:root {
+  /* —— 纸张与油墨 —— */
+  --paper:           #f7f4ed;        /* 主底 · 象牙纸白 */
+  --paper-deep:      #ede7d7;        /* 浅纸 · 卡片底 */
+  --paper-edge:      #e0d8c2;        /* 纸边 · 阴影侧 */
+  --ink:             #1a1a1a;        /* 主文字 · 墨黑 */
+  --ink-soft:        #3d3a36;        /* 次文字 · 暖灰 */
+  --ink-mute:        #6b6760;        /* 弱文字 · 标签 */
+
+  /* —— 学术蓝 —— */
+  --blue:            #1a365d;        /* 章题、链接 */
+  --blue-deep:       #0f2543;        /* 顶栏、强调底 */
+  --blue-soft:       #2c4a78;        /* 副标题 */
+  --blue-tint:       #e6ecf4;        /* hover 背景 */
+  --blue-line:       #b0c0d8;        /* 蓝色描边 */
+
+  /* —— 朱批红 —— */
+  --red:             #a83232;        /* 印章、批注、强调 */
+  --red-soft:        #c25555;        /* hover 红 */
+  --red-deep:        #7a1f1f;        /* active 红 */
+  --red-tint:        #f6ecec;        /* 红色提示底 */
+
+  /* —— 分隔线 —— */
+  --rule:            #c8bfa8;        /* 主分隔线 */
+  --rule-fine:       #d8d0bb;        /* 细分隔线 */
+  --rule-bold:       #1a1a1a;        /* 顶/底加粗线 */
+
+  /* —— 状态色 —— */
+  --ok:              #3d7a3d;        /* 通过 · 墨绿 */
+  --ok-tint:         #e8f0e3;
+  --warn:            #b8742a;        /* 警告 · 赭石 */
+  --warn-tint:       #f5ecd8;
+  --danger:          var(--red);
+  --danger-tint:     var(--red-tint);
+
+  /* —— 字体栈 —— */
+  --serif:    'Noto Serif SC', 'Source Han Serif SC', '思源宋体', 'Songti SC', 'STSong', 'SimSun', '宋体', serif;
+  --sans:     'Noto Sans SC', 'Source Han Sans SC', '思源黑体', 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+  --mono:     'JetBrains Mono', ui-monospace, 'Cascadia Mono', 'Consolas', 'Courier New', monospace;
+  --latin:    'EB Garamond', 'Times New Roman', Georgia, serif;
+
+  /* —— 字号 —— 偏大档 —— */
+  --fz-base:         17px;
+  --fz-sm:           14px;
+  --fz-xs:           12px;
+  --fz-mono:         13px;
+  --fz-mono-sm:      11px;
+  --fz-h1:           52px;
+  --fz-h2:           34px;
+  --fz-h3:           22px;
+  --fz-h4:           18px;
+  --fz-display:      72px;
+
+  --lh-tight:        1.2;
+  --lh-base:         1.75;
+  --lh-loose:        1.9;
+
+  --ls-wide:         0.15em;
+  --ls-medium:       0.08em;
+  --ls-tight:        -0.01em;
+
+  /* —— 间距 —— */
+  --gap-1:           4px;
+  --gap-2:           8px;
+  --gap-3:           12px;
+  --gap-4:           16px;
+  --gap-5:           24px;
+  --gap-6:           32px;
+  --gap-7:           48px;
+  --gap-8:           64px;
+
+  /* —— 半径（极小） —— */
+  --radius-0:        0;
+  --radius-1:        2px;
+  --radius-2:        3px;
+
+  /* —— 阴影（克制） —— */
+  --shadow-1:        0 1px 0 var(--rule-fine);
+  --shadow-2:        0 1px 0 var(--rule-fine), 0 8px 24px -16px rgba(20,20,40,.18);
+  --shadow-3:        0 1px 0 var(--rule), 0 24px 48px -24px rgba(20,20,40,.28);
+  --shadow-paper:    0 1px 0 var(--paper-edge), 0 30px 80px -40px rgba(20,20,40,.2);
+
+  /* —— 动效 —— */
+  --ease-paper:      cubic-bezier(.22,.61,.36,1);
+  --dur-fast:        .15s;
+  --dur-base:        .25s;
+  --dur-slow:        .45s;
+
+  /* —— 布局 —— */
+  --sidebar-w:       232px;
+  --topbar-h:        56px;
+  --content-max:     1280px;
+}

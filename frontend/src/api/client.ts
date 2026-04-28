@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
+import { msg } from '../design/message'
 
 const api = axios.create({ baseURL: '/api', timeout: 120000 })
 
@@ -8,7 +8,7 @@ api.interceptors.response.use(
   (error) => {
     const detail = error.response?.data?.detail || error.message || '未知错误'
     const status = error.response?.status
-    ElMessage.error(status ? `[${status}] ${detail}` : detail)
+    msg.error(status ? `[${status}] ${detail}` : detail)
     return Promise.reject(error)
   }
 )

@@ -1,78 +1,57 @@
-<template>
-  <div class="exp-view">
-    <div class="exp-view__header">
-      <h2 class="exp-view__title">实验评测工作台</h2>
-      <p class="exp-view__subtitle">切换检索与生成策略，对比评测指标，记录实验历史</p>
-    </div>
-
-    <div class="exp-section-title">Pipeline 配置</div>
-    <PipelineSelector />
-
-    <div class="exp-section-title" style="margin-top: 20px">批量评测</div>
-    <div class="exp-eval-card">
-      <div class="exp-eval-row">
-        <el-select v-model="datasetId" placeholder="选择数据集（可选）" clearable style="width: 240px">
-          <el-option v-for="d in datasets" :key="d.id" :label="d.name" :value="d.id" />
-        </el-select>
-        <el-input v-model="note" placeholder="实验备注（可选）" style="flex: 1; max-width: 320px" />
-      </div>
-      <div class="exp-eval-row" style="margin-top: 12px">
-        <el-upload action="" :auto-upload="false" :on-change="handleFileChange" accept=".json" style="display:inline-flex">
-          <el-button>上传评测数据 (JSON)</el-button>
-        </el-upload>
-        <el-button type="primary" :loading="evaluating" :disabled="!evalData" @click="runEval">运行评测</el-button>
-        <el-button :loading="generatingNegs" :disabled="!evalData" @click="generateHardNegs">生成困难负例</el-button>
-        <el-button v-if="evalData" @click="downloadEvalData">下载评测数据</el-button>
-      </div>
-      <div v-if="evalData" class="exp-data-hint">
-        当前评测数据：{{ evalData.length }} 条 query
-        <span v-if="hasHardNegs" class="exp-data-hint--negs">· 已生成困难负例</span>
-      </div>
-      <div class="exp-format-hint">格式: [{"query": "...", "relevant": ["doc_id:page"]}]</div>
-    </div>
-
-    <EvalResults :metrics="metrics" />
-    <ExperimentHistory ref="historyRef" />
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import PipelineSelector from '../components/PipelineSelector.vue'
 import EvalResults from '../components/EvalResults.vue'
 import ExperimentHistory from '../components/ExperimentHistory.vue'
 import { experimentsApi, datasetsApi, type EvalMetrics, type DatasetInfo } from '../api/client'
-import { ElMessage } from 'element-plus'
+import {
+  AppPageHead, AppCard, AppButton, AppInput, AppSelect, msg,
+} from '../design/primitives'
+import Icon from '../design/Icons.vue'
 
 type EvalQuery = { query: string; relevant: string[]; hard_negatives?: string[] }
+
 const evalData = ref<EvalQuery[] | null>(null)
 const evaluating = ref(false)
 const generatingNegs = ref(false)
 const metrics = ref<EvalMetrics | null>(null)
 const note = ref('')
-const datasetId = ref<number | undefined>(undefined)
+const datasetId = ref<number | null>(null)
 const datasets = ref<DatasetInfo[]>([])
-const historyRef = ref<any>(null)
+const historyRef = ref<InstanceType<typeof ExperimentHistory> | null>(null)
 const hasHardNegs = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
 
-function handleFileChange(uploadFile: any) {
+function pickFile() { fileInput.value?.click() }
+
+function onFile(e: Event) {
+  const f = (e.target as HTMLInputElement).files?.[0]
+  if (!f) return
   const reader = new FileReader()
-  reader.onload = (e) => {
-    evalData.value = JSON.parse(e.target?.result as string)
-    hasHardNegs.value = evalData.value?.some(q => q.hard_negatives !== undefined) || false
+  reader.onload = (ev) => {
+    try {
+      evalData.value = JSON.parse(ev.target?.result as string)
+      hasHardNegs.value = evalData.value?.some(q => q.hard_negatives !== undefined) || false
+      msg.success(`已载入 ${evalData.value?.length || 0} 条问询`)
+    } catch {
+      msg.error('JSON 格式错误')
+    }
   }
-  reader.readAsText(uploadFile.raw)
+  reader.readAsText(f)
+  ;(e.target as HTMLInputElement).value = ''
 }
 
 async function runEval() {
   if (!evalData.value) return
-  evaluating.value = true; metrics.value = null
+  evaluating.value = true
+  metrics.value = null
   try {
     const resp = await experimentsApi.evaluate(
       evalData.value.map(q => ({ query: q.query, relevant: q.relevant })),
-      10, note.value, datasetId.value
+      10, note.value, datasetId.value ?? undefined
     )
     metrics.value = resp.data
+    msg.success('评测完成')
     await historyRef.value?.refresh()
   } finally { evaluating.value = false }
 }
@@ -86,7 +65,7 @@ async function generateHardNegs() {
     )
     evalData.value = resp.data.eval_data
     hasHardNegs.value = true
-    ElMessage.success('已生成困难负例')
+    msg.success('已生成困难负例')
   } finally { generatingNegs.value = false }
 }
 
@@ -94,9 +73,14 @@ function downloadEvalData() {
   if (!evalData.value) return
   const blob = new Blob([JSON.stringify(evalData.value, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
-  const a = document.createElement('a'); a.href = url; a.download = 'eval_with_hard_negatives.json'; a.click()
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'eval_with_hard_negatives.json'
+  a.click()
   URL.revokeObjectURL(url)
 }
+
+const datasetOptions = computed(() => datasets.value.map(d => ({ label: d.name, value: d.id, tag: `${d.document_count}件` })))
 
 async function loadDatasets() {
   try { const resp = await datasetsApi.list(); datasets.value = resp.data } catch {}
@@ -104,27 +88,162 @@ async function loadDatasets() {
 onMounted(loadDatasets)
 </script>
 
+<template>
+  <div class="ev">
+    <AppPageHead
+      chapter="5"
+      kicker="experimentum · 考 校"
+      title="评 测 工 作 台"
+      subtitle="切换检索 / 生成流水线 · 评估 Recall / MRR · 实验历史与对比"
+      stamp="评测&#10;工作"
+    />
+
+    <PipelineSelector />
+
+    <AppCard title="批 量 评 测" subtitle="batch evaluation" :num="'EV'" class="ev__eval">
+      <div class="ev__form">
+        <div class="ev__row">
+          <label class="ev__l">指 定 集 录</label>
+          <div class="ev__f">
+            <AppSelect
+              v-model="datasetId"
+              :options="datasetOptions"
+              placeholder="可选 · 留空则全集"
+            />
+          </div>
+        </div>
+        <div class="ev__row">
+          <label class="ev__l">实 验 备 注</label>
+          <div class="ev__f">
+            <AppInput v-model="note" placeholder="可选 · 简述本次实验" />
+          </div>
+        </div>
+
+        <div class="ev__data">
+          <input
+            ref="fileInput"
+            type="file"
+            accept=".json"
+            class="ev__file"
+            @change="onFile"
+          />
+          <AppButton variant="ghost" @click="pickFile">
+            <Icon name="upload" :size="13" />
+            载 入 评 测 JSON
+          </AppButton>
+          <AppButton
+            variant="primary"
+            :loading="evaluating"
+            :disabled="!evalData"
+            @click="runEval"
+          >
+            <Icon name="sparkles" :size="13" />
+            运 行 评 测
+          </AppButton>
+          <AppButton
+            variant="red"
+            :loading="generatingNegs"
+            :disabled="!evalData"
+            @click="generateHardNegs"
+          >
+            生 成 困 难 负 例
+          </AppButton>
+          <AppButton
+            v-if="evalData"
+            variant="ghost"
+            @click="downloadEvalData"
+          >
+            <Icon name="doc" :size="13" />
+            导 出 数 据
+          </AppButton>
+        </div>
+
+        <div v-if="evalData" class="ev__hint">
+          <span class="ev__hint-l">已 载</span>
+          <b>{{ evalData.length }}</b><small> 条</small>
+          <span v-if="hasHardNegs" class="ev__hint-neg">· 含困难负例</span>
+        </div>
+        <div class="ev__fmt">
+          <code>格式:</code>
+          <span>[{ "query": "⋯", "relevant": ["doc_id:page"] }, ⋯]</span>
+        </div>
+      </div>
+    </AppCard>
+
+    <EvalResults :metrics="metrics" />
+
+    <ExperimentHistory ref="historyRef" />
+  </div>
+</template>
+
 <style scoped>
-.exp-view { max-width: 1000px; margin: 0 auto; }
-.exp-view__header { margin-bottom: 20px; }
-.exp-view__title { font-size: 22px; font-weight: 800; color: var(--text-primary); margin: 0 0 4px; }
-.exp-view__subtitle { font-size: 13px; color: var(--text-muted); margin: 0; }
+.ev { max-width: 1280px; margin: 0 auto; }
 
-.exp-section-title {
-  font-size: 11px; font-weight: 700; color: var(--text-muted);
-  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+.ev__eval { margin-top: var(--gap-5); }
+
+.ev__form { display: flex; flex-direction: column; gap: var(--gap-3); }
+.ev__row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: var(--gap-4);
+  align-items: center;
+}
+.ev__l {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: var(--fz-sm);
+  color: var(--ink);
+  letter-spacing: 0.18em;
 }
 
-.exp-eval-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 16px;
+.ev__file { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+.ev__data {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-2);
+  margin-top: var(--gap-2);
+  padding-top: var(--gap-3);
+  border-top: 1px dashed var(--rule);
 }
-.exp-eval-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.exp-data-hint { margin-top: 10px; font-size: 12px; color: var(--text-muted); }
-.exp-data-hint--negs { color: var(--success); margin-left: 4px; font-weight: 600; }
-.exp-format-hint { margin-top: 6px; font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+.ev__hint {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: var(--fz-mono-sm);
+  color: var(--ink-mute);
+  letter-spacing: 0.1em;
+  margin-top: var(--gap-2);
+}
+.ev__hint-l {
+  font-family: var(--serif);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.18em;
+  margin-right: 4px;
+}
+.ev__hint b {
+  color: var(--blue);
+  font-weight: 700;
+  font-size: var(--fz-base);
+  font-variant-numeric: tabular-nums;
+}
+.ev__hint small { color: var(--ink-mute); font-weight: 400; }
+.ev__hint-neg { color: var(--red); margin-left: 8px; font-weight: 700; }
+
+.ev__fmt {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-mute);
+  letter-spacing: 0.05em;
+  display: flex;
+  gap: 6px;
+}
+.ev__fmt code {
+  font-family: var(--serif);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.15em;
+}
 </style>

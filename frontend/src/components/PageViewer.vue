@@ -1,58 +1,3 @@
-<template>
-  <div class="page-viewer">
-    <div class="page-viewer__image-wrap" ref="wrapRef">
-      <img
-        :src="imageUrl"
-        class="page-viewer__img"
-        @load="onImageLoad"
-        alt="Document page"
-      />
-      <!-- SVG overlay for bounding boxes -->
-      <svg
-        v-if="layout && imgSize.w > 0"
-        class="page-viewer__overlay"
-        :viewBox="`0 0 ${imgSize.w} ${imgSize.h}`"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <rect
-          v-for="(el, i) in visibleElements"
-          :key="i"
-          :x="toPixel(el.bbox.x0, 'x')"
-          :y="toPixel(el.bbox.y0, 'y')"
-          :width="toPixel(el.bbox.x1, 'x') - toPixel(el.bbox.x0, 'x')"
-          :height="toPixel(el.bbox.y1, 'y') - toPixel(el.bbox.y0, 'y')"
-          :fill="elementColor(el.element_type, 0.12)"
-          :stroke="elementColor(el.element_type, 0.8)"
-          stroke-width="1.5"
-          rx="2"
-          class="page-viewer__bbox"
-          @mouseenter="hoverIndex = i"
-          @mouseleave="hoverIndex = -1"
-        />
-        <!-- Label for hovered element -->
-        <text
-          v-if="hoverIndex >= 0"
-          :x="toPixel(visibleElements[hoverIndex].bbox.x0, 'x') + 4"
-          :y="toPixel(visibleElements[hoverIndex].bbox.y0, 'y') + 14"
-          font-size="11"
-          :fill="elementColor(visibleElements[hoverIndex].element_type, 1)"
-          font-weight="600"
-        >{{ elementLabel(visibleElements[hoverIndex].element_type) }}</text>
-      </svg>
-    </div>
-
-    <!-- Element type legend -->
-    <div v-if="layout && layout.elements.length" class="page-viewer__legend">
-      <span
-        v-for="type in uniqueTypes"
-        :key="type"
-        class="page-viewer__legend-item"
-        :style="{ borderColor: elementColor(type, 0.8), color: elementColor(type, 1) }"
-      >{{ elementLabel(type) }}</span>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import type { PageLayout, LayoutElement } from '../api/client'
@@ -60,10 +5,9 @@ import type { PageLayout, LayoutElement } from '../api/client'
 const props = defineProps<{
   imageUrl: string
   layout?: PageLayout | null
-  showTypes?: string[]   // filter which element types to render; empty = all
+  showTypes?: string[]
 }>()
 
-const wrapRef = ref<HTMLDivElement>()
 const imgSize = ref({ w: 0, h: 0 })
 const hoverIndex = ref(-1)
 
@@ -72,13 +16,9 @@ function onImageLoad(e: Event) {
   imgSize.value = { w: img.naturalWidth, h: img.naturalHeight }
 }
 
-// pdfplumber uses top-left origin (top/bottom), same direction as pixels
-// We just scale from PDF points → pixels using the image natural size
 function toPixel(coord: number, axis: 'x' | 'y'): number {
   if (!props.layout) return 0
-  if (axis === 'x') {
-    return (coord / props.layout.page_width) * imgSize.value.w
-  }
+  if (axis === 'x') return (coord / props.layout.page_width) * imgSize.value.w
   return (coord / props.layout.page_height) * imgSize.value.h
 }
 
@@ -89,77 +29,128 @@ const visibleElements = computed<LayoutElement[]>(() => {
   return els.filter(e => props.showTypes!.includes(e.element_type))
 })
 
-const uniqueTypes = computed(() =>
-  [...new Set(visibleElements.value.map(e => e.element_type))]
-)
-
-const TYPE_COLORS: Record<string, string> = {
-  text_block: '96,165,250',  // blue-400
-  heading: '251,146,60',     // orange-400
-  table: '52,211,153',       // emerald-400
-  figure: '232,121,249',     // fuchsia-400
+const TYPE_LABELS: Record<string, string> = {
+  text_block: '正文', heading: '标题', table: '表格', figure: '图表',
 }
+function elementLabel(type: string): string { return TYPE_LABELS[type] || type }
 
-function elementColor(type: string, alpha: number): string {
-  const rgb = TYPE_COLORS[type] || '148,163,184'
-  return `rgba(${rgb},${alpha})`
-}
-
-function elementLabel(type: string): string {
-  const labels: Record<string, string> = {
-    text_block: '文本块',
-    heading: '标题',
-    table: '表格',
-    figure: '图表',
-  }
-  return labels[type] || type
-}
+const uniqueTypes = computed(() => [...new Set(visibleElements.value.map(e => e.element_type))])
 </script>
 
+<template>
+  <div class="pv">
+    <div class="pv__paper">
+      <img :src="imageUrl" class="pv__img" @load="onImageLoad" alt="文档页面" />
+      <svg
+        v-if="layout && imgSize.w > 0"
+        class="pv__overlay"
+        :viewBox="`0 0 ${imgSize.w} ${imgSize.h}`"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g v-for="(el, i) in visibleElements" :key="i">
+          <!-- 双重 stroke 模拟毛笔朱批 -->
+          <rect
+            :x="toPixel(el.bbox.x0, 'x') - 2"
+            :y="toPixel(el.bbox.y0, 'y') - 2"
+            :width="toPixel(el.bbox.x1, 'x') - toPixel(el.bbox.x0, 'x') + 4"
+            :height="toPixel(el.bbox.y1, 'y') - toPixel(el.bbox.y0, 'y') + 4"
+            fill="rgba(168, 50, 50, 0.06)"
+            stroke="rgba(168, 50, 50, 0.85)"
+            :stroke-width="hoverIndex === i ? 4 : 2.5"
+            class="pv__bbox"
+            @mouseenter="hoverIndex = i"
+            @mouseleave="hoverIndex = -1"
+          />
+          <text
+            :x="toPixel(el.bbox.x0, 'x')"
+            :y="toPixel(el.bbox.y0, 'y') - 6"
+            font-family="Noto Serif SC, serif"
+            font-weight="700"
+            font-size="14"
+            fill="#a83232"
+            class="pv__lbl"
+          >{{ String(i + 1).padStart(2, '0') }} · {{ elementLabel(el.element_type) }}</text>
+        </g>
+      </svg>
+    </div>
+
+    <div v-if="uniqueTypes.length" class="pv__legend">
+      <span class="pv__legend-l">图　例</span>
+      <span v-for="t in uniqueTypes" :key="t" class="pv__legend-tag">
+        <span class="pv__legend-dot"></span>{{ elementLabel(t) }}
+      </span>
+    </div>
+  </div>
+</template>
+
 <style scoped>
-.page-viewer {
-  width: 100%;
-}
+.pv { width: 100%; }
 
-.page-viewer__image-wrap {
+.pv__paper {
   position: relative;
-  display: inline-block;
+  display: block;
   width: 100%;
+  background: #fff;
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-paper);
 }
 
-.page-viewer__img {
+.pv__img {
   width: 100%;
   display: block;
-  border-radius: 6px;
 }
 
-.page-viewer__overlay {
+.pv__overlay {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 0; left: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
 }
-
-.page-viewer__bbox {
+.pv__bbox {
   pointer-events: all;
   cursor: default;
-  transition: fill 0.15s;
+  transition: stroke-width var(--dur-fast) var(--ease-paper);
+}
+.pv__lbl {
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 2.5px;
+  letter-spacing: 0.05em;
 }
 
-.page-viewer__legend {
+.pv__legend {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  gap: var(--gap-3);
+  margin-top: var(--gap-3);
+  padding: 8px 12px;
+  background: var(--paper-deep);
+  border: 1px solid var(--rule);
+  font-size: var(--fz-mono-sm);
+  font-family: var(--mono);
 }
-
-.page-viewer__legend-item {
-  font-size: 11px;
-  padding: 2px 8px;
-  border: 1.5px solid;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.05);
+.pv__legend-l {
+  font-family: var(--serif);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.15em;
+  margin-right: 4px;
+  font-size: var(--fz-sm);
+}
+.pv__legend-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-medium);
+}
+.pv__legend-dot {
+  width: 9px; height: 9px;
+  background: var(--red);
+  display: inline-block;
 }
 </style>

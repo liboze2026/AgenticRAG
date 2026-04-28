@@ -1,29 +1,7 @@
-<template>
-  <div v-if="answer" class="answer-card">
-    <div class="answer-card__header">
-      <div class="answer-card__title-row">
-        <svg class="answer-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-        </svg>
-        <span class="answer-card__title">系统回答</span>
-      </div>
-      <el-button size="small" text @click="copyAnswer">
-        <svg style="width:13px;height:13px;margin-right:4px;vertical-align:middle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        复制
-      </el-button>
-    </div>
-    <div class="answer-card__body">
-      <template v-for="(seg, i) in segments" :key="i">
-        <span v-if="seg.type === 'text'" class="answer-card__text">{{ seg.value }}</span>
-        <sup v-else class="answer-card__cite" @click="$emit('cite', seg.index - 1)">[{{ seg.index }}]</sup>
-      </template>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { msg } from '../design/primitives'
+import Icon from '../design/Icons.vue'
 
 const props = defineProps<{ answer: string }>()
 defineEmits<{ (e: 'cite', index: number): void }>()
@@ -45,48 +23,118 @@ const segments = computed<Segment[]>(() => {
 
 function copyAnswer() {
   navigator.clipboard.writeText(props.answer)
-  ElMessage.success('已复制')
+  msg.success('已抄录至剪贴板')
 }
 </script>
 
+<template>
+  <div v-if="answer" class="ans">
+    <div class="ans__head">
+      <span class="ans__seal">答</span>
+      <span class="ans__label">系 统 释 答</span>
+      <button class="ans__copy" @click="copyAnswer" title="抄录">
+        <Icon name="edit" :size="13" />
+        <span>抄　录</span>
+      </button>
+    </div>
+    <div class="ans__body">
+      <template v-for="(seg, i) in segments" :key="i">
+        <span v-if="seg.type === 'text'" class="ans__text">{{ seg.value }}</span>
+        <sup v-else class="ans__cite" @click="$emit('cite', seg.index - 1)">[{{ seg.index }}]</sup>
+      </template>
+    </div>
+  </div>
+</template>
+
 <style scoped>
-.answer-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--accent);
-  border-radius: 8px;
-  margin: 12px 0;
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
+.ans {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--red);
+  margin: var(--gap-4) 0;
+  box-shadow: var(--shadow-2);
 }
-.answer-card__header {
+
+.ans__head {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-base);
+  gap: var(--gap-3);
+  padding: 10px 18px;
+  background: var(--paper-deep);
+  border-bottom: 1px dashed var(--rule);
 }
-.answer-card__title-row { display: flex; align-items: center; gap: 8px; }
-.answer-card__icon { width: 16px; height: 16px; color: var(--accent); }
-.answer-card__title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
-.answer-card__body {
-  padding: 16px 20px;
-  white-space: pre-wrap;
-  line-height: 1.8;
-  font-size: 14px;
-  color: var(--text-primary);
+
+.ans__seal {
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: 18px;
+  color: var(--red);
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
-.answer-card__text { color: inherit; }
-.answer-card__cite {
-  color: var(--accent);
-  font-size: 11px;
+
+.ans__label {
+  flex: 1;
+  font-family: var(--serif);
   font-weight: 700;
-  cursor: pointer;
-  margin: 0 1px;
-  vertical-align: super;
-  font-family: 'Inter', sans-serif;
-  transition: color .15s;
+  font-size: var(--fz-sm);
+  color: var(--ink);
+  letter-spacing: 0.18em;
 }
-.answer-card__cite:hover { color: var(--accent-hover); text-decoration: underline; }
+
+.ans__copy {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink-mute);
+  padding: 4px 10px;
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-paper);
+}
+.ans__copy:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.ans__body {
+  padding: 18px 22px;
+  font-family: var(--serif);
+  font-size: var(--fz-base);
+  line-height: var(--lh-loose);
+  color: var(--ink);
+  white-space: pre-wrap;
+  text-indent: 2em;
+}
+
+.ans__text { color: inherit; }
+
+.ans__cite {
+  display: inline-block;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 10px;
+  color: var(--red);
+  vertical-align: super;
+  cursor: pointer;
+  padding: 0 2px;
+  margin: 0 1px;
+  text-decoration: none;
+  border-bottom: 1px solid var(--red);
+  transition: all var(--dur-fast);
+}
+.ans__cite:hover {
+  background: var(--red);
+  color: var(--paper);
+}
 </style>

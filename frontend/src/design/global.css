@@ -1,0 +1,136 @@
+/* =====================================================================
+   全局基线 · 学术档案
+   ===================================================================== */
+
+@import './tokens.css';
+@import './fonts.css';
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #app {
+  margin: 0; padding: 0;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: var(--fz-base);
+  line-height: var(--lh-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'kern', 'liga', 'palt';
+}
+
+/* —— 纸张颗粒（极淡，固定背景） —— */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(rgba(60,40,10,0.022) 1px, transparent 1px),
+    radial-gradient(rgba(60,40,10,0.014) 1px, transparent 1px);
+  background-size: 3px 3px, 7px 7px;
+  background-position: 0 0, 1px 1px;
+}
+
+/* —— 标题 —— */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  color: var(--ink);
+  letter-spacing: var(--ls-tight);
+}
+
+p { margin: 0 0 var(--gap-4); }
+
+a {
+  color: var(--blue);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color var(--dur-fast) var(--ease-paper),
+              border-color var(--dur-fast) var(--ease-paper);
+}
+a:hover {
+  color: var(--red);
+  border-bottom-color: var(--red);
+}
+
+/* —— 文字工具 —— */
+.t-mono { font-family: var(--mono); }
+.t-sans { font-family: var(--sans); }
+.t-serif { font-family: var(--serif); }
+.t-latin { font-family: var(--latin); font-style: italic; }
+.t-mute { color: var(--ink-mute); }
+.t-soft { color: var(--ink-soft); }
+.t-blue { color: var(--blue); }
+.t-red { color: var(--red); }
+.t-up { text-transform: uppercase; letter-spacing: var(--ls-wide); }
+.t-num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.t-tag {
+  font-family: var(--mono);
+  font-size: var(--fz-mono-sm);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  color: var(--ink-mute);
+}
+
+/* —— 焦点框 —— */
+*:focus { outline: none; }
+*:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* —— 选区 —— */
+::selection {
+  background: var(--red);
+  color: var(--paper);
+}
+
+/* —— 滚动条 —— */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border: 1px solid var(--paper);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--ink-mute); }
+
+/* —— 入场动画 —— */
+@keyframes fold-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ink-bleed {
+  from { opacity: 0; letter-spacing: 0.05em; }
+  to { opacity: 1; letter-spacing: var(--ls-tight); }
+}
+@keyframes stamp-down {
+  0% { opacity: 0; transform: rotate(-8deg) scale(1.4); }
+  60% { opacity: 1; transform: rotate(-14deg) scale(.95); }
+  100% { opacity: .85; transform: rotate(-12deg) scale(1); }
+}
+
+.fold-in { animation: fold-in var(--dur-slow) var(--ease-paper) both; }
+.ink-bleed { animation: ink-bleed var(--dur-slow) var(--ease-paper) both; }
+
+/* —— 通用 hairline —— */
+hr {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: var(--gap-5) 0;
+}
+
+/* —— 表单基线 reset —— */
+input, button, select, textarea {
+  font: inherit; color: inherit; background: transparent;
+}
+button { cursor: pointer; }
+
+/* —— 路由切换淡入 —— */
+.view-enter-active { transition: opacity var(--dur-base) var(--ease-paper), transform var(--dur-base) var(--ease-paper); }
+.view-leave-active { transition: opacity var(--dur-fast) var(--ease-paper); }
+.view-enter-from { opacity: 0; transform: translateY(6px); }
+.view-leave-to { opacity: 0; }

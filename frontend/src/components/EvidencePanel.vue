@@ -1,93 +1,8 @@
-<template>
-  <div v-if="results.length" class="evidence-panel">
-    <div class="evidence-panel__header">
-      <span class="evidence-panel__title">检索证据</span>
-      <span class="evidence-panel__count">共 {{ results.length }} 页</span>
-    </div>
-
-    <div class="evidence-panel__grid">
-      <div
-        v-for="(r, i) in results"
-        :key="i"
-        class="evidence-card"
-        :class="{ 'evidence-card--active': activeIndex === i }"
-        @click="openViewer(i)"
-      >
-        <!-- Citation badge -->
-        <div class="evidence-card__badge">[{{ i + 1 }}]</div>
-
-        <!-- Thumbnail -->
-        <div class="evidence-card__thumb">
-          <img :src="imgUrl(r)" alt="page" loading="lazy" @error="onImgError" />
-          <!-- element type mini-indicators -->
-          <div v-if="r.layout?.elements.length" class="evidence-card__tags">
-            <span
-              v-for="type in uniqueTypes(r)"
-              :key="type"
-              class="evidence-card__tag"
-              :style="{ background: typeColor(type) }"
-            >{{ typeShort(type) }}</span>
-          </div>
-        </div>
-
-        <!-- Meta -->
-        <div class="evidence-card__meta">
-          <div class="evidence-card__filename" :title="r.document_id">
-            {{ shortId(r.document_id) }}
-          </div>
-          <div class="evidence-card__page">第 {{ r.page_number }} 页</div>
-        </div>
-
-        <!-- Score bar -->
-        <div class="evidence-card__score-wrap">
-          <div
-            class="evidence-card__score-bar"
-            :style="{ width: scorePercent(r.score) + '%' }"
-          />
-          <span class="evidence-card__score-val">{{ r.score.toFixed(4) }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Full-page viewer drawer -->
-    <el-drawer
-      v-model="drawerOpen"
-      direction="rtl"
-      size="50%"
-      :title="`[${activeIndex + 1}] 第 ${activeResult?.page_number} 页`"
-      destroy-on-close
-    >
-      <div v-if="activeResult" class="evidence-drawer">
-        <PageViewer
-          :image-url="imgUrl(activeResult)"
-          :layout="activeResult.layout"
-        />
-        <!-- Layout element list -->
-        <div v-if="activeResult.layout?.elements.length" class="evidence-drawer__elements">
-          <div class="evidence-drawer__elements-title">版面元素 ({{ activeResult.layout.elements.length }})</div>
-          <div
-            v-for="(el, ei) in activeResult.layout.elements"
-            :key="ei"
-            class="evidence-drawer__element"
-          >
-            <span class="evidence-drawer__element-type" :style="{ background: typeColor(el.element_type) }">
-              {{ typeLabel(el.element_type) }}
-            </span>
-            <span v-if="el.text" class="evidence-drawer__element-text">
-              {{ el.text.slice(0, 100) }}{{ el.text.length > 100 ? '…' : '' }}
-            </span>
-            <span v-else-if="el.element_type === 'figure'" class="evidence-drawer__element-text">图片区域</span>
-          </div>
-        </div>
-      </div>
-    </el-drawer>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import type { RetrievalResult } from '../api/client'
 import PageViewer from './PageViewer.vue'
+import { AppDrawer, AppTag } from '../design/primitives'
 
 const props = defineProps<{ results: RetrievalResult[] }>()
 const emit = defineEmits<{ (e: 'cite', index: number): void }>()
@@ -105,18 +20,15 @@ function openViewer(i: number) {
   emit('cite', i)
 }
 
-function onImgError(e: Event) {
-  const img = e.target as HTMLImageElement
-  img.style.cssText = 'opacity:.35;filter:grayscale(1)'
-  img.title = '图片文件不存在'
-}
-
 function imgUrl(r: RetrievalResult) {
   return `/api/images/${r.document_id}/page_${r.page_number}.png`
 }
-
 function shortId(id: string) {
-  return id.length > 20 ? id.slice(0, 8) + '…' + id.slice(-6) : id
+  return id.length > 20 ? id.slice(0, 8) + '⋯' + id.slice(-6) : id
+}
+function onImgError(e: Event) {
+  const img = e.target as HTMLImageElement
+  img.style.cssText = 'opacity:.35;filter:grayscale(1)'
 }
 
 const maxScore = computed(() => Math.max(...props.results.map(r => r.score), 0.001))
@@ -124,188 +36,288 @@ function scorePercent(score: number) {
   return Math.round((score / maxScore.value) * 100)
 }
 
-const TYPE_COLORS: Record<string, string> = {
-  text_block: 'rgba(96,165,250,0.25)',
-  heading: 'rgba(251,146,60,0.25)',
-  table: 'rgba(52,211,153,0.25)',
-  figure: 'rgba(232,121,249,0.25)',
-}
-function typeColor(type: string) { return TYPE_COLORS[type] || 'rgba(148,163,184,0.25)' }
-
 const TYPE_LABELS: Record<string, string> = {
-  text_block: '文本', heading: '标题', table: '表格', figure: '图表',
+  text_block: '正文', heading: '标题', table: '表格', figure: '图表',
 }
-function typeLabel(type: string) { return TYPE_LABELS[type] || type }
-function typeShort(type: string) {
-  const s: Record<string, string> = { text_block: '文', heading: '题', table: '表', figure: '图' }
-  return s[type] || type[0]
-}
-
+function typeLabel(t: string) { return TYPE_LABELS[t] || t }
 function uniqueTypes(r: RetrievalResult): string[] {
   if (!r.layout?.elements.length) return []
   return [...new Set(r.layout.elements.map(e => e.element_type))]
 }
 </script>
 
+<template>
+  <section v-if="results.length" class="ep">
+    <div class="ep__head">
+      <span class="ep__seal">证</span>
+      <h3 class="ep__title">检 索 证 据</h3>
+      <span class="ep__count">共 <b>{{ results.length }}</b> 页</span>
+    </div>
+
+    <div class="ep__grid">
+      <article
+        v-for="(r, i) in results"
+        :key="i"
+        class="ep-card"
+        :class="{ 'ep-card--active': activeIndex === i }"
+        @click="openViewer(i)"
+      >
+        <div class="ep-card__cite">[{{ i + 1 }}]</div>
+
+        <div class="ep-card__thumb">
+          <img :src="imgUrl(r)" alt="page" loading="lazy" @error="onImgError" />
+          <div class="ep-card__corner"></div>
+        </div>
+
+        <div class="ep-card__body">
+          <div class="ep-card__row">
+            <span class="ep-card__l">编 号</span>
+            <span class="ep-card__v" :title="r.document_id">{{ shortId(r.document_id) }}</span>
+          </div>
+          <div class="ep-card__row">
+            <span class="ep-card__l">页 码</span>
+            <span class="ep-card__v ep-card__v--mono">第 {{ r.page_number }} 页</span>
+          </div>
+          <div class="ep-card__row">
+            <span class="ep-card__l">置 信</span>
+            <span class="ep-card__v ep-card__v--mono">{{ r.score.toFixed(4) }}</span>
+          </div>
+        </div>
+
+        <div class="ep-card__tags" v-if="uniqueTypes(r).length">
+          <AppTag v-for="t in uniqueTypes(r)" :key="t" variant="paper" size="sm">{{ typeLabel(t) }}</AppTag>
+        </div>
+
+        <div class="ep-card__bar">
+          <div class="ep-card__bar-fill" :style="{ width: scorePercent(r.score) + '%' }"></div>
+        </div>
+      </article>
+    </div>
+
+    <AppDrawer
+      v-model="drawerOpen"
+      :title="activeResult ? `[${activeIndex + 1}] 第 ${activeResult.page_number} 页 · ${shortId(activeResult.document_id)}` : ''"
+      width="640px"
+    >
+      <div v-if="activeResult" class="ep-dr">
+        <PageViewer :image-url="imgUrl(activeResult)" :layout="activeResult.layout" />
+
+        <div v-if="activeResult.layout?.elements.length" class="ep-dr__elements">
+          <div class="ep-dr__title">
+            <span>版 面 元 素</span>
+            <span class="ep-dr__count">{{ activeResult.layout.elements.length }} 项</span>
+          </div>
+          <ol class="ep-dr__list">
+            <li v-for="(el, ei) in activeResult.layout.elements" :key="ei" class="ep-dr__item">
+              <span class="ep-dr__no">{{ String(ei + 1).padStart(2, '0') }}</span>
+              <AppTag :variant="'paper'" size="sm">{{ typeLabel(el.element_type) }}</AppTag>
+              <span class="ep-dr__text">
+                <template v-if="el.text">{{ el.text.slice(0, 140) }}{{ el.text.length > 140 ? '⋯' : '' }}</template>
+                <template v-else-if="el.element_type === 'figure'">（图像区域）</template>
+              </span>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </AppDrawer>
+  </section>
+</template>
+
 <style scoped>
-.evidence-panel { margin-top: 16px; }
+.ep { margin-top: var(--gap-5); }
 
-.evidence-panel__header {
+.ep__head {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 12px;
+  align-items: center;
+  gap: var(--gap-3);
+  margin-bottom: var(--gap-4);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 8px;
 }
-.evidence-panel__title {
-  font-size: 14px;
+.ep__seal {
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: 18px;
+  color: var(--red);
+  width: 32px; height: 32px;
+  border: 2px solid var(--red);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.ep__title {
+  flex: 1;
+  font-family: var(--serif);
   font-weight: 700;
-  color: var(--color-text);
+  font-size: var(--fz-h3);
+  color: var(--blue);
+  margin: 0;
+  letter-spacing: 0.18em;
 }
-.evidence-panel__count {
-  font-size: 12px;
-  color: var(--color-text-muted);
+.ep__count {
+  font-family: var(--mono);
+  font-size: var(--fz-mono-sm);
+  color: var(--ink-mute);
+  letter-spacing: 0.1em;
 }
+.ep__count b { color: var(--red); font-weight: 700; font-variant-numeric: tabular-nums; margin: 0 2px; }
 
-.evidence-panel__grid {
+.ep__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--gap-4);
 }
 
-.evidence-card {
-  background: var(--color-surface);
-  border: 1.5px solid var(--color-border);
-  border-radius: 10px;
-  padding: 10px;
+.ep-card {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--rule);
   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
-  position: relative;
-}
-.evidence-card:hover {
-  border-color: var(--color-primary);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-  transform: translateY(-2px);
-}
-.evidence-card--active {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
-}
-
-.evidence-card__badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: var(--color-primary);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 6px;
-  z-index: 1;
-  letter-spacing: 0.02em;
-}
-
-.evidence-card__thumb {
-  position: relative;
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--color-bg);
-}
-.evidence-card__thumb img {
-  width: 100%;
-  height: 140px;
-  object-fit: contain;
-  display: block;
-}
-
-.evidence-card__tags {
-  position: absolute;
-  bottom: 4px;
-  right: 4px;
+  transition: transform var(--dur-fast) var(--ease-paper),
+              box-shadow var(--dur-fast) var(--ease-paper),
+              border-color var(--dur-fast) var(--ease-paper);
   display: flex;
-  gap: 3px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  flex-direction: column;
 }
-.evidence-card__tag {
-  font-size: 10px;
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-weight: 600;
-  color: var(--color-text);
+.ep-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--ink);
+  box-shadow: var(--shadow-3);
+}
+.ep-card--active {
+  border-color: var(--red);
+  border-width: 2px;
 }
 
-.evidence-card__meta {
-  margin-top: 8px;
+.ep-card__cite {
+  position: absolute;
+  top: 6px; left: 6px;
+  background: var(--red);
+  color: var(--paper);
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: var(--fz-mono-sm);
+  padding: 2px 8px;
+  letter-spacing: 0.05em;
+  z-index: 2;
+}
+
+.ep-card__thumb {
+  position: relative;
+  height: 160px;
+  background: var(--paper-deep);
+  border-bottom: 1px solid var(--rule);
+  overflow: hidden;
+}
+.ep-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  filter: grayscale(0.1) sepia(0.04);
+}
+.ep-card__corner {
+  position: absolute;
+  top: 0; right: 0;
+  width: 24px; height: 24px;
+  background: var(--paper);
+  border-left: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.ep-card__body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.ep-card__row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  font-size: var(--fz-mono-sm);
+  border-bottom: 1px dotted var(--rule-fine);
+  padding: 3px 0;
+}
+.ep-card__l {
+  font-family: var(--serif);
+  color: var(--ink-mute);
+  letter-spacing: 0.15em;
   font-size: 11px;
 }
-.evidence-card__filename {
-  color: var(--color-text-muted);
-  max-width: 100px;
-  overflow: hidden;
+.ep-card__v {
+  color: var(--ink);
+  font-weight: 600;
+  font-family: var(--serif);
   text-overflow: ellipsis;
+  overflow: hidden;
   white-space: nowrap;
+  max-width: 110px;
 }
-.evidence-card__page {
-  color: var(--color-text);
-  font-weight: 600;
-}
+.ep-card__v--mono { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--blue); }
 
-.evidence-card__score-wrap {
+.ep-card__tags {
+  padding: 0 12px 8px;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-}
-.evidence-card__score-bar {
-  height: 4px;
-  background: var(--color-primary);
-  border-radius: 2px;
-  flex: 1;
-  max-width: calc(100% - 48px);
-  opacity: 0.7;
-}
-.evidence-card__score-val {
-  font-size: 10px;
-  color: var(--color-text-muted);
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
-/* Drawer content */
-.evidence-drawer { padding: 0 4px; }
+.ep-card__bar {
+  height: 3px;
+  background: var(--paper-deep);
+}
+.ep-card__bar-fill {
+  height: 100%;
+  background: var(--red);
+  transition: width var(--dur-base) var(--ease-paper);
+}
 
-.evidence-drawer__elements { margin-top: 16px; }
-.evidence-drawer__elements-title {
-  font-size: 12px;
+/* Drawer detail */
+.ep-dr {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-5);
+}
+.ep-dr__title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--serif);
   font-weight: 700;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
+  font-size: var(--fz-h4);
+  color: var(--ink);
+  letter-spacing: 0.18em;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 6px;
+  margin-bottom: 10px;
 }
-.evidence-drawer__element {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--color-border);
-  font-size: 12px;
+.ep-dr__count {
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: var(--fz-mono-sm);
+  color: var(--ink-mute);
+  letter-spacing: 0.1em;
 }
-.evidence-drawer__element-type {
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-  flex-shrink: 0;
-  color: var(--color-text);
+
+.ep-dr__list { list-style: none; margin: 0; padding: 0; }
+.ep-dr__item {
+  display: grid;
+  grid-template-columns: 30px auto 1fr;
+  gap: 10px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px dotted var(--rule);
 }
-.evidence-drawer__element-text {
-  color: var(--color-text-muted);
-  line-height: 1.4;
+.ep-dr__no {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: var(--fz-mono-sm);
+  color: var(--red);
+}
+.ep-dr__text {
+  color: var(--ink-soft);
+  font-family: var(--serif);
+  font-size: var(--fz-sm);
+  line-height: 1.6;
 }
 </style>

@@ -1,17 +1,31 @@
-<template>
-  <el-card style="margin-top: 16px" v-if="metrics">
-    <template #header>评测结果</template>
-    <el-descriptions :column="2" border>
-      <el-descriptions-item label="总查询数">{{ metrics.total_queries }}</el-descriptions-item>
-      <el-descriptions-item label="MRR">{{ metrics.mrr.toFixed(4) }}</el-descriptions-item>
-      <el-descriptions-item v-for="(val, k) in metrics.recall_at_k" :key="k" :label="'Recall@' + k">
-        {{ val.toFixed(4) }}
-      </el-descriptions-item>
-    </el-descriptions>
-  </el-card>
-</template>
-
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { EvalMetrics } from '../api/client'
-defineProps<{ metrics: EvalMetrics | null }>()
+import { AppMetricGrid, AppCard } from '../design/primitives'
+
+const props = defineProps<{ metrics: EvalMetrics | null }>()
+
+const cells = computed(() => {
+  if (!props.metrics) return []
+  const m = props.metrics
+  const recall = m.recall_at_k || {}
+  const ks = Object.keys(recall).map(Number).sort((a, b) => a - b)
+  const out: { label: string; value: string; unit?: string }[] = [
+    { label: 'M R R', value: (m.mrr || 0).toFixed(4) },
+    { label: '查 询', value: String(m.total_queries), unit: '次' },
+  ]
+  for (const k of ks) {
+    out.push({ label: `recall @ ${k}`, value: (recall[k] || 0).toFixed(4) })
+  }
+  if (m.avg_timing_ms?.total_ms) {
+    out.push({ label: '平均延迟', value: m.avg_timing_ms.total_ms.toFixed(0), unit: 'ms' })
+  }
+  return out
+})
 </script>
+
+<template>
+  <AppCard v-if="metrics" title="评 测 结 果" subtitle="evaluation report" :num="'EV'">
+    <AppMetricGrid :metrics="cells" :cols="Math.min(cells.length, 4)" />
+  </AppCard>
+</template>
