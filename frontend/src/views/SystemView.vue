@@ -29,7 +29,7 @@ async function loadCacheStats() {
 
 async function clearQueryCache() {
   await cacheApi.clearQuery()
-  msg.success('问询缓存已清空')
+  msg.success('查询缓存已清空')
   await loadCacheStats()
 }
 
@@ -47,27 +47,27 @@ function formatBytes(b: number): string {
 
 const services = computed(() => [
   {
-    name: '后 端 服 务',
+    name: '后端服务',
     en: 'Backend API',
     state: health.value ? 'ok' : 'unknown',
-    detail: health.value ? `状态 · ${health.value.status || 'ok'}` : '检测中⋯',
+    detail: health.value ? `状态: ${health.value.status || 'ok'}` : '检测中⋯',
   },
   {
-    name: '工 作 节 点',
+    name: 'Worker 节点',
     en: 'Worker · ColPali',
     state: health.value?.worker?.status === 'ok' ? 'ok' : (health.value ? 'error' : 'unknown'),
-    detail: health.value?.worker?.model || (health.value?.worker?.status === 'ok' ? '就 绪' : (health.value ? '未 连 接' : '检测中⋯')),
+    detail: health.value?.worker?.model || (health.value?.worker?.status === 'ok' ? '就绪' : (health.value ? '未连接' : '检测中⋯')),
   },
   {
-    name: '向 量 数 据 库',
+    name: 'Qdrant 向量库',
     en: 'Qdrant',
     state: health.value?.qdrant?.status === 'ok' ? 'ok' : (health.value ? 'error' : 'unknown'),
-    detail: health.value?.qdrant?.status === 'ok' ? '就 绪' : (health.value ? '未 连 接' : '检测中⋯'),
+    detail: health.value?.qdrant?.status === 'ok' ? '就绪' : (health.value ? '未连接' : '检测中⋯'),
   },
 ])
 
 function stateLabel(s: string) {
-  return ({ ok: '运 行', error: '故 障', unknown: '检 测' } as Record<string,string>)[s] || s
+  return ({ ok: '正常', error: '异常', unknown: '检测中' } as Record<string,string>)[s] || s
 }
 function stateVar(s: string): 'ok' | 'red' | 'mute' {
   return ({ ok: 'ok', error: 'red', unknown: 'mute' } as const)[s as 'ok'] || 'mute'
@@ -80,17 +80,17 @@ onMounted(refresh)
   <div class="sv">
     <AppPageHead
       chapter="6"
-      kicker="custodia · 运 行"
-      title="运 行 志"
-      subtitle="系统健康 · 服务状态 · 缓存统计"
-      stamp="运行&#10;监测"
+      kicker="系统状态"
+      title="系统状态"
+      subtitle="服务健康检查、缓存统计、系统监控"
+      stamp="系统&#10;状态"
     />
 
-    <AppCard title="服 务 健 康" subtitle="health snapshot" :num="'A'">
+    <AppCard title="服务健康" subtitle="health snapshot" :num="'A'">
       <template #extra>
         <AppButton variant="ghost" size="sm" :loading="loading" @click="refresh">
           <Icon name="reload" :size="13" />
-          刷 新
+          刷新
         </AppButton>
       </template>
 
@@ -109,7 +109,7 @@ onMounted(refresh)
 
     <AppCard
       v-if="cacheData"
-      title="缓 存 统 计"
+      title="缓存统计"
       subtitle="cache stats"
       :num="'B'"
       class="sv-cache"
@@ -117,42 +117,42 @@ onMounted(refresh)
       <template #extra>
         <AppButton variant="ghost" size="sm" @click="loadCacheStats">
           <Icon name="reload" :size="13" />
-          刷 新
+          刷新
         </AppButton>
       </template>
 
       <div class="sv-cache__grid">
         <div class="sv-cache__cell">
           <div class="sv-cache__head">
-            <span class="sv-cache__zh">问 询 缓 存</span>
+            <span class="sv-cache__zh">查询缓存</span>
             <AppTag :variant="cacheData.query_cache.enabled ? 'ok' : 'mute'" size="sm">
-              {{ cacheData.query_cache.enabled ? '启 用' : '关 闭' }}
+              {{ cacheData.query_cache.enabled ? '已启用' : '已关闭' }}
             </AppTag>
           </div>
           <dl class="sv-cache__meta">
-            <div><dt>条目</dt><dd>{{ cacheData.query_cache.entries }}<small> 项</small></dd></div>
-            <div><dt>占用</dt><dd>{{ formatBytes(cacheData.query_cache.size_bytes) }}</dd></div>
+            <div><dt>条目数</dt><dd>{{ cacheData.query_cache.entries }}<small> 项</small></dd></div>
+            <div><dt>占用空间</dt><dd>{{ formatBytes(cacheData.query_cache.size_bytes) }}</dd></div>
           </dl>
           <AppButton variant="red" size="sm" @click="clearQueryCache">
             <Icon name="trash" :size="13" />
-            清空 query
+            清空查询缓存
           </AppButton>
         </div>
 
         <div class="sv-cache__cell">
           <div class="sv-cache__head">
-            <span class="sv-cache__zh">生 成 缓 存</span>
+            <span class="sv-cache__zh">生成缓存</span>
             <AppTag :variant="cacheData.generation_cache.enabled ? 'ok' : 'mute'" size="sm">
-              {{ cacheData.generation_cache.enabled ? '启 用' : '关 闭' }}
+              {{ cacheData.generation_cache.enabled ? '已启用' : '已关闭' }}
             </AppTag>
           </div>
           <dl class="sv-cache__meta">
-            <div><dt>条目</dt><dd>{{ cacheData.generation_cache.entries }}<small> 项</small></dd></div>
-            <div><dt>占用</dt><dd>{{ formatBytes(cacheData.generation_cache.size_bytes) }}</dd></div>
+            <div><dt>条目数</dt><dd>{{ cacheData.generation_cache.entries }}<small> 项</small></dd></div>
+            <div><dt>占用空间</dt><dd>{{ formatBytes(cacheData.generation_cache.size_bytes) }}</dd></div>
           </dl>
           <AppButton variant="red" size="sm" @click="clearGenCache">
             <Icon name="trash" :size="13" />
-            清空 generation
+            清空生成缓存
           </AppButton>
         </div>
       </div>

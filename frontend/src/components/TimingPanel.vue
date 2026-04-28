@@ -33,7 +33,7 @@ const hasData = computed(() => Object.keys(props.timing || {}).length > 0)
 <template>
   <div v-if="hasData" class="tp">
     <div class="tp__head">
-      <span class="tp__l">耗 时 分 解</span>
+      <span class="tp__l">耗时分解</span>
       <span class="tp__total">合计 <b>{{ total.toFixed(0) }}</b><small> ms</small></span>
     </div>
     <ul class="tp__list">

@@ -6,7 +6,7 @@ const props = defineProps<{ timing: Record<string, number> }>()
 
 const STAGE_ORDER = ['encode_query_ms', 'retrieve_ms', 'rerank_ms', 'generate_ms']
 const STAGE_LABELS: Record<string, string> = {
-  encode_query_ms: '问询编码',
+  encode_query_ms: '查询编码',
   retrieve_ms:     '向量检索',
   rerank_ms:       '重排序',
   generate_ms:     '答案生成',
@@ -29,7 +29,7 @@ const totalMs = computed(() => props.timing['total_ms'] ?? stages.value.reduce((
 <template>
   <div v-if="stages.length" class="pp">
     <div class="pp__head">
-      <span class="pp__l">流 水 线 链 路</span>
+      <span class="pp__l">Pipeline 流程</span>
       <span class="pp__t">合计 <b>{{ totalMs.toFixed(0) }}</b><small> ms</small></span>
     </div>
     <ol class="pp__chain">

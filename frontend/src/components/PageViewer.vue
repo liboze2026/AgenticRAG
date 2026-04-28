@@ -75,7 +75,7 @@ const uniqueTypes = computed(() => [...new Set(visibleElements.value.map(e => e.
     </div>
 
     <div v-if="uniqueTypes.length" class="pv__legend">
-      <span class="pv__legend-l">图　例</span>
+      <span class="pv__legend-l">图例</span>
       <span v-for="t in uniqueTypes" :key="t" class="pv__legend-tag">
         <span class="pv__legend-dot"></span>{{ elementLabel(t) }}
       </span>

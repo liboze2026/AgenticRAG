@@ -7,6 +7,7 @@ const routes = [
   { path: '/documents', name: 'Documents', component: () => import('../views/DocumentsView.vue') },
   { path: '/datasets', name: 'Datasets', component: () => import('../views/DatasetsView.vue') },
   { path: '/experiments', name: 'Experiments', component: () => import('../views/ExperimentView.vue') },
+  { path: '/visdom', name: 'VisDoM', component: () => import('../views/VisDomView.vue') },
   { path: '/system', name: 'System', component: () => import('../views/SystemView.vue') },
 ]
 

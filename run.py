@@ -218,7 +218,7 @@ def _forward_tunnel(local_port: int, remote_port: int, transport: paramiko.Trans
         def sock_to_chan():
             try:
                 while True:
-                    data = client_sock.recv(32768)
+                    data = client_sock.recv(1048576)
                     if not data:
                         break
                     chan.sendall(data)
@@ -231,7 +231,7 @@ def _forward_tunnel(local_port: int, remote_port: int, transport: paramiko.Trans
         def chan_to_sock():
             try:
                 while True:
-                    data = chan.recv(32768)
+                    data = chan.recv(1048576)
                     if not data:
                         break
                     client_sock.sendall(data)

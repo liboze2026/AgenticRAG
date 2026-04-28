@@ -8,13 +8,14 @@ const selected = ref<Record<string, string | null>>({})
 const switching = ref(false)
 
 const moduleLabels: Record<string, string> = {
+  processor:        '版面处理',
+  document_encoder: '文档编码',
+  query_encoder:    '查询编码',
   retriever:        '检索器',
-  generator:        '生成器',
   reranker:         '重排器',
+  generator:        '生成器',
   embedder:         '嵌入器',
   text_extractor:   '文本抽取',
-  layout_analyzer:  '版式分析',
-  query_processor:  '问询处理',
   cache:            '缓存',
 }
 
@@ -38,7 +39,7 @@ async function handleSwitch() {
   switching.value = true
   try {
     await experimentsApi.switchPipeline(selected.value)
-    msg.success('流水线已切换')
+    msg.success('Pipeline 已切换')
   } catch {
     msg.error('切换失败')
   } finally {
@@ -59,7 +60,7 @@ onMounted(loadPipelines)
 </script>
 
 <template>
-  <AppCard title="流水线配置" subtitle="Pipeline modules · 各模块可独立替换" :num="'PL'">
+  <AppCard title="Pipeline 配置" subtitle="各模块可独立切换" :num="'PL'">
     <div v-if="moduleEntries.length" class="ps">
       <div v-for="entry in moduleEntries" :key="entry.key" class="ps__row">
         <label class="ps__label">
@@ -70,13 +71,13 @@ onMounted(loadPipelines)
           <AppSelect
             v-model="selected[entry.key]"
             :options="entry.options"
-            :placeholder="`选择 ${entry.label}`"
+            :placeholder="`选择${entry.label}`"
           />
         </div>
       </div>
       <div class="ps__act">
         <AppButton variant="primary" :loading="switching" @click="handleSwitch">
-          切 换 流 水 线
+          应用配置
         </AppButton>
       </div>
     </div>

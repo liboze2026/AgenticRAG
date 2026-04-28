@@ -1,0 +1,3922 @@
+{
+  "manifest": {
+    "dataset": "VisDoM/SPIQA",
+    "subset_strategy": "按查询数排序取前 3 篇论文",
+    "papers": [
+      "1805.04687v2",
+      "1805.06431v4",
+      "1811.02721v3"
+    ],
+    "doc_pages": {
+      "1805.04687v2": 14,
+      "1805.06431v4": 21,
+      "1811.02721v3": 22
+    },
+    "queries_in_eval": 51,
+    "queries_total_in_subset": 51,
+    "csv_source": "/home/bzli/lbz/data/VisDoM-main/spiqa/spiqa.csv",
+    "pdf_source": "/home/bzli/lbz/data/VisDoM-main/spiqa/docs"
+  },
+  "papers_meta": {
+    "1805.04687v2": {
+      "pages": 14
+    },
+    "1805.06431v4": {
+      "pages": 21
+    },
+    "1811.02721v3": {
+      "pages": 22
+    }
+  },
+  "metrics": {
+    "recall@1": 0.9803921568627451,
+    "recall@3": 1.0,
+    "recall@5": 1.0,
+    "recall@10": 1.0,
+    "mrr": 0.9869281045751633,
+    "n_queries": 51,
+    "avg_timing_ms": {
+      "query_encode_ms": 1244.9936165529139,
+      "score_ms": 20430.251425387814,
+      "total_ms": 21675.245041940725
+    }
+  },
+  "per_query": [
+    {
+      "q_id": "spiqa_3",
+      "query": "How does ChoiceNet's performance under symmetric noise (20% and 50%) settings compare to its performance under the Pair-45% asymmetric noise setting, as shown in Table 2, and what does this reveal about its strengths and specific limitations when handling different types of noise?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Table2-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1811.02721v3",
+        "1805.04687v2"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 42.21759111722349
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 41.256678650854155
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 19,
+          "score": 41.1498989991087
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 17,
+          "score": 36.975633248550366
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 18,
+          "score": 35.607600539740815
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 7,
+          "score": 35.50754651182251
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 21,
+          "score": 35.153596113432286
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 13,
+          "score": 34.37110735103488
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 6,
+          "score": 33.22014056635089
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 16,
+          "score": 32.942545866382716
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1845.0472354888916,
+        "score_ms": 24944.83995437622,
+        "total_ms": 26789.887189865112
+      }
+    },
+    {
+      "q_id": "spiqa_10",
+      "query": "Table 1",
+      "target_doc": "1811.02721v3",
+      "reference_figure": "1811.02721v3-Table4-1.png",
+      "paper_title": "Performant TCP for Low-Power Wireless Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1805.04687v2",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 7,
+          "score": 8.435757955739973
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 21,
+          "score": 8.408590041159187
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 13,
+          "score": 8.37610343034612
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 14,
+          "score": 8.347127982910024
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 19,
+          "score": 8.302919675785233
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 14,
+          "score": 8.26325286449719
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 18,
+          "score": 8.200886656501098
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 16,
+          "score": 8.146990726731019
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 8.021395140793175
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 7.9388782175810775
+        }
+      ],
+      "rr": 0.3333333333333333,
+      "recall_at_k": {
+        "1": 0.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 430.90248107910156,
+        "score_ms": 4973.524808883667,
+        "total_ms": 5404.427289962769
+      }
+    },
+    {
+      "q_id": "spiqa_11",
+      "query": "Based on the data presented in Table 1 of the \"BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning\" paper, which object category has the highest combined total of bounding box and instance track annotations in the BDD100K MOT dataset?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Table11-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 39.13793996250752
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 3,
+          "score": 37.77090576378396
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 37.76327062212658
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 37.54137961883225
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 1,
+          "score": 36.311636480662855
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 35.55005572412483
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 33.264643420421635
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 13,
+          "score": 33.01798284035249
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 2,
+          "score": 31.022419903314585
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 4,
+          "score": 30.979467026045313
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1553.6205768585205,
+        "score_ms": 24016.16883277893,
+        "total_ms": 25569.78940963745
+      }
+    },
+    {
+      "q_id": "spiqa_16",
+      "query": "Based on Table 8 in the BDD100K paper, which multitask learning approach for semantic segmentation achieved the highest mean IoU, and how does its performance compare to the baseline Sem-Seg model in terms of the improvement in mean IoU?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Table8-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 36.80995472994522
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 35.41640455090783
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 6,
+          "score": 33.43841218518355
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 31.711844079080038
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 31.226799227555603
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 31.05937499715219
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 30.275393413823622
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 16,
+          "score": 29.646964786821627
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 8,
+          "score": 29.497537747245588
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 13,
+          "score": 28.911266375740524
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1253.368616104126,
+        "score_ms": 22818.19772720337,
+        "total_ms": 24071.566343307495
+      }
+    },
+    {
+      "q_id": "spiqa_34",
+      "query": "Referring to Table 7 in the BDD100K paper, why does the model trained on both the detection and MOT sets (\"MOT + Det\") exhibit a higher number of identity switches (IDS), despite improving in other tracking metrics like AP, MOTA, and MOTP?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Table7-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 40.44757978774578
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 37.476866258934024
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 36.708983095450094
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 6,
+          "score": 32.8300667646472
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 14,
+          "score": 31.431048535226182
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 31.399158688727766
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 31.256276464861003
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 31.084342311951332
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 30.839847486622602
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 16,
+          "score": 30.760486824915915
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1617.337703704834,
+        "score_ms": 24287.66679763794,
+        "total_ms": 25905.004501342773
+      }
+    },
+    {
+      "q_id": "spiqa_52",
+      "query": "Based on the figure detailing the effect of batching on power consumption in LLN experiments with TCP, how does batching influence the radio duty cycle and CPU duty cycle?",
+      "target_doc": "1811.02721v3",
+      "reference_figure": "1811.02721v3-Figure9-1.png",
+      "paper_title": "Performant TCP for Low-Power Wireless Networks",
+      "retrieved_unique_ordered": [
+        "1811.02721v3",
+        "1805.06431v4",
+        "1805.04687v2"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1811.02721v3",
+          "page": 11,
+          "score": 31.09853445418412
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 10,
+          "score": 27.02906814067137
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 12,
+          "score": 25.85735068298527
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 2,
+          "score": 24.384213594254106
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 13,
+          "score": 24.056905850986368
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 9,
+          "score": 23.03821485748631
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 7,
+          "score": 22.7308057480941
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 21,
+          "score": 22.309420079385745
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 8,
+          "score": 22.02519009509524
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 3,
+          "score": 21.361458503102767
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 938.3456707000732,
+        "score_ms": 15789.30640220642,
+        "total_ms": 16727.652072906494
+      }
+    },
+    {
+      "q_id": "spiqa_55",
+      "query": "Based on the results in Table 5 of the BDD100K paper, how does scaling the training set size from 10K to 70K images influence the ODS-F for lane marking and IoU for drivable area segmentation, and what performance trends can be observed?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Table5-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1811.02721v3",
+        "1805.06431v4"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 42.28291189155425
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 14,
+          "score": 39.6527747193104
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 39.189408871833166
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 35.87607053685633
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 6,
+          "score": 35.859472683032436
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 34.801642172416905
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 10,
+          "score": 34.72960469811005
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 4,
+          "score": 34.18935007447726
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 33.86746588142921
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 3,
+          "score": 33.65179804201398
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1480.6976318359375,
+        "score_ms": 25744.747161865234,
+        "total_ms": 27225.444793701172
+      }
+    },
+    {
+      "q_id": "spiqa_61",
+      "query": "Based on the dataset comparison presented in Table 2, how does the scale and diversity of the BDD100K dataset—specifically in terms of frames, sequences, and tracked identities—highlight its advantages over KITTI and MOT17 for multiple object tracking tasks?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Table2-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 41.725278682373755
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 1,
+          "score": 34.147336621099385
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 33.16658697477578
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 3,
+          "score": 32.88106003521534
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 32.531578474739945
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 10,
+          "score": 32.095179250209185
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 31.304639106710965
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 6,
+          "score": 31.29323613293309
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 31.175844994178988
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 4,
+          "score": 31.001250774887012
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1489.133358001709,
+        "score_ms": 22994.202613830566,
+        "total_ms": 24483.335971832275
+      }
+    },
+    {
+      "q_id": "spiqa_64",
+      "query": "How effectively does the ChoiceNet model fit datasets with uniform corruptions, as evidenced by the fitting results in Figure (c) and the correlations with the ground truth in Figure (d)?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Figure4-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1805.04687v2",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 6,
+          "score": 31.18475049622066
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 18,
+          "score": 27.536170104373014
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 19,
+          "score": 27.482160662571914
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 21,
+          "score": 26.508905203882023
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 26.012005559299723
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 16,
+          "score": 25.972584697294224
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 17,
+          "score": 25.254351614077677
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 7,
+          "score": 25.223299678154035
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 24.983651374739566
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 5,
+          "score": 24.545556752433185
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 811.3176822662354,
+        "score_ms": 16841.15481376648,
+        "total_ms": 17652.472496032715
+      }
+    },
+    {
+      "q_id": "spiqa_72",
+      "query": "Referring to the figure depicting the results of the random shuffle experiments on the MNIST dataset, how does the accuracy of the Mixup method vary as the level of noise increases from 50% to 95%, and what trend is observed?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Figure12-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1805.04687v2",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 19,
+          "score": 36.78259095344947
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 35.98035165332112
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 17,
+          "score": 35.6900179766526
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 18,
+          "score": 35.65220616677834
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 21,
+          "score": 33.982656518768636
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 16,
+          "score": 33.556751467837785
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 30.641982117464067
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 6,
+          "score": 29.151001503178122
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 7,
+          "score": 27.577305869859856
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 13,
+          "score": 27.24017154618923
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1217.2868251800537,
+        "score_ms": 21178.189516067505,
+        "total_ms": 22395.47634124756
+      }
+    },
+    {
+      "q_id": "spiqa_74",
+      "query": "Referencing the learning curves shown in the figure for the CIFAR-10 dataset with 50% random shuffle, which model, WideResNet or ChoiceNet, demonstrates superior accuracy?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Figure14-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1811.02721v3",
+        "1805.04687v2"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 19,
+          "score": 30.138982482629217
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 28.103885240325326
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 16,
+          "score": 27.898199227098303
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 17,
+          "score": 27.894929760077503
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 27.840593662187075
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 21,
+          "score": 27.7783579966017
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 18,
+          "score": 27.61587983884965
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 6,
+          "score": 25.12989009649027
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 15,
+          "score": 24.427593404459913
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 14,
+          "score": 24.378667349494208
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1576.5492916107178,
+        "score_ms": 17377.35676765442,
+        "total_ms": 18953.906059265137
+      }
+    },
+    {
+      "q_id": "spiqa_97",
+      "query": "Referring to the figure illustrating TCP congestion behavior over IEEE 802.15.4 in low-power and lossy networks, how does the maximum link delay influence the frequency of TCP timeouts and fast retransmissions?",
+      "target_doc": "1811.02721v3",
+      "reference_figure": "1811.02721v3-Figure6-1.png",
+      "paper_title": "Performant TCP for Low-Power Wireless Networks",
+      "retrieved_unique_ordered": [
+        "1811.02721v3",
+        "1805.04687v2",
+        "1805.06431v4"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1811.02721v3",
+          "page": 2,
+          "score": 31.181100151879946
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 1,
+          "score": 31.039762300031725
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 7,
+          "score": 30.947940815422044
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 8,
+          "score": 30.469910739251645
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 15,
+          "score": 30.101990705967182
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 9,
+          "score": 29.723702997842338
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 17,
+          "score": 29.61330052800986
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 14,
+          "score": 29.21978138977147
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 12,
+          "score": 28.937748119758908
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 21,
+          "score": 28.78940579801565
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1173.835039138794,
+        "score_ms": 20127.715349197388,
+        "total_ms": 21301.55038833618
+      }
+    },
+    {
+      "q_id": "spiqa_98",
+      "query": "In the \"Performant TCP for Low-Power Wireless Networks\" paper, as outlined in Figure (a), how does increasing the maximum link delay between retransmissions impact the segment loss rate and goodput in a one-hop TCP connection over IEEE 802.15.4-based LLNs?",
+      "target_doc": "1811.02721v3",
+      "reference_figure": "1811.02721v3-Figure5-1.png",
+      "paper_title": "Performant TCP for Low-Power Wireless Networks",
+      "retrieved_unique_ordered": [
+        "1811.02721v3",
+        "1805.06431v4",
+        "1805.04687v2"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1811.02721v3",
+          "page": 8,
+          "score": 44.327507125748184
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 1,
+          "score": 44.2946123026062
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 2,
+          "score": 43.46225594574497
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 7,
+          "score": 43.09790967241673
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 13,
+          "score": 42.012340532270514
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 9,
+          "score": 41.76997588550816
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 3,
+          "score": 39.87604218230172
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 4,
+          "score": 39.06554787603352
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 15,
+          "score": 38.38641878855137
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 21,
+          "score": 38.00457686943017
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1657.2332382202148,
+        "score_ms": 26014.270782470703,
+        "total_ms": 27671.504020690918
+      }
+    },
+    {
+      "q_id": "spiqa_99",
+      "query": "In the context of *Performant TCP for Low-Power Wireless Networks*, as shown in Table 3, how does the memory usage of the posix_sockets module compare to that of the combined protocol and socket layers for both active and passive connections, and what are the specific memory values for each?",
+      "target_doc": "1811.02721v3",
+      "reference_figure": "1811.02721v3-Table3-1.png",
+      "paper_title": "Performant TCP for Low-Power Wireless Networks",
+      "retrieved_unique_ordered": [
+        "1811.02721v3",
+        "1805.04687v2",
+        "1805.06431v4"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1811.02721v3",
+          "page": 5,
+          "score": 41.83063245425001
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 20,
+          "score": 37.80436301286318
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 4,
+          "score": 35.15802586868813
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 2,
+          "score": 34.4765525378607
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 17,
+          "score": 33.969097514116584
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 15,
+          "score": 33.61002243232588
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 1,
+          "score": 33.41488458826416
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 6,
+          "score": 33.39247672245983
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 12,
+          "score": 33.146115754541825
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 16,
+          "score": 33.115791578830795
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1491.783618927002,
+        "score_ms": 24976.881742477417,
+        "total_ms": 26468.66536140442
+      }
+    },
+    {
+      "q_id": "spiqa_115",
+      "query": "Based on Table 14 of the BDD100K paper, how do ODS-F scores for lane marking detection, including direction, continuity, and category, evolve as the threshold values (τ = 1, 2, 10 pixels) are increased?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Table14-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 14,
+          "score": 40.35837939376779
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 37.021440374068334
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 30.643819966659066
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 13,
+          "score": 30.603910040408664
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 10,
+          "score": 30.25744023473635
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 30.11950004042592
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 7,
+          "score": 29.937411824896117
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 29.752626926368976
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 29.708793288564266
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 6,
+          "score": 29.558532942897727
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1514.9633884429932,
+        "score_ms": 23668.79105567932,
+        "total_ms": 25183.754444122314
+      }
+    },
+    {
+      "q_id": "spiqa_122",
+      "query": "How do the test accuracies of ChoiceNet, ConvNet, and ConvNet+Mixup on the MNIST dataset, as shown in Table 12, change as the label corruption increases from 25% to 47%, and which model demonstrates the most robustness against label corruption?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Table12-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1805.04687v2",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 18,
+          "score": 46.726164431267534
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 16,
+          "score": 45.88188751435541
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 17,
+          "score": 45.88039660769391
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 19,
+          "score": 43.93732586007536
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 21,
+          "score": 42.85704768520873
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 41.60076093538373
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 39.55229790925296
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 6,
+          "score": 38.679741888954595
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 15,
+          "score": 37.818580757018935
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 7,
+          "score": 36.6306385350299
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1475.7864475250244,
+        "score_ms": 25060.307025909424,
+        "total_ms": 26536.09347343445
+      }
+    },
+    {
+      "q_id": "spiqa_148",
+      "query": "\"In Table 7 of the 'Performant TCP for Low-Power Wireless Networks' paper, CoAP shows a slightly higher reliability (99.5%) compared to TCPlp (99.3%). Can the difference in retransmission mechanisms and radio duty cycles between the two protocols under lossy network conditions explain this discrepancy, and what does this suggest for optimizing TCP-based transport layers in LLNs?\"",
+      "target_doc": "1811.02721v3",
+      "reference_figure": "1811.02721v3-Table7-1.png",
+      "paper_title": "Performant TCP for Low-Power Wireless Networks",
+      "retrieved_unique_ordered": [
+        "1811.02721v3",
+        "1805.06431v4",
+        "1805.04687v2"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1811.02721v3",
+          "page": 12,
+          "score": 55.99796962581604
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 11,
+          "score": 54.37740842216908
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 4,
+          "score": 54.372963186531706
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 1,
+          "score": 54.24055648848662
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 2,
+          "score": 53.27325124402887
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 13,
+          "score": 51.996878147107054
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 14,
+          "score": 51.493726729971854
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 15,
+          "score": 51.43225001505925
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 17,
+          "score": 51.250974151662376
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 3,
+          "score": 50.62412914487504
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 2009.0172290802002,
+        "score_ms": 32588.083505630493,
+        "total_ms": 34597.10073471069
+      }
+    },
+    {
+      "q_id": "spiqa_150",
+      "query": "According to the figure showcasing drivable area prediction via segmentation in the BDD100K paper, how does the model predict drivable spaces when lane markings are absent?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Figure11-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 26.741254425808222
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 10,
+          "score": 26.01521180775393
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 4,
+          "score": 25.957941737082024
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 25.595519210065277
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 24.456993761849276
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 1,
+          "score": 22.764108391333593
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 14,
+          "score": 22.660778263777956
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 22.236524899806682
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 3,
+          "score": 20.657576227840195
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 6,
+          "score": 20.125130705042466
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1010.7159614562988,
+        "score_ms": 15961.872339248657,
+        "total_ms": 16972.588300704956
+      }
+    },
+    {
+      "q_id": "spiqa_161",
+      "query": "Based on the figure depicting TCP goodput over a single IEEE 802.15.4 hop, how does increasing the buffer size initially improve TCP performance, and at what point does further buffer size expansion become detrimental due to latency?",
+      "target_doc": "1811.02721v3",
+      "reference_figure": "1811.02721v3-Figure3-1.png",
+      "paper_title": "Performant TCP for Low-Power Wireless Networks",
+      "retrieved_unique_ordered": [
+        "1811.02721v3",
+        "1805.06431v4",
+        "1805.04687v2"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1811.02721v3",
+          "page": 7,
+          "score": 37.122082527446764
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 9,
+          "score": 33.38658026936173
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 8,
+          "score": 33.04677465777786
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 13,
+          "score": 31.15029661069275
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 2,
+          "score": 30.497800541854303
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 10,
+          "score": 30.118167147290478
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 6,
+          "score": 29.62947066059678
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 1,
+          "score": 29.033377186879534
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 5,
+          "score": 28.80081680092553
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 11,
+          "score": 28.740136449538113
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1120.2681064605713,
+        "score_ms": 21085.08539199829,
+        "total_ms": 22205.353498458862
+      }
+    },
+    {
+      "q_id": "spiqa_164",
+      "query": "How many hops are shown between Node 1 (Hamilton) and the Internet in the OpenThread topology at a transmission power of -8 dBm, as depicted in the figure?",
+      "target_doc": "1811.02721v3",
+      "reference_figure": "1811.02721v3-Figure1-1.png",
+      "paper_title": "Performant TCP for Low-Power Wireless Networks",
+      "retrieved_unique_ordered": [
+        "1811.02721v3",
+        "1805.06431v4",
+        "1805.04687v2"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1811.02721v3",
+          "page": 5,
+          "score": 27.375516419751875
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 4,
+          "score": 23.49251070187165
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 7,
+          "score": 22.90364578689332
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 8,
+          "score": 22.469945853001263
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 10,
+          "score": 22.125413472975197
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 19,
+          "score": 21.942501140758395
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 13,
+          "score": 20.715187542563854
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 14,
+          "score": 20.423378921461335
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 12,
+          "score": 20.077072381742255
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 15,
+          "score": 19.872765817592153
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 988.4381294250488,
+        "score_ms": 16423.428773880005,
+        "total_ms": 17411.866903305054
+      }
+    },
+    {
+      "q_id": "spiqa_171",
+      "query": "When examining Table 13 of the \"Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks\" paper, does applying Mixup to ConvNet+CN lead to better test accuracy compared to using ConvNet+CN without Mixup, specifically when the corruption probability is 80%?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Table13-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1805.04687v2",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 19,
+          "score": 46.03674242737179
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 18,
+          "score": 45.96314316284406
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 16,
+          "score": 45.052774124560074
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 17,
+          "score": 44.433004737700685
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 42.751796550059225
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 21,
+          "score": 41.88151712992112
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 6,
+          "score": 39.65177007293096
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 39.07859534940508
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 7,
+          "score": 37.98538231133716
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 3,
+          "score": 37.87417258996419
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1610.8672618865967,
+        "score_ms": 25586.056232452393,
+        "total_ms": 27196.92349433899
+      }
+    },
+    {
+      "q_id": "spiqa_177",
+      "query": "Based on the figure depicting the BDD100K dataset, what are the detailed types of annotations visualized, including object bounding boxes around cars, lane markings, colored areas for drivable regions, and other provided annotations such as scene tagging and segmentation data?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Figure1-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 4,
+          "score": 34.94281998259248
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 3,
+          "score": 34.74203891270008
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 13,
+          "score": 33.54947819749941
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 33.37417958282458
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 1,
+          "score": 33.233252854959574
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 33.09091376476681
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 32.22330573128784
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 31.8427683238624
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 31.686384885913867
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 10,
+          "score": 31.5106479417027
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1160.1130962371826,
+        "score_ms": 21807.67774581909,
+        "total_ms": 22967.790842056274
+      }
+    },
+    {
+      "q_id": "spiqa_188",
+      "query": "According to the geographical distribution depicted in Figure 2 of the BDD100K paper, what are the three primary regions in the US where most of the driving video data was collected, based on the starting locations of the clips?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Figure2-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1811.02721v3",
+        "1805.06431v4"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 3,
+          "score": 37.820811226913065
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 29.56937405737699
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 29.26307484791323
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 4,
+          "score": 28.2483632665826
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 1,
+          "score": 27.78884538164857
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 10,
+          "score": 27.10292264305008
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 27.094447375959135
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 13,
+          "score": 25.520712270692457
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 6,
+          "score": 25.429761025217886
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 24.43334908210636
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1084.8381519317627,
+        "score_ms": 20393.728494644165,
+        "total_ms": 21478.566646575928
+      }
+    },
+    {
+      "q_id": "spiqa_228",
+      "query": "What does the figure comparing CoAP vs. HTTP/TCP goodput in the \"Performant TCP for Low-Power Wireless Networks\" paper indicate as the difference in median response time between CoAP and HTTP for a 50 KiB response size in an IEEE 802.15.4-based LLN?",
+      "target_doc": "1811.02721v3",
+      "reference_figure": "1811.02721v3-Figure8-1.png",
+      "paper_title": "Performant TCP for Low-Power Wireless Networks",
+      "retrieved_unique_ordered": [
+        "1811.02721v3",
+        "1805.06431v4",
+        "1805.04687v2"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1811.02721v3",
+          "page": 2,
+          "score": 44.30559588839242
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 1,
+          "score": 44.05334720664541
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 13,
+          "score": 42.97372252433706
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 10,
+          "score": 42.87316225441464
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 7,
+          "score": 42.09046013828993
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 4,
+          "score": 41.12240951325339
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 9,
+          "score": 40.78023103526357
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 8,
+          "score": 40.5809693649644
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 3,
+          "score": 39.97786257754251
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 15,
+          "score": 38.33950448206451
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1636.657953262329,
+        "score_ms": 26915.38715362549,
+        "total_ms": 28552.045106887817
+      }
+    },
+    {
+      "q_id": "spiqa_245",
+      "query": "In the figure presented in the \"Performant TCP for Low-Power Wireless Networks\" paper, what role does the Hamilton-based PCB play in the operation of the ultrasonic anemometer?",
+      "target_doc": "1811.02721v3",
+      "reference_figure": "1811.02721v3-Figure13-1.png",
+      "paper_title": "Performant TCP for Low-Power Wireless Networks",
+      "retrieved_unique_ordered": [
+        "1811.02721v3",
+        "1805.04687v2",
+        "1805.06431v4"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1811.02721v3",
+          "page": 22,
+          "score": 29.61657794481107
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 14,
+          "score": 25.193205939487598
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 5,
+          "score": 23.732038312351506
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 1,
+          "score": 23.5532398702926
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 4,
+          "score": 22.924604079111305
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 8,
+          "score": 22.909866084024543
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 7,
+          "score": 21.845512640380548
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 16,
+          "score": 21.823040250370468
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 15,
+          "score": 21.679204175627433
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 13,
+          "score": 20.95310244927532
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1061.5639686584473,
+        "score_ms": 16960.459232330322,
+        "total_ms": 18022.02320098877
+      }
+    },
+    {
+      "q_id": "spiqa_253",
+      "query": "Based on the figure depicting the distribution of scene categories in the BDD100K dataset, which specific scene type has the highest number of instances?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Figure10-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 23.758128805551678
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 3,
+          "score": 23.058197378442856
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 22.55954408584512
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 22.330849318224864
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 13,
+          "score": 21.938640105276136
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 20.75682129048073
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 4,
+          "score": 20.37932504350465
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 1,
+          "score": 19.82463712036406
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 19.4171478828398
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 14,
+          "score": 18.764725298067788
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 885.9145641326904,
+        "score_ms": 14521.529197692871,
+        "total_ms": 15407.443761825562
+      }
+    },
+    {
+      "q_id": "spiqa_258",
+      "query": "In the figure illustrating the Cholesky Block in the paper on Task Agnostic Robust Learning with noisy outputs, how does the Cholesky Block process the target and auxiliary matrices to distinguish between abnormal and normal patterns?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Figure2-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1805.04687v2",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 4,
+          "score": 32.223428745001
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 1,
+          "score": 29.526896153445705
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 13,
+          "score": 28.390996494636056
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 2,
+          "score": 26.703200434371865
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 5,
+          "score": 26.2205777936324
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 26.149903577417717
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 6,
+          "score": 24.690934792073676
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 24.44879407354165
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 11,
+          "score": 24.204596030420362
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 17,
+          "score": 23.742532918342476
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1036.3750457763672,
+        "score_ms": 18663.811206817627,
+        "total_ms": 19700.186252593994
+      }
+    },
+    {
+      "q_id": "spiqa_315",
+      "query": "In the ChoiceNet architecture, as depicted in the figure of the paper, how does the Cholesky block decompose the covariance matrix Σk to ensure that it is positive definite and suitable for generating a valid Gaussian distribution?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Figure3-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1811.02721v3",
+        "1805.04687v2"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 4,
+          "score": 32.00178825337207
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 5,
+          "score": 31.42169983799249
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 13,
+          "score": 29.566189846405905
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 6,
+          "score": 28.363322708915803
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 2,
+          "score": 28.12421684716719
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 27.752782457524518
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 14,
+          "score": 27.257738940876152
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 18,
+          "score": 26.98675815059687
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 17,
+          "score": 26.69797171650862
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 1,
+          "score": 25.872502628968505
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1453.758955001831,
+        "score_ms": 19124.59135055542,
+        "total_ms": 20578.35030555725
+      }
+    },
+    {
+      "q_id": "spiqa_347",
+      "query": "Based on the right-side figure illustrating the CDF of occlusion durations in the BDD100K dataset, what percentage of occlusions last for more than 10 frames?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Figure8-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1811.02721v3",
+        "1805.06431v4"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 29.169546393153723
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 21.893216421769466
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 3,
+          "score": 21.069884925353108
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 13,
+          "score": 20.60863625197817
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 4,
+          "score": 20.291240876984375
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 1,
+          "score": 20.02761859882594
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 14,
+          "score": 19.493032340287755
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 7,
+          "score": 19.250051284534266
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 14,
+          "score": 19.248516841529636
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 12,
+          "score": 19.171852856408805
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 824.8889446258545,
+        "score_ms": 16564.279317855835,
+        "total_ms": 17389.16826248169
+      }
+    },
+    {
+      "q_id": "spiqa_348",
+      "query": "Based on the figure displaying radio duty cycles in a lossy environment impacted by human activity in the paper \"Performant TCP for Low-Power Wireless Networks\", which protocol—TCP or CoAP—exhibits a higher radio duty cycle during the first 7 hours?",
+      "target_doc": "1811.02721v3",
+      "reference_figure": "1811.02721v3-Figure11-1.png",
+      "paper_title": "Performant TCP for Low-Power Wireless Networks",
+      "retrieved_unique_ordered": [
+        "1811.02721v3",
+        "1805.06431v4",
+        "1805.04687v2"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1811.02721v3",
+          "page": 12,
+          "score": 37.57911238874294
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 11,
+          "score": 34.386507552757394
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 13,
+          "score": 32.90873286954593
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 2,
+          "score": 32.16666676398199
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 1,
+          "score": 32.02263364039209
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 15,
+          "score": 31.882975222732057
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 10,
+          "score": 31.762104012472264
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 3,
+          "score": 31.402959277722402
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 9,
+          "score": 31.3968187571445
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 14,
+          "score": 31.28798469871799
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1240.4263019561768,
+        "score_ms": 22262.314796447754,
+        "total_ms": 23502.74109840393
+      }
+    },
+    {
+      "q_id": "spiqa_353",
+      "query": "Referring to the detailed comparison in Table 9 of the paper \"Performant TCP for Low-Power Wireless Networks,\" which TCP stack demonstrates the most complete implementation of essential features such as flow control, congestion control, RTT estimation, and selective ACKs, and which stack lacks the majority of these critical functionalities, revealing significant gaps in its design?",
+      "target_doc": "1811.02721v3",
+      "reference_figure": "1811.02721v3-Table9-1.png",
+      "paper_title": "Performant TCP for Low-Power Wireless Networks",
+      "retrieved_unique_ordered": [
+        "1811.02721v3",
+        "1805.04687v2",
+        "1805.06431v4"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1811.02721v3",
+          "page": 20,
+          "score": 46.77957661763503
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 5,
+          "score": 42.67998682284133
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 2,
+          "score": 42.601167003238515
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 1,
+          "score": 42.26639726734538
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 4,
+          "score": 41.27114073359553
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 16,
+          "score": 41.106318649182185
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 18,
+          "score": 41.01610558556422
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 6,
+          "score": 40.973594109062105
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 15,
+          "score": 40.75778341698242
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 11,
+          "score": 40.7072292046505
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1593.4422016143799,
+        "score_ms": 27662.641763687134,
+        "total_ms": 29256.083965301514
+      }
+    },
+    {
+      "q_id": "spiqa_369",
+      "query": "Based on the figure that illustrates the long-tail distribution of object categories in the BDD100K dataset, which specific category is the least frequent in terms of instance count?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Figure3-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 3,
+          "score": 27.746868214802817
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 25.473785922818934
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 24.723898438522156
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 13,
+          "score": 24.43243556436937
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 22.978490160467118
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 4,
+          "score": 21.53475454985164
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 21.363102838326085
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 21.09937307031214
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 1,
+          "score": 20.92349507207109
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 2,
+          "score": 19.646241914460916
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 774.0321159362793,
+        "score_ms": 16474.661827087402,
+        "total_ms": 17248.69394302368
+      }
+    },
+    {
+      "q_id": "spiqa_370",
+      "query": "Referring to Table 12 of the BDD100K MOTS annotations, which object category has the highest total number of annotations, and does the high count of occluded annotations provide evidence that this category might be more challenging to annotate accurately?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Table12-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 35.071965424322116
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 31.099647705210373
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 30.580884234965197
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 3,
+          "score": 29.56124700318469
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 29.43611862573016
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 13,
+          "score": 27.856696413757163
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 4,
+          "score": 27.55609109425859
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 27.148190011124825
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 10,
+          "score": 27.026070746826008
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 1,
+          "score": 26.84629194313311
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1161.6263389587402,
+        "score_ms": 21659.67607498169,
+        "total_ms": 22821.30241394043
+      }
+    },
+    {
+      "q_id": "spiqa_394",
+      "query": "Based on the lane marking statistics figure in the paper, which dataset is reported to have the highest number of annotated lane markings?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Table1-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 4,
+          "score": 22.09986667314479
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 10,
+          "score": 21.55304270520719
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 20.21143570037384
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 19.731368881291928
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 3,
+          "score": 19.46868353374157
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 19.167981751539628
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 18.793606967374217
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 18,
+          "score": 17.921239528357546
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 17.84334200876765
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 14,
+          "score": 17.608022250627982
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 809.9896907806396,
+        "score_ms": 12404.002666473389,
+        "total_ms": 13213.992357254028
+      }
+    },
+    {
+      "q_id": "spiqa_409",
+      "query": "From the domain discrepancy experiments illustrated in Table 4 of the BDD100K paper, which domain shift leads to a greater decrease in object detection performance: city vs. non-city environments or daytime vs. nighttime conditions?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Table4-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1811.02721v3",
+        "1805.06431v4"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 6,
+          "score": 36.56986779186627
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 14,
+          "score": 33.44223481348308
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 10,
+          "score": 30.731086653249804
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 3,
+          "score": 29.534226109406518
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 28.235050249652886
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 4,
+          "score": 27.390063947947056
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 26.892813425359236
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 26.17471094888606
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 26.16025323231588
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 1,
+          "score": 25.821786247382988
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1108.7005138397217,
+        "score_ms": 20043.999195098877,
+        "total_ms": 21152.6997089386
+      }
+    },
+    {
+      "q_id": "spiqa_445",
+      "query": "In the context of Table 1, which method demonstrates the most robust performance, consistently achieving the lowest RMSE across various outlier rates, particularly when noisy or corrupted outputs are present in the synthetic datasets?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Table4-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1805.04687v2",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 7,
+          "score": 31.031445614129552
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 13,
+          "score": 30.130640341114486
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 14,
+          "score": 28.95591304530535
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 15,
+          "score": 27.294272157501837
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 25.02039319305186
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 21,
+          "score": 24.502955634047794
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 17,
+          "score": 24.419669205785794
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 24.000834137819766
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 19,
+          "score": 23.31646519010701
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 18,
+          "score": 23.116742475998763
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1121.3324069976807,
+        "score_ms": 17199.541568756104,
+        "total_ms": 18320.873975753784
+      }
+    },
+    {
+      "q_id": "spiqa_446",
+      "query": "Based on Table 7, which method consistently achieves the lowest collision rates on straight lanes, even when up to 40% of the vehicles are outliers, indicating the safest performance for autonomous driving in the presence of noisy data?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Table7-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1811.02721v3",
+        "1805.04687v2"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 15,
+          "score": 34.239344038311174
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 14,
+          "score": 26.38594699260284
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 25.942540524411015
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 17,
+          "score": 25.864989242305455
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 13,
+          "score": 25.41248836065489
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 7,
+          "score": 25.17073290010012
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 25.141028006208217
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 16,
+          "score": 24.551518661866055
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 6,
+          "score": 24.507639413961442
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 1,
+          "score": 24.357215702946633
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1131.1419010162354,
+        "score_ms": 19658.771514892578,
+        "total_ms": 20789.913415908813
+      }
+    },
+    {
+      "q_id": "spiqa_449",
+      "query": "Based on the results of Table 6 for the HalfCheetah behavior cloning task, how does ChoiceNet perform relative to MDN at different outlier percentages (10%, 20%, and 30%), and how does the performance gap between the two models change as the level of corrupt data increases?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Table6-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1811.02721v3",
+        "1805.04687v2"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 14,
+          "score": 45.23553641740318
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 15,
+          "score": 43.126375271065626
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 21,
+          "score": 40.69660543603641
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 19,
+          "score": 40.111225738748544
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 7,
+          "score": 40.075904832459855
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 39.65133471907029
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 13,
+          "score": 39.4912315015963
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 39.18981760732822
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 17,
+          "score": 39.10339572828161
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 18,
+          "score": 38.90561829701619
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1573.4508037567139,
+        "score_ms": 25135.897397994995,
+        "total_ms": 26709.34820175171
+      }
+    },
+    {
+      "q_id": "spiqa_469",
+      "query": "In the figure comparing methods on MNIST with noise levels of 25%, 40%, 45%, and 47%, which model consistently achieves the highest accuracy across both the training and test sets?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Figure13-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1805.04687v2",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 31.877269500953844
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 18,
+          "score": 31.238214029421215
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 21,
+          "score": 31.103906966360228
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 30.644300925201605
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 19,
+          "score": 30.408337196466164
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 17,
+          "score": 29.65695078238059
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 16,
+          "score": 28.26035913765736
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 15,
+          "score": 27.360571573204652
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 13,
+          "score": 27.192711851654167
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 6,
+          "score": 27.047220468040905
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1060.1937770843506,
+        "score_ms": 18990.38314819336,
+        "total_ms": 20050.57692527771
+      }
+    },
+    {
+      "q_id": "spiqa_477",
+      "query": "Referring to Table 15, which method achieves the highest test accuracy on the Large Movie Review dataset when there is no label corruption (p = 0%), and how does its performance change as corruption levels increase to 40%?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Table15-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1805.04687v2",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 21,
+          "score": 35.88058786049078
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 32.20069467097119
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 16,
+          "score": 31.375537982051355
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 18,
+          "score": 31.35558848289702
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 17,
+          "score": 31.26606731803622
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 19,
+          "score": 29.34827893687543
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 15,
+          "score": 28.076030778998756
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 6,
+          "score": 27.33648903714311
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 7,
+          "score": 26.76394959616846
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 13,
+          "score": 26.260576943876913
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1136.8966102600098,
+        "score_ms": 19999.166250228882,
+        "total_ms": 21136.06286048889
+      }
+    },
+    {
+      "q_id": "spiqa_538",
+      "query": "According to Table 8 in the paper \"Performant TCP for Low-Power Wireless Networks,\" which module of TCPlp on TinyOS consumes the most active RAM, and what is the exact memory consumption?",
+      "target_doc": "1811.02721v3",
+      "reference_figure": "1811.02721v3-Table8-1.png",
+      "paper_title": "Performant TCP for Low-Power Wireless Networks",
+      "retrieved_unique_ordered": [
+        "1811.02721v3",
+        "1805.06431v4",
+        "1805.04687v2"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1811.02721v3",
+          "page": 20,
+          "score": 31.366348648040002
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 5,
+          "score": 30.35588843676669
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 6,
+          "score": 28.826347043534042
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 2,
+          "score": 28.218053452033928
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 4,
+          "score": 27.497787106229225
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 1,
+          "score": 27.366165172381443
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 3,
+          "score": 26.614123270624987
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 19,
+          "score": 26.599998144190977
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 15,
+          "score": 26.491588072252853
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 11,
+          "score": 26.15982829879431
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1726.8280982971191,
+        "score_ms": 18006.62851333618,
+        "total_ms": 19733.4566116333
+      }
+    },
+    {
+      "q_id": "spiqa_546",
+      "query": "In the figure comparing resulting trajectories of methods trained with mixed demonstrations, which method exhibits the safest behavior by staying closest to the center of the lane and avoiding the oncoming vehicle?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Figure8-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1805.04687v2",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 15,
+          "score": 24.653984273017386
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 16,
+          "score": 24.03909991635919
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 6,
+          "score": 21.04548507500158
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 20.487466190901614
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 4,
+          "score": 19.80654049036093
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 19.40118385424921
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 19.007168177093263
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 18.971355459289043
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 14,
+          "score": 18.892666555344476
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 10,
+          "score": 18.553459033460967
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 938.9197826385498,
+        "score_ms": 15533.638715744019,
+        "total_ms": 16472.55849838257
+      }
+    },
+    {
+      "q_id": "spiqa_552",
+      "query": "According to Figure (c) of the paper \"Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks,\" which method achieves the lowest average fitting error across varying outlier rates when fitting the step function?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Figure6-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1805.04687v2",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 7,
+          "score": 32.89091520492366
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 6,
+          "score": 29.9541477318744
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 1,
+          "score": 28.787993118672603
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 3,
+          "score": 27.999744103566627
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 13,
+          "score": 26.989978055211395
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 18,
+          "score": 26.833981858348125
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 26.39990470401608
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 19,
+          "score": 26.288244491661317
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 21,
+          "score": 25.94606097826079
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 14,
+          "score": 25.72397593416281
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 962.4509811401367,
+        "score_ms": 19328.607320785522,
+        "total_ms": 20291.05830192566
+      }
+    },
+    {
+      "q_id": "spiqa_559",
+      "query": "Based on the figure illustrating binary classification on corrupt data using both a mixture of densities and a mixture of classifiers, which method is shown to more effectively handle outliers and accurately classify the data points?",
+      "target_doc": "1805.06431v4",
+      "reference_figure": "1805.06431v4-Figure1-1.png",
+      "paper_title": "Task Agnostic Robust Learning on Corrupt Outputs by Correlation-Guided Mixture Density Networks",
+      "retrieved_unique_ordered": [
+        "1805.06431v4",
+        "1805.04687v2",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.06431v4",
+          "page": 3,
+          "score": 29.455362123291707
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 1,
+          "score": 26.974391021170504
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 6,
+          "score": 25.746331231301156
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 5,
+          "score": 23.61715605545851
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 21,
+          "score": 23.506293490965618
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 4,
+          "score": 23.225875676216674
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 13,
+          "score": 23.175367558552807
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 23.04659440728028
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 2,
+          "score": 22.858547198607994
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 7,
+          "score": 22.794624855131133
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 958.3892822265625,
+        "score_ms": 16888.70906829834,
+        "total_ms": 17847.098350524902
+      }
+    },
+    {
+      "q_id": "spiqa_577",
+      "query": "According to Table 1 in *Performant TCP for Low-Power Wireless Networks*, which technique addressing the *Resource Constraints* challenge provided the greatest overall memory reduction across both send and receive buffers for low-power sensor platforms?",
+      "target_doc": "1811.02721v3",
+      "reference_figure": "1811.02721v3-Table1-1.png",
+      "paper_title": "Performant TCP for Low-Power Wireless Networks",
+      "retrieved_unique_ordered": [
+        "1811.02721v3",
+        "1805.04687v2",
+        "1805.06431v4"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1811.02721v3",
+          "page": 2,
+          "score": 33.97645721527806
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 5,
+          "score": 33.273532968272775
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 1,
+          "score": 31.58972034213366
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 6,
+          "score": 31.282692157830752
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 3,
+          "score": 30.633592111887992
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 4,
+          "score": 30.456500876538485
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 11,
+          "score": 28.171734767711314
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 16,
+          "score": 28.105747099865766
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 14,
+          "score": 28.088804242914193
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 15,
+          "score": 27.59524098080874
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1235.6858253479004,
+        "score_ms": 19355.990648269653,
+        "total_ms": 20591.676473617554
+      }
+    },
+    {
+      "q_id": "spiqa_581",
+      "query": "Referencing Table 9 in the BDD100K paper, which specific training approach achieved the optimal balance between minimizing false negatives (FN) and false positives (FP), while also achieving the highest MOTSA score in the multi-object tracking and segmentation task?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Table9-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 37.72010579530911
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 32.74326365238812
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 32.36325906281854
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 29.683607800179743
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 16,
+          "score": 29.43922849970113
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 29.15232811437454
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 1,
+          "score": 29.032664129328623
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 28.90503327089391
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 21,
+          "score": 27.92353715509398
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 14,
+          "score": 27.86396241260809
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1494.5042133331299,
+        "score_ms": 22370.34821510315,
+        "total_ms": 23864.85242843628
+      }
+    },
+    {
+      "q_id": "spiqa_587",
+      "query": "Based on the class distribution presented in Figure 14 of the BDD100K paper for semantic instance segmentation, which object type appears most frequently in the dataset?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Figure14-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 25.993450920012037
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 13,
+          "score": 24.745039801062376
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 24.18269517531735
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 23.98844218940212
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 3,
+          "score": 23.70982328296668
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 22.522323378965666
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 22.442079117783578
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 1,
+          "score": 22.242480827670647
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 4,
+          "score": 21.667314497889492
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 10,
+          "score": 21.441245580012037
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 894.8414325714111,
+        "score_ms": 15908.493757247925,
+        "total_ms": 16803.335189819336
+      }
+    },
+    {
+      "q_id": "spiqa_589",
+      "query": "In the BDD100K paper, as depicted in Figure 4, which weather condition yields the highest classification accuracy for the image tagging task using the DLA-34 model?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Figure4-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 3,
+          "score": 30.782339279321604
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 27.268529823519202
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 23.441287337744143
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 22.500764832788263
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 22.017637233468122
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 2,
+          "score": 21.1692633370767
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 20,
+          "score": 21.15173409700219
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 8,
+          "score": 21.011728774246876
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 6,
+          "score": 20.93221294406976
+        },
+        {
+          "doc_id": "1805.06431v4",
+          "page": 6,
+          "score": 20.720868147705914
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 966.9098854064941,
+        "score_ms": 16896.589994430542,
+        "total_ms": 17863.499879837036
+      }
+    },
+    {
+      "q_id": "spiqa_591",
+      "query": "Based on the data presented in Table 3, why do MOTS datasets like KITTI MOTS and MOTS Challenge require significantly denser annotations per frame than YouTube VOS, despite having fewer frames and sequences, and how does this correlate with the multitask learning objectives in autonomous driving?",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Table3-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 38.956312364461155
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 33.601945969574444
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 32.778786152073735
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 13,
+          "score": 32.004260119383616
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 2,
+          "score": 31.941788713316782
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 1,
+          "score": 30.845694531617482
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 10,
+          "score": 30.603920312462833
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 6,
+          "score": 30.46087008554605
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 30.37123310278548
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 9,
+          "score": 29.596784611960175
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1456.1614990234375,
+        "score_ms": 23144.718885421753,
+        "total_ms": 24600.88038444519
+      }
+    },
+    {
+      "q_id": "spiqa_596",
+      "query": "\"According to Table 1 in your paper, why does the BDD100K dataset, despite its significantly higher total pedestrian count (86,047), record substantially fewer persons per image (1.2) compared to Cityscapes (7.0)? What factors, mentioned in the passage and table, explain this disparity?\"",
+      "target_doc": "1805.04687v2",
+      "reference_figure": "1805.04687v2-Table10-1.png",
+      "paper_title": "BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning",
+      "retrieved_unique_ordered": [
+        "1805.04687v2",
+        "1805.06431v4",
+        "1811.02721v3"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1805.04687v2",
+          "page": 10,
+          "score": 43.88337033723474
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 11,
+          "score": 39.4593439596174
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 6,
+          "score": 39.11399885227911
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 5,
+          "score": 38.44207815595564
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 4,
+          "score": 38.035641431748445
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 3,
+          "score": 37.614263606875284
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 7,
+          "score": 36.685706804317306
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 12,
+          "score": 36.13982208990342
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 1,
+          "score": 35.64873207078563
+        },
+        {
+          "doc_id": "1805.04687v2",
+          "page": 8,
+          "score": 34.40450429014163
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1712.677001953125,
+        "score_ms": 28241.62459373474,
+        "total_ms": 29954.301595687866
+      }
+    },
+    {
+      "q_id": "spiqa_598",
+      "query": "How does 6LoWPAN fragmentation, as demonstrated by the data in Table 5, enhance bandwidth efficiency by reducing TCP/IP header overhead for subsequent fragments in low-power wireless networks?",
+      "target_doc": "1811.02721v3",
+      "reference_figure": "1811.02721v3-Table5-1.png",
+      "paper_title": "Performant TCP for Low-Power Wireless Networks",
+      "retrieved_unique_ordered": [
+        "1811.02721v3",
+        "1805.04687v2",
+        "1805.06431v4"
+      ],
+      "retrieved_pages": [
+        {
+          "doc_id": "1811.02721v3",
+          "page": 2,
+          "score": 28.394244770233854
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 6,
+          "score": 27.555469263952546
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 12,
+          "score": 26.066852316927452
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 7,
+          "score": 25.84315036472981
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 4,
+          "score": 25.67016861612501
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 5,
+          "score": 25.484945707106817
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 8,
+          "score": 25.397013326924935
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 15,
+          "score": 24.735263575634235
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 1,
+          "score": 24.57351895235479
+        },
+        {
+          "doc_id": "1811.02721v3",
+          "page": 11,
+          "score": 24.3057798845839
+        }
+      ],
+      "rr": 1.0,
+      "recall_at_k": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "10": 1.0
+      },
+      "timing_ms": {
+        "query_encode_ms": 1025.4476070404053,
+        "score_ms": 17367.10548400879,
+        "total_ms": 18392.553091049194
+      }
+    }
+  ]
+}

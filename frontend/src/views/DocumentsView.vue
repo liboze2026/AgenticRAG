@@ -28,9 +28,9 @@ async function loadDatasets() {
 }
 
 async function handleDelete(id: string) {
-  if (!confirm('确认注销此文献？')) return
+  if (!confirm('确认删除此文档？')) return
   await documentsApi.delete(id)
-  msg.success('已注销')
+  msg.success('已删除')
   await loadDocuments()
 }
 
@@ -41,10 +41,10 @@ async function handleRetry(id: string) {
 }
 
 const stats = computed(() => [
-  { label: '在 编 文 献', value: documents.value.length, unit: '件' },
-  { label: '页 面 总 数', value: documents.value.reduce((s, d) => s + (d.total_pages || 0), 0), unit: '页' },
-  { label: '已 编 目', value: documents.value.filter(d => d.status === 'completed').length, unit: '件' },
-  { label: '失 败 件', value: documents.value.filter(d => d.status === 'failed').length, unit: '件' },
+  { label: '文档总数', value: documents.value.length, unit: '个' },
+  { label: '页面总数', value: documents.value.reduce((s, d) => s + (d.total_pages || 0), 0), unit: '页' },
+  { label: '已索引', value: documents.value.filter(d => d.status === 'completed').length, unit: '个' },
+  { label: '索引失败', value: documents.value.filter(d => d.status === 'failed').length, unit: '个' },
 ])
 
 const datasetOptions = computed(() => allDatasets.value.map(d => ({ label: d.name, value: d.id, tag: `${d.document_count}件` })))
@@ -59,16 +59,16 @@ onMounted(() => {
   <div class="dv">
     <AppPageHead
       chapter="3"
-      kicker="archivum · 志　料"
-      title="文 献 管 理"
-      subtitle="呈送 PDF 文献 · 系统自动版面分析与多模态向量索引"
-      stamp="文献&#10;在编"
+      kicker="文档管理"
+      title="文档管理"
+      subtitle="上传 PDF 文档，系统自动进行版面分析与多模态向量索引"
+      stamp="文档&#10;管理"
     />
 
     <AppMetricGrid :metrics="stats" :cols="4" />
 
     <div class="dv__cards">
-      <AppCard title="呈 送 文 献" subtitle="upload pdf for ingestion" :num="'A'">
+      <AppCard title="上传文档" subtitle="upload pdf" :num="'A'">
         <DocumentUpload @uploaded="loadDocuments" />
       </AppCard>
     </div>
@@ -77,22 +77,22 @@ onMounted(() => {
       <div class="dv__list-head">
         <h3 class="dv__list-title">
           <span class="dv__list-num">B</span>
-          在 编 列 表
-          <span class="dv__list-count">（{{ documents.length }} 件）</span>
+          文档列表
+          <span class="dv__list-count">（共 {{ documents.length }} 个）</span>
         </h3>
         <div class="dv__list-tools">
           <div class="dv__filter">
             <AppSelect
               v-model="filterDataset"
               :options="datasetOptions"
-              placeholder="筛选 · 集录"
+              placeholder="按数据集筛选"
               size="sm"
               @change="loadDocuments"
             />
           </div>
           <AppButton variant="ghost" size="sm" :loading="loading" @click="loadDocuments">
             <Icon name="reload" :size="13" />
-            刷 新
+            刷新
           </AppButton>
         </div>
       </div>

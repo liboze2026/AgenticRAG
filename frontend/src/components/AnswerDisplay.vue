@@ -23,7 +23,7 @@ const segments = computed<Segment[]>(() => {
 
 function copyAnswer() {
   navigator.clipboard.writeText(props.answer)
-  msg.success('已抄录至剪贴板')
+  msg.success('已复制到剪贴板')
 }
 </script>
 
@@ -31,10 +31,10 @@ function copyAnswer() {
   <div v-if="answer" class="ans">
     <div class="ans__head">
       <span class="ans__seal">答</span>
-      <span class="ans__label">系 统 释 答</span>
-      <button class="ans__copy" @click="copyAnswer" title="抄录">
+      <span class="ans__label">系统回答</span>
+      <button class="ans__copy" @click="copyAnswer" title="复制">
         <Icon name="edit" :size="13" />
-        <span>抄　录</span>
+        <span>复制</span>
       </button>
     </div>
     <div class="ans__body">

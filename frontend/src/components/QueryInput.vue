@@ -32,7 +32,7 @@ function bumpK(d: number) {
       <AppInput
         v-model="query"
         size="lg"
-        placeholder="问 · 系统自动检索相关页面与版面元素"
+        placeholder="输入问题，系统自动检索相关页面与版面元素"
         prefix="问"
         @enter="send"
       />
@@ -50,10 +50,10 @@ function bumpK(d: number) {
       </button>
     </div>
     <AppButton variant="primary" size="lg" :loading="loading" :disabled="!query.trim()" @click="send">
-      检 · 答
+      检索 + 生成
     </AppButton>
     <AppButton variant="ghost" size="lg" :loading="loading" :disabled="!query.trim()" @click="justRetrieve">
-      仅 检 索
+      仅检索
     </AppButton>
   </div>
 </template>

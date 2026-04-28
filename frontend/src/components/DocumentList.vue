@@ -15,7 +15,7 @@ function shortId(id: string) {
 }
 
 function statusLabel(s: string) {
-  return ({ completed: '已 编 目', indexing: '编 目 中', pending: '待 处 理', failed: '处 理 失 败' } as Record<string,string>)[s] || s
+  return ({ completed: '已索引', indexing: '索引中', pending: '等待中', failed: '索引失败' } as Record<string,string>)[s] || s
 }
 
 function statusVar(s: string): 'ok' | 'warn' | 'red' | 'mute' {
@@ -24,7 +24,7 @@ function statusVar(s: string): 'ok' | 'warn' | 'red' | 'mute' {
 </script>
 
 <template>
-  <AppEmpty v-if="documents.length === 0" text="尚无藏目" hint="upload pdf to begin" />
+  <AppEmpty v-if="documents.length === 0" text="暂无文档" hint="请先上传 PDF" />
   <div v-else class="dl">
     <article
       v-for="doc in documents"
@@ -51,7 +51,7 @@ function statusVar(s: string): 'ok' | 'warn' | 'red' | 'mute' {
         <h4 class="dl-card__name" :title="doc.filename">{{ doc.filename }}</h4>
         <dl class="dl-card__meta">
           <div class="dl-card__row">
-            <dt>页　数</dt>
+            <dt>页数</dt>
             <dd>{{ doc.total_pages }}</dd>
           </div>
           <div class="dl-card__row">
@@ -59,7 +59,7 @@ function statusVar(s: string): 'ok' | 'warn' | 'red' | 'mute' {
             <dd>{{ doc.indexed_pages }} / {{ doc.total_pages }}</dd>
           </div>
           <div class="dl-card__row" v-if="doc.dataset_id">
-            <dt>所属集</dt>
+            <dt>数据集</dt>
             <dd># {{ doc.dataset_id }}</dd>
           </div>
         </dl>
@@ -74,10 +74,10 @@ function statusVar(s: string): 'ok' | 'warn' | 'red' | 'mute' {
 
       <footer class="dl-card__foot">
         <AppButton v-if="doc.status === 'failed'" variant="ghost" size="sm" @click="$emit('retry', doc.id)">
-          重 试
+          重试
         </AppButton>
         <AppButton variant="red" size="sm" @click="$emit('delete', doc.id)">
-          注 销
+          删除
         </AppButton>
       </footer>
     </article>

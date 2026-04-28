@@ -10,34 +10,36 @@ const health = ref<any>(null)
 const docs = ref<any[]>([])
 
 const stats = computed(() => [
-  { label: '在 编 文 献', value: docs.value.length, unit: '件' },
-  { label: '总 页 面', value: docs.value.reduce((s, d) => s + (d.total_pages || 0), 0), unit: '页' },
-  { label: '编 目 完 成', value: docs.value.filter(d => d.status === 'completed').length, unit: '件' },
-  { label: '处 理 失 败', value: docs.value.filter(d => d.status === 'failed').length, unit: '件' },
+  { label: '文档总数', value: docs.value.length, unit: '个' },
+  { label: '页面总数', value: docs.value.reduce((s, d) => s + (d.total_pages || 0), 0), unit: '页' },
+  { label: '已完成索引', value: docs.value.filter(d => d.status === 'completed').length, unit: '个' },
+  { label: '索引失败', value: docs.value.filter(d => d.status === 'failed').length, unit: '个' },
 ])
 
 const archSteps = [
-  { id: '1', name: '呈　送', en: 'INGEST', icon: 'upload', desc: 'PDF 文献入库 · 自动版面分析' },
-  { id: '2', name: '编　目', en: 'INDEX', icon: 'archive', desc: '页面切片 · 多模态向量化' },
-  { id: '3', name: '检　索', en: 'RETRIEVE', icon: 'search', desc: 'ColPali 视觉检索 · 重排序' },
-  { id: '4', name: '答　对', en: 'GENERATE', icon: 'chat', desc: 'LLM 生成 · 引用回填' },
+  { id: '1', name: '上传',  en: 'INGEST',   icon: 'upload',  desc: 'PDF 文档上传，自动版面分析' },
+  { id: '2', name: '索引',  en: 'INDEX',    icon: 'archive', desc: '页面切片，多模态向量化' },
+  { id: '3', name: '检索',  en: 'RETRIEVE', icon: 'search',  desc: 'ColPali 视觉检索 + 重排序' },
+  { id: '4', name: '生成',  en: 'GENERATE', icon: 'chat',    desc: 'LLM 生成回答，附引用来源' },
 ]
 
 const services = computed(() => [
   {
     name: '后端服务',
     state: health.value ? 'ok' : 'unknown',
-    detail: health.value ? '运 行' : '检 测',
+    detail: health.value ? '运行中' : '检测中',
   },
   {
-    name: '工作节点',
+    name: 'Worker 节点',
     state: health.value?.worker?.status === 'ok' ? 'ok' : (health.value ? 'error' : 'unknown'),
-    detail: health.value?.worker?.model ? '就 绪' : (health.value?.worker?.status === 'ok' ? '就 绪' : (health.value ? '未 连' : '检 测')),
+    detail: health.value?.worker?.model
+      ? health.value.worker.model
+      : (health.value?.worker?.status === 'ok' ? '就绪' : (health.value ? '未连接' : '检测中')),
   },
   {
     name: 'Qdrant 向量库',
     state: health.value?.qdrant?.status === 'ok' ? 'ok' : (health.value ? 'error' : 'unknown'),
-    detail: health.value?.qdrant?.status === 'ok' ? '就 绪' : (health.value ? '未 连' : '检 测'),
+    detail: health.value?.qdrant?.status === 'ok' ? '就绪' : (health.value ? '未连接' : '检测中'),
   },
 ])
 
@@ -45,14 +47,14 @@ function stateVar(s: string): 'ok' | 'red' | 'mute' {
   return ({ ok: 'ok', error: 'red', unknown: 'mute' } as const)[s as 'ok'] || 'mute'
 }
 function stateLabel(s: string) {
-  return ({ ok: '正 常', error: '异 常', unknown: '待 检' } as Record<string,string>)[s] || s
+  return ({ ok: '正常', error: '异常', unknown: '检测中' } as Record<string,string>)[s] || s
 }
 
 const actions = [
-  { to: '/chat', icon: 'chat', label: '智 能 对 话', en: 'Multi-turn dialogue', desc: '保留上下文 · 多轮追问 · 引用回填', primary: true, chap: '1' },
-  { to: '/query', icon: 'search', label: '检 索 问 答', en: 'Single-shot query', desc: '一次问询 · 完整链路 · 证据呈交', chap: '2' },
-  { to: '/documents', icon: 'doc', label: '文 献 管 理', en: 'Document corpus', desc: '呈送 PDF · 编目 · 注销', chap: '3' },
-  { to: '/experiments', icon: 'flask', label: '评 测 录', en: 'Experiment & evaluation', desc: '切换流水线 · 评估指标', chap: '5' },
+  { to: '/chat',        icon: 'chat',    label: '多轮对话', en: 'Multi-turn Chat',     desc: '保留上下文，多轮追问，引用来源回填', primary: true, chap: '1' },
+  { to: '/query',       icon: 'search',  label: '单次检索', en: 'Single-shot Query',   desc: '单次提问，展示检索结果与生成答案',                  chap: '2' },
+  { to: '/documents',   icon: 'doc',     label: '文档管理', en: 'Document Management', desc: '上传 PDF，自动索引，支持删除与重试',                chap: '3' },
+  { to: '/experiments', icon: 'flask',   label: '实验评测', en: 'Experiment & Eval',   desc: '切换 Pipeline，计算 Recall / MRR',             chap: '5' },
 ]
 
 onMounted(async () => {
@@ -65,23 +67,23 @@ onMounted(async () => {
   <div class="hv">
     <AppPageHead
       chapter="0"
-      kicker="prologus · 论 著 总 纲"
-      title="智 能 体 检 索 增 强 系 统"
-      subtitle="面向多模态学术文献的版式感知检索与多轮对话框架 · 论文学位演示版"
+      kicker="系统概览"
+      title="智能体检索增强系统"
+      subtitle="面向多模态学术文献的版面感知检索与多轮对话框架，论文演示版"
       :meta="[
         { label: '系统', value: 'AGENTIC-RAG' },
         { label: '版本', value: 'v1.0' },
       ]"
-      stamp="论著&#10;演示"
+      stamp="论文&#10;演示"
     />
 
     <AppMetricGrid :metrics="stats" :cols="4" class="hv__grid" />
 
     <section class="hv__sec">
       <header class="hv__sec-head">
-        <span class="hv__sec-num">壹</span>
-        <h2 class="hv__sec-title">系 统 架 构</h2>
-        <p class="hv__sec-en">SYSTEM ARCHITECTURE · FLOW DIAGRAM</p>
+        <span class="hv__sec-num">1</span>
+        <h2 class="hv__sec-title">系统架构</h2>
+        <p class="hv__sec-en">SYSTEM ARCHITECTURE</p>
       </header>
       <ol class="hv__arch">
         <template v-for="(s, i) in archSteps" :key="s.id">
@@ -106,8 +108,8 @@ onMounted(async () => {
     <section class="hv__sec hv__sec--two">
       <div>
         <header class="hv__sec-head">
-          <span class="hv__sec-num">貳</span>
-          <h2 class="hv__sec-title">服 务 状 态</h2>
+          <span class="hv__sec-num">2</span>
+          <h2 class="hv__sec-title">服务状态</h2>
         </header>
         <ul class="hv__svc">
           <li v-for="(s, i) in services" :key="i" class="hv__svc-item">
@@ -121,8 +123,8 @@ onMounted(async () => {
 
       <div>
         <header class="hv__sec-head">
-          <span class="hv__sec-num">叁</span>
-          <h2 class="hv__sec-title">速 入 章 节</h2>
+          <span class="hv__sec-num">3</span>
+          <h2 class="hv__sec-title">快速入口</h2>
         </header>
         <div class="hv__act">
           <RouterLink
@@ -132,7 +134,7 @@ onMounted(async () => {
             class="hv-act-card"
             :class="{ 'hv-act-card--primary': a.primary }"
           >
-            <span class="hv-act-card__chap">第 {{ a.chap }} 编</span>
+            <span class="hv-act-card__chap">第 {{ a.chap }} 节</span>
             <Icon :name="a.icon" :size="22" class="hv-act-card__icon" />
             <span class="hv-act-card__label">{{ a.label }}</span>
             <span class="hv-act-card__en">{{ a.en }}</span>
@@ -144,8 +146,8 @@ onMounted(async () => {
     </section>
 
     <footer class="hv__foot">
-      <span>AGENTIC-RAG · 论 文 学 位 演 示</span>
-      <span class="hv__foot-mono">FOLIO 00 · v1.0 · MMXXVI</span>
+      <span>AGENTIC-RAG · 论文演示版</span>
+      <span class="hv__foot-mono">v1.0 · 2026</span>
     </footer>
   </div>
 </template>
@@ -167,11 +169,12 @@ onMounted(async () => {
   margin-bottom: var(--gap-5);
 }
 .hv__sec-num {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-weight: 900;
   font-size: var(--fz-h2);
   color: var(--red);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 .hv__sec-title {
   flex: 1;
@@ -246,7 +249,6 @@ onMounted(async () => {
   color: var(--ink-soft);
   margin: 0;
   line-height: 1.6;
-  font-style: italic;
 }
 
 .hv__arch-sep {
@@ -295,13 +297,13 @@ onMounted(async () => {
   font-family: var(--serif);
   font-weight: 600;
   color: var(--ink);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
 }
 .hv__svc-detail {
   font-family: var(--mono);
   font-size: var(--fz-mono-sm);
   color: var(--ink-mute);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
 }
 
 /* Actions */
@@ -367,7 +369,7 @@ onMounted(async () => {
   font-weight: 700;
   font-size: var(--fz-h4);
   color: var(--ink);
-  letter-spacing: 0.18em;
+  letter-spacing: 0.05em;
   margin-bottom: 2px;
 }
 .hv-act-card__en {
@@ -382,7 +384,6 @@ onMounted(async () => {
 .hv-act-card__desc {
   margin: 0;
   font-family: var(--serif);
-  font-style: italic;
   font-size: var(--fz-sm);
   color: var(--ink-soft);
   line-height: 1.5;

@@ -23,7 +23,7 @@ async function refresh() {
 
 async function create() {
   if (!newName.value.trim()) {
-    msg.warn('请填写集录名称')
+    msg.warn('请填写数据集名称')
     return
   }
   creating.value = true
@@ -31,24 +31,24 @@ async function create() {
     await datasetsApi.create(newName.value.trim(), newDesc.value.trim())
     newName.value = ''
     newDesc.value = ''
-    msg.success('已建立集录')
+    msg.success('数据集已创建')
     await refresh()
   } finally { creating.value = false }
 }
 
 async function handleDelete(id: number) {
-  if (!confirm('确认注销此集录？')) return
+  if (!confirm('确认删除此数据集？')) return
   await datasetsApi.delete(id)
-  msg.success('已注销')
+  msg.success('已删除')
   await refresh()
 }
 
 const cols = [
-  { key: 'id', label: '编号', width: '70px', numeric: true },
-  { key: 'name', label: '集录名称', width: '220px' },
+  { key: 'id', label: 'ID', width: '70px', numeric: true },
+  { key: 'name', label: '名称', width: '220px' },
   { key: 'description', label: '描述' },
-  { key: 'document_count', label: '文献数', width: '90px', numeric: true },
-  { key: 'created_at', label: '建立时间', width: '180px' },
+  { key: 'document_count', label: '文档数', width: '90px', numeric: true },
+  { key: 'created_at', label: '创建时间', width: '180px' },
   { key: 'ops', label: '操作', width: '100px', align: 'center' as const },
 ]
 
@@ -66,43 +66,43 @@ onMounted(refresh)
   <div class="dsv">
     <AppPageHead
       chapter="4"
-      kicker="corpora · 语 料"
-      title="语 料 集 录"
-      subtitle="编纂评测集录 · 用于实验复现与跨流水线对比"
-      stamp="集录&#10;管理"
+      kicker="数据集"
+      title="数据集"
+      subtitle="管理评测数据集，用于实验复现与跨配置对比"
+      stamp="数据&#10;集"
     />
 
-    <AppCard title="新 建 集 录" subtitle="register new corpus" :num="'A'">
+    <AppCard title="新建数据集" subtitle="create new dataset" :num="'A'">
       <div class="dsv-form">
         <div class="dsv-form__row">
           <label class="dsv-form__l">名　称</label>
           <div class="dsv-form__f">
-            <AppInput v-model="newName" placeholder="例 · baseline-v1" />
+            <AppInput v-model="newName" placeholder="例如：baseline-v1" />
           </div>
         </div>
         <div class="dsv-form__row">
           <label class="dsv-form__l">描　述</label>
           <div class="dsv-form__f">
-            <AppInput v-model="newDesc" placeholder="可选 · 简述用途" />
+            <AppInput v-model="newDesc" placeholder="可选，简述用途" />
           </div>
         </div>
         <div class="dsv-form__act">
           <AppButton variant="primary" :loading="creating" @click="create">
             <Icon name="plus" :size="13" />
-            建 立 集 录
+            创建
           </AppButton>
         </div>
       </div>
     </AppCard>
 
-    <AppCard title="已 录 集 录" :subtitle="`existing corpora · ${datasets.length} entries`" :num="'B'" class="dsv-list">
+    <AppCard title="数据集列表" :subtitle="`existing datasets · ${datasets.length}`" :num="'B'" class="dsv-list">
       <template #extra>
         <AppButton variant="ghost" size="sm" :loading="loading" @click="refresh">
           <Icon name="reload" :size="13" />
-          刷 新
+          刷新
         </AppButton>
       </template>
-      <AppTable :columns="cols" :rows="datasets" empty="尚无集录">
+      <AppTable :columns="cols" :rows="datasets" empty="暂无数据集">
         <template #cell-id="{ row }">№ {{ row.id }}</template>
         <template #cell-name="{ row }">
           <span class="dsv-name">{{ row.name }}</span>
@@ -112,7 +112,7 @@ onMounted(refresh)
         </template>
         <template #cell-created_at="{ row }">{{ formatTime(row.created_at) }}</template>
         <template #cell-ops="{ row }">
-          <button class="dsv-del" @click="handleDelete(row.id)" title="注销">
+          <button class="dsv-del" @click="handleDelete(row.id)" title="删除">
             <Icon name="trash" :size="13" />
           </button>
         </template>

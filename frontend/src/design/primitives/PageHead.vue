@@ -16,7 +16,7 @@ defineProps<{
   <header class="ph">
     <div class="ph__top">
       <div class="ph__kicker" v-if="kicker || chapter">
-        <span class="ph__chap" v-if="chapter">第 {{ chapter }} 编</span>
+        <span class="ph__chap" v-if="chapter">{{ String(chapter).padStart(2, '0') }}</span>
         <span class="ph__sep" v-if="chapter && kicker">│</span>
         <span v-if="kicker">{{ kicker }}</span>
       </div>

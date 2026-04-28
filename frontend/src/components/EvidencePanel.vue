@@ -49,8 +49,8 @@ function uniqueTypes(r: RetrievalResult): string[] {
 <template>
   <section v-if="results.length" class="ep">
     <div class="ep__head">
-      <span class="ep__seal">证</span>
-      <h3 class="ep__title">检 索 证 据</h3>
+      <span class="ep__seal">源</span>
+      <h3 class="ep__title">检索来源</h3>
       <span class="ep__count">共 <b>{{ results.length }}</b> 页</span>
     </div>
 
@@ -71,15 +71,15 @@ function uniqueTypes(r: RetrievalResult): string[] {
 
         <div class="ep-card__body">
           <div class="ep-card__row">
-            <span class="ep-card__l">编 号</span>
+            <span class="ep-card__l">文档</span>
             <span class="ep-card__v" :title="r.document_id">{{ shortId(r.document_id) }}</span>
           </div>
           <div class="ep-card__row">
-            <span class="ep-card__l">页 码</span>
+            <span class="ep-card__l">页码</span>
             <span class="ep-card__v ep-card__v--mono">第 {{ r.page_number }} 页</span>
           </div>
           <div class="ep-card__row">
-            <span class="ep-card__l">置 信</span>
+            <span class="ep-card__l">得分</span>
             <span class="ep-card__v ep-card__v--mono">{{ r.score.toFixed(4) }}</span>
           </div>
         </div>
@@ -104,7 +104,7 @@ function uniqueTypes(r: RetrievalResult): string[] {
 
         <div v-if="activeResult.layout?.elements.length" class="ep-dr__elements">
           <div class="ep-dr__title">
-            <span>版 面 元 素</span>
+            <span>版面元素</span>
             <span class="ep-dr__count">{{ activeResult.layout.elements.length }} 项</span>
           </div>
           <ol class="ep-dr__list">

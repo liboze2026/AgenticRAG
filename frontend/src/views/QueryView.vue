@@ -41,14 +41,14 @@ function scrollToEvidence(idx: number) {
   <div class="qv">
     <AppPageHead
       chapter="2"
-      kicker="quaerere · 求 索"
-      title="检 索 问 答"
-      subtitle="单次问询 · 系统呈交检索证据与生成答案 · 完整链路可追溯"
+      kicker="单次检索"
+      title="单次检索"
+      subtitle="一次提问，展示检索结果与生成答案，完整 Pipeline 可追溯"
       :meta="[
         { label: '入口', value: '/query' },
-        { label: '模式', value: '单 轮' },
+        { label: '模式', value: '单轮' },
       ]"
-      stamp="单次&#10;问询"
+      stamp="单次&#10;检索"
     />
 
     <section class="qv__sec">

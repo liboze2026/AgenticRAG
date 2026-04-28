@@ -27,11 +27,11 @@ async function refresh() {
 }
 
 async function handleDelete(id: number) {
-  if (!confirm(`确认注销实验记录 #${id}？`)) return
+  if (!confirm(`确认删除实验记录 #${id}？`)) return
   await experimentsApi.deleteHistory(id)
   selectedIds.value.delete(id)
   await refresh()
-  msg.success('已注销')
+  msg.success('已删除')
 }
 
 function toggleSelect(id: number) {
@@ -66,7 +66,7 @@ const compareRows = computed(() => {
     ...Object.fromEntries(selectedRows.value.map(r => [`exp_${r.id}`, (r.metrics.mrr || 0).toFixed(4)])),
   })
   rows.push({
-    metric: '查询数',
+    metric: '查询总数',
     ...Object.fromEntries(selectedRows.value.map(r => [`exp_${r.id}`, r.total_queries])),
   })
   const allKs = new Set<number>()
@@ -92,16 +92,16 @@ const compareRows = computed(() => {
 
 const tableCols = [
   { key: 'sel', label: '选', width: '40px', align: 'center' as const },
-  { key: 'id', label: '编号', width: '60px', numeric: true },
-  { key: 'created_at', label: '记录时间', width: '160px' },
-  { key: 'dataset_id', label: '集录', width: '70px' },
-  { key: 'pipeline', label: '流水线' },
+  { key: 'id', label: 'ID', width: '60px', numeric: true },
+  { key: 'created_at', label: '时间', width: '160px' },
+  { key: 'dataset_id', label: '数据集', width: '80px' },
+  { key: 'pipeline', label: 'Pipeline' },
   { key: 'mrr', label: 'MRR', width: '90px', numeric: true },
   { key: 'recall', label: 'Recall@K', width: '220px' },
   { key: 'latency', label: '延迟', width: '90px', numeric: true },
-  { key: 'queries', label: '问询', width: '60px', numeric: true },
+  { key: 'queries', label: '查询数', width: '70px', numeric: true },
   { key: 'note', label: '备注', width: '160px' },
-  { key: 'ops', label: '操作', width: '140px', align: 'center' as const },
+  { key: 'ops', label: '操作', width: '100px', align: 'center' as const },
 ]
 
 defineExpose({ refresh })
@@ -109,7 +109,7 @@ onMounted(refresh)
 </script>
 
 <template>
-  <AppCard title="实 验 记 录" subtitle="evaluation history" :num="'EX'">
+  <AppCard title="实验历史" subtitle="evaluation history" :num="'EX'">
     <template #extra>
       <div class="eh__actions">
         <AppButton
@@ -123,7 +123,7 @@ onMounted(refresh)
         </AppButton>
         <AppButton variant="ghost" size="sm" :loading="loading" @click="refresh">
           <Icon name="reload" :size="13" />
-          刷 新
+          刷新
         </AppButton>
       </div>
     </template>
@@ -131,7 +131,7 @@ onMounted(refresh)
     <AppTable
       :columns="tableCols"
       :rows="records"
-      empty="尚无实验记录"
+      empty="暂无实验记录"
       :hover="false"
     >
       <template #cell-sel="{ row }">
@@ -154,8 +154,8 @@ onMounted(refresh)
       </template>
       <template #cell-pipeline="{ row }">
         <div class="eh__pl">
-          <div><span class="eh__pl-l">检</span> {{ formatStrategy(row.pipeline_config?.yaml?.retriever || (row.pipeline_config as any)?.retriever) }}</div>
-          <div><span class="eh__pl-l">生</span> {{ formatStrategy(row.pipeline_config?.yaml?.generator || (row.pipeline_config as any)?.generator) }}</div>
+          <div><span class="eh__pl-l" title="retriever">R</span> {{ formatStrategy(row.pipeline_config?.yaml?.retriever || (row.pipeline_config as any)?.retriever) }}</div>
+          <div><span class="eh__pl-l" title="generator">G</span> {{ formatStrategy(row.pipeline_config?.yaml?.generator || (row.pipeline_config as any)?.generator) }}</div>
         </div>
       </template>
       <template #cell-mrr="{ row }">
@@ -183,7 +183,7 @@ onMounted(refresh)
           <button class="eh__op-btn" @click="showDetail(row as ExperimentRecord)" title="详情">
             <Icon name="eye" :size="13" />
           </button>
-          <button class="eh__op-btn eh__op-btn--del" @click="handleDelete(row.id)" title="注销">
+          <button class="eh__op-btn eh__op-btn--del" @click="handleDelete(row.id)" title="删除">
             <Icon name="trash" :size="13" />
           </button>
         </div>
@@ -194,12 +194,12 @@ onMounted(refresh)
     <AppDrawer v-model="detailOpen" :title="`实验详情 · № ${detailRow?.id}`" width="780px">
       <div v-if="detailRow" class="eh-d">
         <section class="eh-d__sec">
-          <h4 class="eh-d__title">流水线配置</h4>
+          <h4 class="eh-d__title">Pipeline 配置</h4>
           <pre class="eh-d__yaml">{{ JSON.stringify(detailRow.pipeline_config, null, 2) }}</pre>
         </section>
 
         <section class="eh-d__sec" v-if="detailRow.metrics.per_query?.length">
-          <h4 class="eh-d__title">单 项 明 细</h4>
+          <h4 class="eh-d__title">逐查询明细</h4>
           <div class="eh-d__pq" v-for="(p, pi) in detailRow.metrics.per_query" :key="pi">
             <div class="eh-d__pq-q"><span class="eh-d__pq-no">{{ String(pi+1).padStart(2, '0') }}</span> {{ p.query }}</div>
             <div class="eh-d__pq-meta">
@@ -207,15 +207,15 @@ onMounted(refresh)
               <span>R@5 <b>{{ (p.recall_at_k[5] || 0).toFixed(3) }}</b></span>
               <span v-if="p.timing_ms?.total_ms">耗时 <b>{{ p.timing_ms.total_ms.toFixed(0) }}<small> ms</small></b></span>
             </div>
-            <div class="eh-d__pq-rel">期望: <code>{{ p.relevant.join(', ') }}</code></div>
-            <div class="eh-d__pq-ret">召回: <code>{{ p.retrieved.slice(0, 5).join(', ') }}{{ p.retrieved.length > 5 ? '⋯' : '' }}</code></div>
+            <div class="eh-d__pq-rel">相关 (relevant): <code>{{ p.relevant.join(', ') }}</code></div>
+            <div class="eh-d__pq-ret">召回 (retrieved): <code>{{ p.retrieved.slice(0, 5).join(', ') }}{{ p.retrieved.length > 5 ? '⋯' : '' }}</code></div>
           </div>
         </section>
       </div>
     </AppDrawer>
 
     <!-- Compare Dialog -->
-    <AppDialog v-model="showCompare" title="实 验 对 比" width="900px">
+    <AppDialog v-model="showCompare" title="实验对比" width="900px">
       <div v-if="selectedRows.length >= 2" class="eh-c">
         <table class="eh-c__tbl">
           <thead>
@@ -237,7 +237,7 @@ onMounted(refresh)
           </tbody>
         </table>
 
-        <h5 class="eh-c__yt">配 置 差 异</h5>
+        <h5 class="eh-c__yt">Pipeline 配置对比</h5>
         <div class="eh-c__yamls">
           <div v-for="r in selectedRows" :key="r.id" class="eh-c__y-card">
             <div class="eh-c__y-head">№ {{ r.id }}</div>

@@ -25,10 +25,10 @@ async function onSelect(files: File[]) {
         await documentsApi.upload(file, selectedDataset.value ?? undefined)
         ok++
       } catch {
-        msg.error(`${file.name} · 提交失败`)
+        msg.error(`${file.name} 上传失败`)
       }
     }
-    if (ok) msg.success(`提交 ${ok} 件至编目`)
+    if (ok) msg.success(`已上传 ${ok} 个文档，开始索引`)
     emit('uploaded')
   } finally {
     uploading.value = false
@@ -41,12 +41,12 @@ onMounted(loadDatasets)
 <template>
   <div class="du">
     <div class="du__row">
-      <label class="du__label">归 入 集 录</label>
+      <label class="du__label">所属数据集</label>
       <div class="du__field">
         <AppSelect
           v-model="selectedDataset"
-          :options="datasets.map(d => ({ label: d.name, value: d.id, tag: `${d.document_count}件` }))"
-          placeholder="可选 · 留空则归入默认"
+          :options="datasets.map(d => ({ label: d.name, value: d.id, tag: `${d.document_count}个` }))"
+          placeholder="可选，不选择则归入默认"
         />
       </div>
     </div>
@@ -54,7 +54,7 @@ onMounted(loadDatasets)
       accept=".pdf"
       multiple
       :disabled="uploading"
-      :hint="uploading ? '编目中⋯' : '点击或拖入 PDF 文献'"
+      :hint="uploading ? '上传中⋯' : '点击或拖入 PDF 文档'"
       @select="onSelect"
     />
   </div>

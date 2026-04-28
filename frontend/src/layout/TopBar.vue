@@ -34,7 +34,7 @@ const today = computed(() => {
     </div>
 
     <div class="tb__date">
-      <span class="tb__date-l">公　历</span>
+      <span class="tb__date-l">日　期</span>
       <span class="tb__date-v">{{ today }}</span>
     </div>
   </header>

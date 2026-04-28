@@ -8,7 +8,7 @@ server:
 worker:
   host: "localhost"
   port: 8001
-  timeout: 300
+  timeout: 600
 
 qdrant:
   host: "localhost"
@@ -32,7 +32,7 @@ pipeline:
 
 ssh_tunnel:
   enabled: true
-  bastion_host: "2001:da8:d800:336::15cb"
+  bastion_host: "vlab.ustc.edu.cn"
   bastion_port: 22
   bastion_user: "ubuntu"
   bastion_key: '${SSH_BASTION_KEY}'
@@ -51,7 +51,7 @@ ssh_deployment:
   conda_env: "mrag_worker"
   qdrant_path: "~/qdrant"
   qdrant_storage: "~/qdrant/storage"
-  gpu_devices: "0"
+  gpu_devices: "1"
 
 api_keys:
   openai: "${OPENAI_API_KEY}"

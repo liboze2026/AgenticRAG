@@ -91,13 +91,13 @@ async function loadSession(sessionId: string) {
 }
 
 async function deleteSession(sessionId: string) {
-  if (!confirm('确认注销此对话？')) return
+  if (!confirm('确认删除此会话？')) return
   await chatApi.deleteSession(sessionId)
   if (currentSessionId.value === sessionId) {
     currentSessionId.value = undefined
     messages.value = []
   }
-  msg.success('已注销')
+  msg.success('已删除')
   await loadSessions()
 }
 
@@ -110,7 +110,7 @@ async function loadSessions() {
 
 function sessionPreview(s: ChatSession): string {
   const first = s.messages.find(m => m.role === 'user')
-  if (!first) return '（新立 · 尚未问询）'
+  if (!first) return '（新建会话 · 暂无消息）'
   return first.content.slice(0, 30) + (first.content.length > 30 ? '⋯' : '')
 }
 
@@ -156,9 +156,9 @@ onMounted(async () => {
   <div class="cv">
     <AppPageHead
       chapter="1"
-      kicker="dialogus · 对　话"
-      title="智 能 对 话"
-      subtitle="多轮问询 · 系统在指定文献范围内逐轮检索 · 答案附页码引证"
+      kicker="多轮对话"
+      title="多轮对话"
+      subtitle="在选定文档范围内进行多轮问答，系统检索相关页面并附引用来源"
       stamp="多轮&#10;对话"
     />
 
@@ -166,10 +166,10 @@ onMounted(async () => {
       <!-- 左侧：历史对话 -->
       <aside class="cv-side">
         <header class="cv-side__head">
-          <span class="cv-side__l">对 话 卷</span>
+          <span class="cv-side__l">会话列表</span>
           <AppButton variant="primary" size="sm" @click="newSession">
             <Icon name="plus" :size="13" />
-            新 立
+            新建
           </AppButton>
         </header>
         <div class="cv-side__list">
@@ -189,12 +189,12 @@ onMounted(async () => {
             <span
               class="cv-side-item__del"
               @click.stop="deleteSession(s.session_id)"
-              title="注销"
+              title="删除"
             >
               <Icon name="close" :size="12" />
             </span>
           </button>
-          <AppEmpty v-if="sessions.length === 0" text="尚 无 对 话 卷" hint="click 新立 to start" />
+          <AppEmpty v-if="sessions.length === 0" text="暂无会话" hint='点击"新建"开始对话' />
         </div>
       </aside>
 
@@ -203,12 +203,12 @@ onMounted(async () => {
         <!-- 工具栏 -->
         <div class="cv-tools">
           <div class="cv-tools__group">
-            <span class="cv-tools__l">范 围</span>
+            <span class="cv-tools__l">文档范围</span>
             <div class="cv-tools__field cv-tools__field--wide">
               <AppSelect
                 :model-value="null"
                 :options="docOptions"
-                placeholder="可多选 · 留空则全部"
+                placeholder="可多选，留空则全部"
                 size="sm"
                 @change="(v) => v && !scopedDocs.includes(v as string) && scopedDocs.push(v as string)"
               />
@@ -223,7 +223,7 @@ onMounted(async () => {
             </div>
           </div>
           <div class="cv-tools__group">
-            <span class="cv-tools__l">召 回</span>
+            <span class="cv-tools__l">Top-K</span>
             <div class="cv-tools__field">
               <AppSelect v-model="topK" :options="topKOptions" size="sm" />
             </div>
@@ -234,8 +234,8 @@ onMounted(async () => {
         <div ref="threadRef" class="cv-thread">
           <div v-if="messages.length === 0" class="cv-thread__empty">
             <div class="cv-thread__empty-mark">·</div>
-            <p class="cv-thread__empty-zh">恭 候 问 询</p>
-            <p class="cv-thread__empty-en">系统将在指定范围内检索并附页码引证</p>
+            <p class="cv-thread__empty-zh">等待提问</p>
+            <p class="cv-thread__empty-en">系统将检索文档并提供来源页码</p>
           </div>
 
           <article
@@ -256,7 +256,7 @@ onMounted(async () => {
                 <AnswerDisplay :answer="m.content" @cite="(idx) => highlightSource(i, idx, m.sources?.[idx])" />
                 <div v-if="m.sources?.length" class="cv-cit">
                   <div class="cv-cit__head">
-                    <span class="cv-cit__l">引 证 页 面</span>
+                    <span class="cv-cit__l">引用来源</span>
                     <span class="cv-cit__c">{{ m.sources.length }} 页</span>
                   </div>
                   <div class="cv-cit__row">
@@ -288,7 +288,7 @@ onMounted(async () => {
                 <span class="cv-load__d"></span>
                 <span class="cv-load__d"></span>
                 <span class="cv-load__d"></span>
-                <span class="cv-load__t">检 索 中⋯</span>
+                <span class="cv-load__t">检索中⋯</span>
               </div>
             </div>
           </div>
@@ -298,7 +298,7 @@ onMounted(async () => {
         <div class="cv-input">
           <AppTextarea
             v-model="inputText"
-            placeholder="问 · 按 Ctrl + Enter 呈送"
+            placeholder="输入问题，按 Ctrl + Enter 发送"
             :rows="2"
             @keydown.ctrl.enter.prevent="sendMessage"
           />
@@ -311,7 +311,7 @@ onMounted(async () => {
             class="cv-input__btn"
           >
             <Icon name="send" :size="14" />
-            <span>呈　送</span>
+            <span>发送</span>
           </AppButton>
         </div>
       </section>

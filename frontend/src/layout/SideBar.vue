@@ -11,25 +11,26 @@ interface NavGroup {
 
 const groups: NavGroup[] = [
   {
-    label: '总　纲',
+    label: '主功能',
     items: [
       { path: '/',         label: '系统概览', icon: 'home',     chap: '0' },
-      { path: '/chat',     label: '智能对话', icon: 'chat',     chap: '1' },
-      { path: '/query',    label: '检索问答', icon: 'search',   chap: '2' },
+      { path: '/chat',     label: '多轮对话', icon: 'chat',     chap: '1' },
+      { path: '/query',    label: '单次检索', icon: 'search',   chap: '2' },
     ],
   },
   {
-    label: '志　料',
+    label: '数　据',
     items: [
-      { path: '/documents',   label: '文献管理', icon: 'doc',      chap: '3' },
-      { path: '/datasets',    label: '语 料 集', icon: 'archive',  chap: '4' },
+      { path: '/documents',   label: '文档管理', icon: 'doc',      chap: '3' },
+      { path: '/datasets',    label: '数据集',   icon: 'archive',  chap: '4' },
     ],
   },
   {
-    label: '考　校',
+    label: '评　测',
     items: [
-      { path: '/experiments', label: '评 测 录', icon: 'flask',    chap: '5' },
-      { path: '/system',      label: '运 行 志', icon: 'gauge',    chap: '6' },
+      { path: '/experiments', label: '实验评测', icon: 'flask',    chap: '5' },
+      { path: '/visdom',      label: 'VisDoM 复现', icon: 'sparkles', chap: 'X' },
+      { path: '/system',      label: '系统状态', icon: 'gauge',    chap: '6' },
     ],
   },
 ]
@@ -61,7 +62,7 @@ const groups: NavGroup[] = [
       </nav>
     </div>
     <footer class="sb__foot">
-      <div class="sb__foot-line">论 文 演 示 版</div>
+      <div class="sb__foot-line">论文演示版</div>
       <div class="sb__foot-mono">v1.0 · build 2026</div>
     </footer>
   </aside>

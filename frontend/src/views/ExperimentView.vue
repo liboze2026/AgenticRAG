@@ -32,7 +32,7 @@ function onFile(e: Event) {
     try {
       evalData.value = JSON.parse(ev.target?.result as string)
       hasHardNegs.value = evalData.value?.some(q => q.hard_negatives !== undefined) || false
-      msg.success(`已载入 ${evalData.value?.length || 0} 条问询`)
+      msg.success(`已加载 ${evalData.value?.length || 0} 条评测查询`)
     } catch {
       msg.error('JSON 格式错误')
     }
@@ -92,30 +92,30 @@ onMounted(loadDatasets)
   <div class="ev">
     <AppPageHead
       chapter="5"
-      kicker="experimentum · 考 校"
-      title="评 测 工 作 台"
-      subtitle="切换检索 / 生成流水线 · 评估 Recall / MRR · 实验历史与对比"
-      stamp="评测&#10;工作"
+      kicker="实验评测"
+      title="实验评测"
+      subtitle="切换检索 / 生成 Pipeline，计算 Recall / MRR，记录实验历史与对比"
+      stamp="实验&#10;评测"
     />
 
     <PipelineSelector />
 
-    <AppCard title="批 量 评 测" subtitle="batch evaluation" :num="'EV'" class="ev__eval">
+    <AppCard title="批量评测" subtitle="batch evaluation" :num="'EV'" class="ev__eval">
       <div class="ev__form">
         <div class="ev__row">
-          <label class="ev__l">指 定 集 录</label>
+          <label class="ev__l">数据集</label>
           <div class="ev__f">
             <AppSelect
               v-model="datasetId"
               :options="datasetOptions"
-              placeholder="可选 · 留空则全集"
+              placeholder="可选，不选择则使用全部文档"
             />
           </div>
         </div>
         <div class="ev__row">
-          <label class="ev__l">实 验 备 注</label>
+          <label class="ev__l">实验备注</label>
           <div class="ev__f">
-            <AppInput v-model="note" placeholder="可选 · 简述本次实验" />
+            <AppInput v-model="note" placeholder="可选，简述本次实验" />
           </div>
         </div>
 
@@ -129,7 +129,7 @@ onMounted(loadDatasets)
           />
           <AppButton variant="ghost" @click="pickFile">
             <Icon name="upload" :size="13" />
-            载 入 评 测 JSON
+            导入评测 JSON
           </AppButton>
           <AppButton
             variant="primary"
@@ -138,7 +138,7 @@ onMounted(loadDatasets)
             @click="runEval"
           >
             <Icon name="sparkles" :size="13" />
-            运 行 评 测
+            运行评测
           </AppButton>
           <AppButton
             variant="red"
@@ -146,7 +146,7 @@ onMounted(loadDatasets)
             :disabled="!evalData"
             @click="generateHardNegs"
           >
-            生 成 困 难 负 例
+            生成困难负例
           </AppButton>
           <AppButton
             v-if="evalData"
@@ -154,18 +154,18 @@ onMounted(loadDatasets)
             @click="downloadEvalData"
           >
             <Icon name="doc" :size="13" />
-            导 出 数 据
+            导出数据
           </AppButton>
         </div>
 
         <div v-if="evalData" class="ev__hint">
-          <span class="ev__hint-l">已 载</span>
+          <span class="ev__hint-l">已加载</span>
           <b>{{ evalData.length }}</b><small> 条</small>
           <span v-if="hasHardNegs" class="ev__hint-neg">· 含困难负例</span>
         </div>
         <div class="ev__fmt">
           <code>格式:</code>
-          <span>[{ "query": "⋯", "relevant": ["doc_id:page"] }, ⋯]</span>
+          <span>[{ "query": "...", "relevant": ["doc_id:page"] }, ...]</span>
         </div>
       </div>
     </AppCard>
