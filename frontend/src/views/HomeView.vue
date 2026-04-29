@@ -68,8 +68,8 @@ onMounted(async () => {
     <AppPageHead
       chapter="0"
       kicker="系统概览"
-      title="智能体检索增强系统"
-      subtitle="面向多模态学术文献的版面感知检索与多轮对话框架，论文演示版"
+      title="面向复杂文档理解的多模态检索方法研究"
+      subtitle="版面感知检索与多轮对话框架，论文演示版"
       :meta="[
         { label: '系统', value: 'AGENTIC-RAG' },
         { label: '版本', value: 'v1.0' },
