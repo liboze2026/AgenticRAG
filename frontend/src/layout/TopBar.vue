@@ -71,8 +71,8 @@ onBeforeUnmount(() => {
         </svg>
       </div>
       <div class="tb__name">
-        <span class="tb__zh">智 能 体 检 索 增 强</span>
-        <span class="tb__en">AGENTIC RETRIEVAL-AUGMENTED GENERATION · v1.0</span>
+        <span class="tb__zh">面向复杂文档理解的多模态检索方法研究</span>
+        <span class="tb__en">MULTIMODAL RETRIEVAL FOR COMPLEX DOCUMENTS · v1.0</span>
       </div>
     </div>
 
