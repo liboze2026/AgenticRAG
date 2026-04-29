@@ -1,3 +1,4 @@
+import asyncio
 import os
 import time
 import uuid
@@ -31,10 +32,22 @@ def _rmtree_with_retry(path: str, attempts: int = 5, delay: float = 0.3) -> None
 class DocumentService:
     """Manages document lifecycle with SQLite persistence."""
 
-    def __init__(self, upload_dir: str, pipeline=None, db_path: Optional[str] = None):
+    def __init__(
+        self,
+        upload_dir: str,
+        pipeline=None,
+        db_path: Optional[str] = None,
+        retry_attempts: int = 1,
+        retry_delay_sec: float = 5.0,
+        images_dir: str = "data/images",
+    ):
         self.upload_dir = upload_dir
         self.pipeline = pipeline
         self.db_path = db_path or os.path.join(upload_dir, "documents.db")
+        # retry_attempts is the TOTAL number of attempts (1 = no retry).
+        self.retry_attempts = max(1, retry_attempts)
+        self.retry_delay_sec = max(0.0, retry_delay_sec)
+        self.images_dir = images_dir
         os.makedirs(upload_dir, exist_ok=True)
         self._init_db()
 
@@ -102,22 +115,33 @@ class DocumentService:
             conn.execute("UPDATE documents SET status = 'indexing' WHERE id = ?", (doc_id,))
             conn.commit()
 
-        try:
-            pages = await self.pipeline.index_document(pdf_path, doc_id)
-            with self._connect() as conn:
-                conn.execute(
-                    "UPDATE documents SET status = 'completed', total_pages = ?, indexed_pages = ? WHERE id = ?",
-                    (len(pages), len(pages), doc_id),
+        last_exc: Optional[BaseException] = None
+        for attempt in range(1, self.retry_attempts + 1):
+            try:
+                pages = await self.pipeline.index_document(pdf_path, doc_id)
+                with self._connect() as conn:
+                    conn.execute(
+                        "UPDATE documents SET status = 'completed', total_pages = ?, indexed_pages = ? WHERE id = ?",
+                        (len(pages), len(pages), doc_id),
+                    )
+                    conn.commit()
+                return self.get_document(doc_id)
+            except Exception as e:
+                last_exc = e
+                logger.warning(
+                    "Index attempt %d/%d for %s failed: %s",
+                    attempt, self.retry_attempts, doc_id, e,
                 )
-                conn.commit()
-        except Exception:
-            logger.exception("Failed to index document %s", doc_id)
-            with self._connect() as conn:
-                conn.execute("UPDATE documents SET status = 'failed' WHERE id = ?", (doc_id,))
-                conn.commit()
-            raise
+                if attempt < self.retry_attempts:
+                    delay = self.retry_delay_sec * (2 ** (attempt - 1))
+                    await asyncio.sleep(delay)
 
-        return self.get_document(doc_id)
+        logger.exception("Failed to index document %s after %d attempts",
+                         doc_id, self.retry_attempts, exc_info=last_exc)
+        with self._connect() as conn:
+            conn.execute("UPDATE documents SET status = 'failed' WHERE id = ?", (doc_id,))
+            conn.commit()
+        raise last_exc if last_exc else RuntimeError("indexing failed")
 
     def get_document(self, doc_id: str) -> Optional[DocumentInfo]:
         with self._connect() as conn:
@@ -172,12 +196,12 @@ class DocumentService:
                     "Could not remove %s (will be orphaned on disk): %s",
                     doc_dir, exc,
                 )
-        images_dir = os.path.join("data/images", doc_id)
-        if os.path.exists(images_dir):
+        images_subdir = os.path.join(self.images_dir, doc_id)
+        if os.path.exists(images_subdir):
             try:
-                _rmtree_with_retry(images_dir)
+                _rmtree_with_retry(images_subdir)
             except Exception as exc:
-                logger.warning("Could not remove images dir %s: %s", images_dir, exc)
+                logger.warning("Could not remove images dir %s: %s", images_subdir, exc)
         with self._connect() as conn:
             conn.execute("DELETE FROM documents WHERE id = ?", (doc_id,))
             conn.commit()

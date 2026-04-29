@@ -1,7 +1,18 @@
+import asyncio
 from typing import Optional
 from fastapi import APIRouter, Request, UploadFile, File, BackgroundTasks, HTTPException, Query
 
 router = APIRouter()
+
+# Cap concurrent indexing jobs — each one fans out hundreds of page encodes
+# to the worker, so unbounded uploads (e.g. user drag-drops 10 PDFs at once)
+# will OOM the GPU. Keep at most 2 in flight; further uploads queue.
+_INDEX_SEMAPHORE = asyncio.Semaphore(2)
+
+
+async def _bounded_index(doc_service, doc_id: str):
+    async with _INDEX_SEMAPHORE:
+        await doc_service.index_document(doc_id)
 
 
 @router.post("/upload")
@@ -20,7 +31,7 @@ async def upload_document(
     if not (file.filename or "").lower().endswith(".pdf") and file.content_type not in ("application/pdf",):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
     doc_info = await doc_service.upload(filename=file.filename, content=content, dataset_id=dataset_id)
-    background_tasks.add_task(doc_service.index_document, doc_info.id)
+    background_tasks.add_task(_bounded_index, doc_service, doc_info.id)
     return doc_info.model_dump()
 
 
@@ -58,5 +69,5 @@ async def retry_indexing(request: Request, doc_id: str, background_tasks: Backgr
         raise HTTPException(status_code=404, detail="Document not found")
     if doc.status not in ("failed", "pending"):
         raise HTTPException(status_code=400, detail=f"Cannot retry document in status: {doc.status}")
-    background_tasks.add_task(doc_service.index_document, doc_id)
+    background_tasks.add_task(_bounded_index, doc_service, doc_id)
     return {"status": "queued"}

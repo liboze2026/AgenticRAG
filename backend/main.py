@@ -40,6 +40,9 @@ def create_app(
     cors_origins=None,
     query_cache=None,
     generation_cache=None,
+    bootstrap_hook=None,
+    collection_name: str = "documents",
+    images_dir: str = "data/images",
 ) -> FastAPI:
     app = FastAPI(title="Multimodal Retrieval System")
     app.add_middleware(
@@ -67,8 +70,9 @@ def create_app(
     app.include_router(cache_api.router, prefix="/api/cache")
     app.include_router(chat_api.router, prefix="/api")
 
-    # Serve page images — return placeholder PNG (200) when file missing
-    images_dir = "data/images"
+    # Serve page images — return placeholder PNG (200) when file missing.
+    # images_dir is injected by run.py from config.storage.images_dir so it
+    # stays in sync with the path the indexer writes to.
     os.makedirs(images_dir, exist_ok=True)
 
     @app.get("/api/images/{doc_id}/{filename}")
@@ -77,5 +81,15 @@ def create_app(
         if os.path.isfile(path):
             return FileResponse(path, media_type="image/png")
         return Response(content=_PLACEHOLDER_PNG, media_type="image/png")
+
+    if bootstrap_hook is not None:
+        @app.on_event("startup")
+        async def _run_bootstrap():
+            try:
+                await bootstrap_hook()
+            except Exception:
+                # Bootstrap is best-effort: never block startup or crash the app
+                import logging
+                logging.getLogger(__name__).exception("bootstrap hook failed")
 
     return app

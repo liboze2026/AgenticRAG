@@ -28,30 +28,77 @@ pipeline:
   generator:
     name: "zhipu"
     options:
-      model: "glm-4v-flash"
+      # Primary: paid reasoning vision model (10M-token quota, very stable)
+      model: "glm-4.6v"
+      # Fallback chain: tried in order if primary fails (rate limit, 5xx,
+      # empty reasoning reply). Last entry is the free flash model — works
+      # even when the paid quota is exhausted.
+      fallback_models:
+        - "glm-4v-plus"
+        - "glm-4v-flash"
+      # 4096 leaves headroom for hidden reasoning tokens consumed by the
+      # primary glm-4.6v model; 2048 was being fully consumed and triggering
+      # empty-reply fallbacks.
+      max_tokens: 4096
 
+# --- SSH server pool ---
+# Servers are tried in order. The first one whose SSH connection + tunnel
+# bind succeeds becomes the active server for this run. If it later fails,
+# requests will surface errors but the system will NOT auto-fail-over to
+# the next server until the user restarts (per design).
 ssh_tunnel:
   enabled: true
-  bastion_host: "vlab.ustc.edu.cn"
-  bastion_port: 22
-  bastion_user: "ubuntu"
-  bastion_key: '${SSH_BASTION_KEY}'
-  target_host: "202.38.68.70"
-  target_port: 2266
-  target_user: "bzli"
-  target_password: "${SSH_TARGET_PASSWORD}"
-  forwards:
-    - local: 8001
-      remote: 8001
-    - local: 6333
-      remote: 6333
 
-ssh_deployment:
-  remote_base: "/home/bzli/mrag_app"
-  conda_env: "mrag_worker"
-  qdrant_path: "~/qdrant"
-  qdrant_storage: "~/qdrant/storage"
-  gpu_devices: "1"
+ssh_servers:
+  - name: "primary-autodl"
+    bastion_host: ""                     # direct connect, no jump host
+    target_host: "connect.nmb1.seetacloud.com"
+    target_port: 22247
+    target_user: "root"
+    target_password: '${SSH_PRIMARY_PASSWORD}'
+    forwards:
+      - { local: 8001, remote: 8001 }
+      - { local: 6333, remote: 6333 }
+    deployment:
+      remote_base: "/root/autodl-tmp/liboze"
+      conda_env: "mrag_worker"
+      qdrant_path: "/root/autodl-tmp/liboze/qdrant"
+      qdrant_storage: "/root/autodl-tmp/liboze/qdrant/storage"
+      gpu_devices: "0"
+      hf_home: "/root/autodl-tmp/liboze/hf_cache"
+      visdom_data: "/root/autodl-tmp/liboze/data/VisDoM-main"
+
+  - name: "fallback-ustc"
+    bastion_host: "vlab.ustc.edu.cn"
+    bastion_port: 22
+    bastion_user: "ubuntu"
+    bastion_key: '${SSH_BASTION_KEY}'
+    target_host: "202.38.68.70"
+    target_port: 2266
+    target_user: "bzli"
+    target_password: '${SSH_TARGET_PASSWORD}'
+    forwards:
+      - { local: 8001, remote: 8001 }
+      - { local: 6333, remote: 6333 }
+    deployment:
+      remote_base: "/home/bzli/mrag_app"
+      conda_env: "mrag_worker"
+      qdrant_path: "~/qdrant"
+      qdrant_storage: "~/qdrant/storage"
+      gpu_devices: "1"
+      hf_home: ""
+      visdom_data: "/home/bzli/lbz/data/VisDoM-main"
+
+# --- Resilience knobs ---
+resilience:
+  health_check_interval_sec: 8        # frontend polls /health every N sec
+  worker_retry_attempts: 3            # WorkerClient httpx retry count
+  worker_retry_backoff_sec: 0.5       # initial backoff (doubles each try)
+  qdrant_retry_attempts: 3
+  tunnel_keepalive_sec: 5             # background thread checks tunnel every N sec
+  index_retry_attempts: 2             # background index_document retry count
+  index_retry_delay_sec: 5            # initial delay between index retries
+  bootstrap_visdom: false             # auto-index VisDoM SPIQA top-3 on first start (off for demo: existing 3 docs already indexed)
 
 api_keys:
   openai: "${OPENAI_API_KEY}"

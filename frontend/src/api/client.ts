@@ -1,14 +1,43 @@
 import axios from 'axios'
+import type { AxiosError, AxiosRequestConfig } from 'axios'
 import { msg } from '../design/message'
 
-const api = axios.create({ baseURL: '/api', timeout: 120000 })
+// 600s matches worker.timeout in config/default.yaml — first chat with VLM
+// inference + base64 page images can exceed 120s, especially when the worker
+// is cold-loading the model.
+const api = axios.create({ baseURL: '/api', timeout: 600000 })
+
+// Per-request flag set on the config object after a retry has been attempted.
+// We retry once on transient failures (network error or 502/503/504), then
+// surface the error to the caller exactly like before.
+const RETRYABLE_STATUS = new Set([502, 503, 504])
+const RETRY_DELAY_MS = 1000
+// Endpoints that are silently polled at high frequency (e.g. health) should
+// not trigger a user-visible toast on every transient failure — they would
+// spam the screen and obscure real errors.
+const SILENT_PATHS = ['/health']
+
+function isRetryable(error: AxiosError): boolean {
+  if (!error.response) return true                  // network / aborted / timeout
+  return RETRYABLE_STATUS.has(error.response.status)
+}
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    const detail = error.response?.data?.detail || error.message || '未知错误'
-    const status = error.response?.status
-    msg.error(status ? `[${status}] ${detail}` : detail)
+  async (error: AxiosError) => {
+    const config = error.config as (AxiosRequestConfig & { _retried?: boolean }) | undefined
+    if (config && !config._retried && isRetryable(error)) {
+      config._retried = true
+      await new Promise((r) => setTimeout(r, RETRY_DELAY_MS))
+      return api.request(config)
+    }
+    const path = config?.url || ''
+    const silent = SILENT_PATHS.some((p) => path.includes(p))
+    if (!silent) {
+      const detail = (error.response?.data as any)?.detail || error.message || '未知错误'
+      const status = error.response?.status
+      msg.error(status ? `[${status}] ${detail}` : detail)
+    }
     return Promise.reject(error)
   }
 )

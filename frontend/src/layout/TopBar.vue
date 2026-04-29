@@ -1,9 +1,58 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
+import { systemApi } from '../api/client'
 
 const today = computed(() => {
   const d = new Date()
   return `${d.getFullYear()} 年 ${(d.getMonth() + 1).toString().padStart(2, '0')} 月 ${d.getDate().toString().padStart(2, '0')} 日`
+})
+
+// 'ok'      = backend + worker + qdrant all healthy
+// 'degraded' = backend ok, but worker or qdrant down
+// 'down'    = backend unreachable
+// 'unknown' = haven't completed first poll yet
+type Health = 'ok' | 'degraded' | 'down' | 'unknown'
+const health = ref<Health>('unknown')
+const detail = ref<string>('正在检测⋯')
+let timer: number | undefined
+
+const POLL_MS = 8000
+
+async function poll() {
+  try {
+    const resp = await systemApi.health()
+    const h = resp.data
+    const wOk = h?.worker?.status === 'ok'
+    const qOk = h?.qdrant?.status === 'ok'
+    if (wOk && qOk) {
+      health.value = 'ok'
+      detail.value = '后端·Worker·Qdrant 全部就绪'
+    } else {
+      health.value = 'degraded'
+      const issues: string[] = []
+      if (!wOk) issues.push(`Worker: ${h?.worker?.detail || '未连接'}`)
+      if (!qOk) issues.push(`Qdrant: ${h?.qdrant?.detail || '未连接'}`)
+      detail.value = issues.join(' · ')
+    }
+  } catch (e: any) {
+    health.value = 'down'
+    detail.value = `后端不可达: ${e?.message || '未知'}`
+  }
+}
+
+const stateLabel = computed(() => ({
+  ok: '在线',
+  degraded: '降级',
+  down: '离线',
+  unknown: '检测中',
+}[health.value]))
+
+onMounted(() => {
+  poll()
+  timer = window.setInterval(poll, POLL_MS)
+})
+onBeforeUnmount(() => {
+  if (timer !== undefined) window.clearInterval(timer)
 })
 </script>
 
@@ -31,6 +80,12 @@ const today = computed(() => {
       <span class="tb__dot"></span>
       <span class="tb__dot"></span>
       <span class="tb__dot"></span>
+    </div>
+
+    <div class="tb__status" :class="`tb__status--${health}`" :title="detail">
+      <span class="tb__status-dot" />
+      <span class="tb__status-l">连接</span>
+      <span class="tb__status-v">{{ stateLabel }}</span>
     </div>
 
     <div class="tb__date">
@@ -119,6 +174,55 @@ const today = computed(() => {
   width: 7px; height: 7px;
   border-radius: 0;
   transform: rotate(45deg);
+}
+
+.tb__status {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: var(--fz-mono-sm);
+  letter-spacing: 0.12em;
+  margin-right: 18px;
+  cursor: help;
+}
+.tb__status-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(247, 244, 237, 0.4);
+  align-self: center;
+  box-shadow: 0 0 0 1px rgba(247, 244, 237, 0.3);
+}
+.tb__status--ok .tb__status-dot {
+  background: #5cd97a;
+  box-shadow: 0 0 0 1px rgba(247, 244, 237, 0.6), 0 0 8px rgba(92, 217, 122, 0.6);
+  animation: tbPulse 2.4s ease-in-out infinite;
+}
+.tb__status--degraded .tb__status-dot {
+  background: #f1c93b;
+  box-shadow: 0 0 0 1px rgba(247, 244, 237, 0.6), 0 0 8px rgba(241, 201, 59, 0.6);
+}
+.tb__status--down .tb__status-dot {
+  background: var(--red);
+  box-shadow: 0 0 0 1px rgba(247, 244, 237, 0.6), 0 0 8px rgba(255, 60, 60, 0.7);
+  animation: tbPulse 1s ease-in-out infinite;
+}
+.tb__status-l {
+  color: rgba(247, 244, 237, 0.55);
+  font-family: var(--serif);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+.tb__status-v {
+  color: var(--paper);
+  font-family: var(--serif);
+  font-weight: 600;
+}
+@keyframes tbPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
 }
 
 .tb__date {

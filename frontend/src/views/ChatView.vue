@@ -34,19 +34,21 @@ const topKOptions = [
   { label: 'top · 10', value: 10 },
 ]
 
-async function sendMessage() {
-  const text = inputText.value.trim()
-  if (!text || loading.value) return
+// Tracks the index of the last user message that failed to get a reply.
+// When set, the UI shows a retry button instead of silently dropping the
+// message (which is what the previous version did and which lost user input
+// on transient backend failures).
+const failedAtIdx = ref<number | null>(null)
 
-  messages.value.push({ role: 'user', content: text, sources: [], timestamp: new Date().toISOString() })
-  inputText.value = ''
+async function dispatchSend(): Promise<void> {
   loading.value = true
-  await nextTick()
-  scrollToBottom()
-
+  failedAtIdx.value = null
   try {
+    // Drop any trailing assistant messages with empty content — they only
+    // exist if a previous send was cancelled mid-flight, and Zhipu rejects
+    // payloads where the conversation ends with an empty assistant turn.
     const apiMessages = messages.value
-      .filter(m => m.role === 'user' || m.role === 'assistant')
+      .filter(m => (m.role === 'user' || m.role === 'assistant') && (m.content ?? '').toString().trim() !== '')
       .map(m => ({ role: m.role, content: m.content }))
 
     const resp = await chatApi.send(apiMessages, scopedDocs.value, currentSessionId.value, topK.value)
@@ -60,13 +62,45 @@ async function sendMessage() {
     })
     await loadSessions()
   } catch {
-    messages.value.pop()
-    msg.error('发送失败')
+    // Keep the user's message in the thread and remember where the failure
+    // happened so a retry button can re-issue the same conversation.
+    const lastUserIdx = [...messages.value].map((m, i) => ({ m, i }))
+      .reverse().find(({ m }) => m.role === 'user')?.i ?? null
+    failedAtIdx.value = lastUserIdx
+    msg.error('发送失败 — 可点击重试')
   } finally {
     loading.value = false
     await nextTick()
     scrollToBottom()
   }
+}
+
+async function sendMessage() {
+  const text = inputText.value.trim()
+  if (!text || loading.value) return
+
+  // If the previous send failed and the user typed a new question instead
+  // of retrying, drop the stale failure marker so the retry banner doesn't
+  // linger above the new turn.
+  failedAtIdx.value = null
+
+  messages.value.push({ role: 'user', content: text, sources: [], timestamp: new Date().toISOString() })
+  inputText.value = ''
+  await nextTick()
+  scrollToBottom()
+  await dispatchSend()
+}
+
+async function retryLast() {
+  if (loading.value) return
+  // If the user has started typing a new question, send that as a NEW turn
+  // rather than re-issuing the failed conversation — avoids confusing the
+  // generator with stale context.
+  if (inputText.value.trim()) {
+    await sendMessage()
+    return
+  }
+  await dispatchSend()
 }
 
 function scrollToBottom() {
@@ -292,6 +326,18 @@ onMounted(async () => {
               </div>
             </div>
           </div>
+
+          <div v-if="!loading && failedAtIdx !== null" class="cv-msg cv-msg--assistant cv-msg--failed">
+            <div class="cv-msg__rail"><span class="cv-msg__seal">!</span></div>
+            <div class="cv-msg__body">
+              <div class="cv-fail">
+                <span class="cv-fail__t">上一条消息发送失败</span>
+                <AppButton variant="primary" size="sm" @click="retryLast">
+                  <Icon name="reload" :size="13" /> 重试
+                </AppButton>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 输入区 -->
@@ -299,7 +345,7 @@ onMounted(async () => {
           <AppTextarea
             v-model="inputText"
             placeholder="输入问题，按 Ctrl + Enter 发送"
-            :rows="2"
+            :rows="5"
             @keydown.ctrl.enter.prevent="sendMessage"
           />
           <AppButton
@@ -330,21 +376,28 @@ onMounted(async () => {
 
 <style scoped>
 .cv {
-  max-width: 1280px;
+  max-width: 1700px;
+  width: 100%;
   margin: 0 auto;
-  height: calc(100vh - var(--topbar-h) - var(--gap-7));
   display: flex;
   flex-direction: column;
 }
 
+/* Chat workspace is the bulk of the page (85vh) so user can read multiple
+   turns + sources without scrolling out of the input. Page header stays
+   visible above; the page can scroll if header + 85vh exceeds viewport. */
 .cv__shell {
   display: grid;
   grid-template-columns: 240px 1fr;
-  flex: 1;
-  min-height: 0;
+  height: 85vh;
+  min-height: 600px;
   gap: 0;
   border: 1px solid var(--rule);
   background: var(--paper);
+}
+.cv-side, .cv-main {
+  height: 100%;
+  min-height: 0;
 }
 
 /* Sidebar */
@@ -668,6 +721,24 @@ onMounted(async () => {
 }
 
 /* Loading */
+.cv-msg--failed .cv-msg__seal { color: var(--red); border-color: var(--red); }
+.cv-fail {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: var(--paper-deep);
+  border: 1px dashed var(--red);
+  width: max-content;
+}
+.cv-fail__t {
+  font-family: var(--serif);
+  font-size: var(--fz-sm);
+  color: var(--red);
+  font-style: italic;
+  letter-spacing: 0.1em;
+}
+
 .cv-msg--loading .cv-load {
   display: flex;
   align-items: center;

@@ -44,6 +44,8 @@ node_modules/
 
 # Temp/scratch
 .tmp_*
+tmp/
+output/
 
 # Superpowers brainstorm scratch
 .superpowers/
