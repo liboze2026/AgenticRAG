@@ -16,7 +16,10 @@
       "Bash(npm --version)",
       "Bash(npm create:*)",
       "Bash(npm install:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(mkdir -p ~/.claude/skills/academic-pptx)",
+      "Bash(cp /tmp/academic-pptx-skill/SKILL.md /tmp/academic-pptx-skill/content_guidelines.md /tmp/academic-pptx-skill/slide_patterns.md /tmp/academic-pptx-skill/README.md ~/.claude/skills/academic-pptx/)",
+      "Read(//c/Users/Zionjuer/.claude/skills/**)"
     ]
   }
 }
