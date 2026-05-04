@@ -35,6 +35,10 @@ logger = logging.getLogger(__name__)
 REGION_COLLECTION_NAME = "documents_regions"
 REGION_VECTOR_SIZE = 128
 MIN_CROP_PX = 24       # skip elements smaller than this on either axis
+# Per-page hard cap: encode + upsert must finish within this window or the
+# page is logged as a failure and the loop moves on. Without it, a stuck
+# tunnel transfer can pin one page for hours and starve the whole job.
+PAGE_BUDGET_SEC = 90.0
 
 
 class LabRegionService:
@@ -251,9 +255,21 @@ class LabRegionService:
                     self._set_job(doc_id, indexed=indexed, skipped=skipped, errors=errors)
                     continue
 
-                # Encode crops via worker (in batches handled inside encoder)
+                # Encode crops via worker (in batches handled inside encoder).
+                # Hard timeout per page so a stuck tunnel can't pin the job;
+                # the next page still gets a chance.
                 try:
-                    raw = await self.worker_client.encode_documents(crop_paths)
+                    raw = await asyncio.wait_for(
+                        self.worker_client.encode_documents(crop_paths),
+                        timeout=PAGE_BUDGET_SEC,
+                    )
+                except asyncio.TimeoutError:
+                    logger.warning("region encode TIMEOUT after %.0fs for %s p%d",
+                                   PAGE_BUDGET_SEC, doc_id, page_num)
+                    errors += len(crop_paths)
+                    self._set_job(doc_id, indexed=indexed, skipped=skipped, errors=errors,
+                                  note=f"页 {page_num} encode 超时 {PAGE_BUDGET_SEC:.0f}s — 已跳过")
+                    continue
                 except Exception as e:
                     logger.exception("region encode failed for %s p%d", doc_id, page_num)
                     errors += len(crop_paths)
@@ -285,9 +301,17 @@ class LabRegionService:
                     indexed += 1
                 if points:
                     try:
-                        await self.qdrant.upsert(
-                            collection_name=self.collection_name, points=points,
+                        await asyncio.wait_for(
+                            self.qdrant.upsert(
+                                collection_name=self.collection_name, points=points,
+                            ),
+                            timeout=PAGE_BUDGET_SEC,
                         )
+                    except asyncio.TimeoutError:
+                        logger.warning("region upsert TIMEOUT after %.0fs for %s p%d",
+                                       PAGE_BUDGET_SEC, doc_id, page_num)
+                        errors += len(points)
+                        indexed -= len(points)
                     except Exception as e:
                         logger.exception("region upsert failed for %s p%d", doc_id, page_num)
                         errors += len(points)
