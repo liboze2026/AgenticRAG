@@ -35,7 +35,8 @@ class ChatService:
                 )
             """)
 
-    def create_session(self, document_ids: List[str] = []) -> ChatSession:
+    def create_session(self, document_ids: Optional[List[str]] = None) -> ChatSession:
+        document_ids = list(document_ids or [])
         sid = str(uuid.uuid4())
         now = _now()
         with self._conn() as conn:
@@ -63,18 +64,28 @@ class ChatService:
     def append_message(self, session_id: str, message: ChatMessage) -> None:
         now = _now()
         message.timestamp = now
+        # Wrap read-modify-write in BEGIN IMMEDIATE so concurrent appends
+        # serialize at the SQLite level rather than racing on the in-memory
+        # JSON list (which would silently lose messages).
         with self._conn() as conn:
-            row = conn.execute(
-                "SELECT messages FROM sessions WHERE session_id = ?", (session_id,)
-            ).fetchone()
-            if not row:
-                return
-            msgs = json.loads(row["messages"])
-            msgs.append(message.model_dump())
-            conn.execute(
-                "UPDATE sessions SET messages = ?, updated_at = ? WHERE session_id = ?",
-                (json.dumps(msgs), now, session_id),
-            )
+            conn.execute("BEGIN IMMEDIATE")
+            try:
+                row = conn.execute(
+                    "SELECT messages FROM sessions WHERE session_id = ?", (session_id,)
+                ).fetchone()
+                if not row:
+                    conn.execute("ROLLBACK")
+                    return
+                msgs = json.loads(row["messages"])
+                msgs.append(message.model_dump())
+                conn.execute(
+                    "UPDATE sessions SET messages = ?, updated_at = ? WHERE session_id = ?",
+                    (json.dumps(msgs), now, session_id),
+                )
+                conn.execute("COMMIT")
+            except Exception:
+                conn.execute("ROLLBACK")
+                raise
 
     def update_document_scope(self, session_id: str, document_ids: List[str]) -> None:
         with self._conn() as conn:

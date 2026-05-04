@@ -2,7 +2,7 @@ import json
 import os
 import sqlite3
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ class ExperimentService:
                 "INSERT INTO experiments (created_at, pipeline_config, metrics, total_queries, note, dataset_id) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
                 (
-                    datetime.utcnow().isoformat(timespec="seconds") + "Z",
+                    datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                     json.dumps(pipeline_config, ensure_ascii=False),
                     json.dumps(metrics, ensure_ascii=False),
                     total_queries,

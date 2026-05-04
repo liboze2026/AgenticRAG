@@ -3,7 +3,7 @@ import pytest
 
 from backend.lab.feedback import (
     _dedup_results, _gmm_signal, _figure_heavy, _has_caption_text,
-    _has_layout_with_type,
+    _has_layout_with_type, _neighbor_expand, feedback_retrieve,
 )
 from backend.models.schemas import (
     BoundingBox, LayoutElement, PageLayout, RetrievalResult,
@@ -83,3 +83,65 @@ def test_has_layout_with_type():
     assert not _has_layout_with_type(rs, "figure")
     # No layout = not a match
     assert not _has_layout_with_type([_r("d", 2, 0.5)], "heading")
+
+
+# ---------------------------------------------------------------------------
+# Regression: _neighbor_expand must use the original query, not image_path
+# ---------------------------------------------------------------------------
+
+class _StubBundle:
+    def __init__(self, results):
+        self.results = results
+        self.timing = {}
+
+
+class _StubPipeline:
+    def __init__(self):
+        self.last_query = None
+
+    async def retrieve(self, query, top_k=5):
+        self.last_query = query
+        return _StubBundle(results=[])
+
+
+@pytest.mark.asyncio
+async def test_neighbor_expand_uses_query_not_image_path():
+    pipe = _StubPipeline()
+    cur = [_r("d1", 5, 0.9), _r("d1", 5, 0.8)]
+    seen = {("d1", 5)}
+    out = await _neighbor_expand(pipe, "what is X?", seen, cur, top_k=3)
+    assert pipe.last_query == "what is X?", "_neighbor_expand should pass the query through, not image_path"
+    # Stubs synthesized for ±1 of page 5 (i.e. pages 4 and 6)
+    pages = sorted(r.page_number for r in out)
+    assert pages == [4, 6]
+
+
+@pytest.mark.asyncio
+async def test_neighbor_expand_skips_deep_when_query_blank():
+    pipe = _StubPipeline()
+    cur = [_r("d1", 5, 0.9)]
+    out = await _neighbor_expand(pipe, "", set(), cur, top_k=3)
+    # Empty query means we must NOT call retrieve at all
+    assert pipe.last_query is None
+
+
+# ---------------------------------------------------------------------------
+# Regression: max_rounds_hit + converged flag interplay
+# ---------------------------------------------------------------------------
+
+class _NoHitPipeline:
+    """Always returns nothing — exercises the empty-initial branch."""
+    async def retrieve(self, query, top_k=5):
+        return _StubBundle(results=[])
+
+
+@pytest.mark.asyncio
+async def test_feedback_empty_initial_does_not_claim_converged():
+    resp = await feedback_retrieve(
+        _NoHitPipeline(), query="x", top_k=2, candidates=4,
+        max_rounds=3, do_generate=False,
+    )
+    # Empty initial → not converged, max_rounds not hit
+    assert resp.converged is False
+    assert resp.max_rounds_hit is False
+    assert resp.final_results == []

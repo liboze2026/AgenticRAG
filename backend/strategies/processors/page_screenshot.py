@@ -15,7 +15,10 @@ class PageScreenshotProcessor(BaseProcessor):
     async def process(self, pdf_path: str, document_id: str) -> List[PageImage]:
         doc_dir = os.path.join(self.images_dir, document_id)
         os.makedirs(doc_dir, exist_ok=True)
-        images = convert_from_path(pdf_path, dpi=self.dpi)
+        try:
+            images = convert_from_path(pdf_path, dpi=self.dpi)
+        except Exception as e:
+            raise RuntimeError(f"PDF 渲染失败 ({type(e).__name__}: {e}) — 文件可能损坏或缺少 poppler") from e
         pages = []
         for i, img in enumerate(images):
             page_num = i + 1

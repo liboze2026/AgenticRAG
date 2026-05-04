@@ -23,6 +23,7 @@ This module is read-only: it pulls from Qdrant 'documents' but never writes.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 import time
@@ -238,13 +239,18 @@ class LabGraphService:
         self.qdrant = qdrant_client
         self.collection_name = collection_name
 
+    _FETCH_TIMEOUT_SEC = 10.0
+
     async def _fetch_layout(self, doc_id: str, page: int) -> Optional[PageLayout]:
         try:
             point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{doc_id}:{page}"))
-            res = await self.qdrant.retrieve(
-                collection_name=self.collection_name,
-                ids=[point_id],
-                with_payload=True,
+            res = await asyncio.wait_for(
+                self.qdrant.retrieve(
+                    collection_name=self.collection_name,
+                    ids=[point_id],
+                    with_payload=True,
+                ),
+                timeout=self._FETCH_TIMEOUT_SEC,
             )
             if not res:
                 return None
@@ -253,6 +259,10 @@ class LabGraphService:
             if not ld:
                 return None
             return PageLayout(**ld)
+        except asyncio.TimeoutError:
+            logger.warning("graph layout fetch TIMEOUT %.0fs for %s p%d",
+                           self._FETCH_TIMEOUT_SEC, doc_id, page)
+            return None
         except Exception:
             return None
 
@@ -269,9 +279,16 @@ class LabGraphService:
                     targets.add((d, p - 1))
                 targets.add((d, p + 1))
 
+        # Fetch all targets concurrently — each call is bounded by
+        # _FETCH_TIMEOUT_SEC, so the whole graph build cannot stall longer
+        # than that even when Qdrant is slow.
+        target_list = list(targets)
+        layout_results = await asyncio.gather(
+            *[self._fetch_layout(d, p) for d, p in target_list],
+            return_exceptions=False,
+        )
         layouts: Dict[Tuple[str, int], PageLayout] = {}
-        for d, p in targets:
-            ly = await self._fetch_layout(d, p)
+        for (d, p), ly in zip(target_list, layout_results):
             if ly is not None:
                 layouts[(d, p)] = ly
         if not layouts:

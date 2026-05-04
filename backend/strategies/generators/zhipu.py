@@ -170,7 +170,7 @@ class ZhipuGenerator(BaseGenerator):
                     with open(result.image_path, "rb") as f:
                         b64 = base64.b64encode(f.read()).decode()
                     content.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}})
-                except FileNotFoundError:
+                except (FileNotFoundError, PermissionError, OSError):
                     pass
             else:
                 content.append({"type": "text", "text": f"(doc: {result.document_id}, page: {result.page_number})"})

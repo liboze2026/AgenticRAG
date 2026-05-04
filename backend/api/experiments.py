@@ -53,16 +53,35 @@ class EvalRequest(BaseModel):
 async def evaluate(request: Request, body: EvalRequest):
     manager = request.app.state.pipeline_manager
     pipeline = manager.pipeline
+    if pipeline is None:
+        raise HTTPException(status_code=503, detail="主 pipeline 未就绪")
     exp_svc = request.app.state.experiment_service
+
+    if not body.queries:
+        raise HTTPException(status_code=400, detail="queries 不能为空")
 
     recall_sums = {1: 0.0, 5: 0.0, 10: 0.0}
     mrr_sum = 0.0
     timing_sums = {}
     per_query = []
     n = len(body.queries)
+    failed = 0
 
     for eq in body.queries:
-        bundle = await pipeline.retrieve(eq.query, top_k=body.top_k)
+        try:
+            bundle = await pipeline.retrieve(eq.query, top_k=body.top_k)
+        except Exception as exc:
+            failed += 1
+            per_query.append({
+                "query": eq.query,
+                "relevant": list(eq.relevant),
+                "retrieved": [],
+                "rr": 0.0,
+                "recall_at_k": {1: 0.0, 5: 0.0, 10: 0.0},
+                "timing_ms": {},
+                "error": f"{type(exc).__name__}: {str(exc)[:200]}",
+            })
+            continue
         retrieved = [f"{r.document_id}:{r.page_number}" for r in bundle.results]
         relevant_set = set(eq.relevant)
 

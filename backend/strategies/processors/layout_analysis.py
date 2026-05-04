@@ -225,35 +225,36 @@ class LayoutAnalysisProcessor(BaseProcessor):
                 return self._extract_figures_from_rects(plumber_page)
 
             fitz_doc = _fitz.open(pdf_path)
-            fitz_page = fitz_doc[page_num - 1]
-            img_list = fitz_page.get_images(full=True)
+            try:
+                fitz_page = fitz_doc[page_num - 1]
+                img_list = fitz_page.get_images(full=True)
 
-            for idx, img_info in enumerate(img_list):
-                xref = img_info[0]
-                rects = fitz_page.get_image_rects(xref)
-                if not rects:
-                    continue
-                rect = rects[0]
-                area = (rect.x1 - rect.x0) * (rect.y1 - rect.y0)
-                if area < self.min_figure_area_pt:
-                    continue
+                for idx, img_info in enumerate(img_list):
+                    xref = img_info[0]
+                    rects = fitz_page.get_image_rects(xref)
+                    if not rects:
+                        continue
+                    rect = rects[0]
+                    area = (rect.x1 - rect.x0) * (rect.y1 - rect.y0)
+                    if area < self.min_figure_area_pt:
+                        continue
 
-                # Crop and save the figure
-                crop_path = os.path.join(doc_dir, f"page_{page_num}_fig_{idx + 1}.png")
-                clip = _fitz.Rect(rect)
-                mat = _fitz.Matrix(self._scale, self._scale)
-                pix = fitz_page.get_pixmap(matrix=mat, clip=clip)
-                pix.save(crop_path)
+                    # Crop and save the figure
+                    crop_path = os.path.join(doc_dir, f"page_{page_num}_fig_{idx + 1}.png")
+                    clip = _fitz.Rect(rect)
+                    mat = _fitz.Matrix(self._scale, self._scale)
+                    pix = fitz_page.get_pixmap(matrix=mat, clip=clip)
+                    pix.save(crop_path)
 
-                # fitz uses top-left origin in PDF points coordinates
-                figures.append(LayoutElement(
-                    element_type="figure",
-                    bbox=BoundingBox(x0=rect.x0, y0=rect.y0, x1=rect.x1, y1=rect.y1),
-                    image_path=crop_path,
-                    confidence=1.0,
-                ))
-
-            fitz_doc.close()
+                    # fitz uses top-left origin in PDF points coordinates
+                    figures.append(LayoutElement(
+                        element_type="figure",
+                        bbox=BoundingBox(x0=rect.x0, y0=rect.y0, x1=rect.x1, y1=rect.y1),
+                        image_path=crop_path,
+                        confidence=1.0,
+                    ))
+            finally:
+                fitz_doc.close()
         except Exception:
             pass
 

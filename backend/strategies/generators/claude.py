@@ -37,7 +37,9 @@ class ClaudeGenerator(BaseGenerator):
             system=_CITATION_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": content}],
         )
-        text = response.content[0].text
+        if not response.content:
+            raise RuntimeError("Claude 返回空 content")
+        text = getattr(response.content[0], "text", "") or ""
 
         if self.generation_cache is not None:
             self.generation_cache.set(cache_key, text)
@@ -65,7 +67,9 @@ class ClaudeGenerator(BaseGenerator):
             system=_CITATION_SYSTEM_PROMPT,
             messages=anthropic_messages,
         )
-        text = response.content[0].text
+        if not response.content:
+            raise RuntimeError("Claude 返回空 content")
+        text = getattr(response.content[0], "text", "") or ""
         return Answer(text=text, sources=context)
 
     def _cache_key(self, query: str, context: List[RetrievalResult]) -> str:
@@ -83,7 +87,7 @@ class ClaudeGenerator(BaseGenerator):
                     "type": "image",
                     "source": {"type": "base64", "media_type": "image/png", "data": b64},
                 })
-            except FileNotFoundError:
+            except (FileNotFoundError, PermissionError, OSError):
                 pass
         content.append({
             "type": "text",

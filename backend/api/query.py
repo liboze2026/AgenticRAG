@@ -17,15 +17,28 @@ def _service_error(exc: Exception) -> HTTPException:
     return HTTPException(status_code=500, detail=msg)
 
 
+def _get_pipeline(request: Request):
+    pm = getattr(request.app.state, "pipeline_manager", None)
+    if pm is None or pm.pipeline is None:
+        raise HTTPException(
+            status_code=503,
+            detail="主 pipeline 未就绪 — 请检查 worker / Qdrant 是否在线",
+        )
+    return pm.pipeline
+
+
 @router.post("/query")
 async def query(request: Request, body: QueryRequest):
-    # Fix C: reject empty query string
     if not body.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty")
-    pipeline = request.app.state.pipeline_manager.pipeline
+    if len(body.query) > 4000:
+        raise HTTPException(status_code=400, detail="Query too long (>4000 chars)")
+    pipeline = _get_pipeline(request)
     try:
         answer = await pipeline.query(body.query, top_k=body.top_k)
-    except (httpx.HTTPStatusError, httpx.ConnectError, Exception) as exc:
+    except HTTPException:
+        raise
+    except Exception as exc:
         raise _service_error(exc)
     return {
         "answer": answer.text,
@@ -36,13 +49,16 @@ async def query(request: Request, body: QueryRequest):
 
 @router.post("/retrieve")
 async def retrieve(request: Request, body: QueryRequest):
-    # Fix C: reject empty query string
     if not body.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty")
-    pipeline = request.app.state.pipeline_manager.pipeline
+    if len(body.query) > 4000:
+        raise HTTPException(status_code=400, detail="Query too long (>4000 chars)")
+    pipeline = _get_pipeline(request)
     try:
         bundle = await pipeline.retrieve(body.query, top_k=body.top_k)
-    except (httpx.HTTPStatusError, httpx.ConnectError, Exception) as exc:
+    except HTTPException:
+        raise
+    except Exception as exc:
         raise _service_error(exc)
     return {
         "results": [r.model_dump() for r in bundle.results],

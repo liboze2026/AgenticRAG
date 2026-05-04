@@ -1,7 +1,7 @@
 import os
 import sqlite3
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from backend.models.schemas import DatasetInfo
@@ -39,7 +39,7 @@ class DatasetService:
             try:
                 cursor = conn.execute(
                     "INSERT INTO datasets (name, description, created_at) VALUES (?, ?, ?)",
-                    (name, description, datetime.utcnow().isoformat(timespec="seconds") + "Z"),
+                    (name, description, datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
                 )
                 conn.commit()
                 ds_id = cursor.lastrowid

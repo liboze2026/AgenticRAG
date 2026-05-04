@@ -62,21 +62,26 @@ class MultiVectorRetriever(BaseRetriever):
         seen = set()
         results = []
         for point in response.points:
+            payload = point.payload or {}
+            doc_id = payload.get("document_id")
+            page_num = payload.get("page_number")
+            if doc_id is None or page_num is None:
+                continue
             layout: Optional[PageLayout] = None
-            if "layout" in point.payload:
+            if payload.get("layout"):
                 try:
-                    layout = PageLayout(**point.payload["layout"])
+                    layout = PageLayout(**payload["layout"])
                 except Exception:
                     pass
-            key = (point.payload["document_id"], point.payload["page_number"])
+            key = (doc_id, page_num)
             if key in seen:
                 continue
             seen.add(key)
             results.append(RetrievalResult(
-                document_id=point.payload["document_id"],
-                page_number=point.payload["page_number"],
+                document_id=doc_id,
+                page_number=page_num,
                 score=point.score,
-                image_path=point.payload["image_path"],
+                image_path=payload.get("image_path", ""),
                 layout=layout,
             ))
             if len(results) >= top_k:

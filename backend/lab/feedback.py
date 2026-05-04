@@ -150,15 +150,15 @@ async def _retrieve_safe(pipeline, query: str, top_k: int) -> List[RetrievalResu
 
 
 async def _neighbor_expand(
-    pipeline, seen: Set[Tuple[str, int]], current: List[RetrievalResult], top_k: int,
+    pipeline, query: str, seen: Set[Tuple[str, int]],
+    current: List[RetrievalResult], top_k: int,
 ) -> List[RetrievalResult]:
-    """Re-issue retrieval for synthetic queries built from top-page neighbours.
+    """Pull pages ±1 around the current top hits.
 
-    We don't have a "fetch page" API on Pipeline, so we simulate neighbour
-    inclusion by retrieving a deeper candidate set and grafting in any pages
-    matching ±1 of the current top pages. If the deeper retrieval doesn't
-    return them, we synthesize stub results scored slightly below the seed
-    so the UI still shows the neighbour was considered.
+    Strategy: re-run the original query at higher depth and graft in any
+    returned page that matches a neighbour target. For neighbours the deep
+    retrieval missed, synthesize stub results (score=0) so the trace still
+    shows the neighbour was considered.
     """
     if not current:
         return []
@@ -171,9 +171,7 @@ async def _neighbor_expand(
     if not target_pages:
         return []
 
-    # Deep retrieval — same query, larger top_k — so we have a chance of
-    # picking up neighbours organically.
-    deep = await _retrieve_safe(pipeline, current[0].image_path or "", top_k=top_k * 4)  # noop fallback
+    deep = await _retrieve_safe(pipeline, query, top_k=top_k * 4) if query else []
     extra: List[RetrievalResult] = []
     for r in deep:
         if (r.document_id, r.page_number) in target_pages:
@@ -259,7 +257,7 @@ async def feedback_retrieve(
         # Pick a trigger and run the corresponding supplementary action.
         if not converged:
             trigger = "low_density"
-            extra = await _neighbor_expand(pipeline, seen, accumulated, top_k=top_k)
+            extra = await _neighbor_expand(pipeline, query, seen, accumulated, top_k=top_k)
             note = f"GMM 触发: {gmm_note}; 新加邻接页 {len(extra)}"
         elif missing_caption:
             trigger = "missing_caption"
@@ -295,9 +293,10 @@ async def feedback_retrieve(
             notes.append(f"R{round_idx} 无新页 — 提前结束补检索")
             break
 
-    max_rounds_hit = len(rounds) >= max_rounds and (
-        "" if rounds else False
-    )
+    max_rounds_hit = len(rounds) >= max_rounds
+    converged_flag = not max_rounds_hit
+    if rounds and rounds[-1].trigger_reason == "initial":
+        converged_flag = True
 
     final_results = accumulated[:top_k]
 
@@ -328,8 +327,8 @@ async def feedback_retrieve(
         final_results=final_results,
         answer=answer_text,
         evidence_regions=regions,
-        converged=(not max_rounds_hit),
-        max_rounds_hit=bool(max_rounds_hit),
+        converged=converged_flag,
+        max_rounds_hit=max_rounds_hit,
         timing_ms=timing,
         note="; ".join(notes),
     )

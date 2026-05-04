@@ -28,7 +28,16 @@ class ChatResponse(BaseModel):
 @router.post("/chat")
 async def chat(request: Request, body: ChatRequest) -> ChatResponse:
     chat_service = request.app.state.chat_service
-    pipeline = request.app.state.pipeline_manager.pipeline
+    pm = getattr(request.app.state, "pipeline_manager", None)
+    if pm is None or pm.pipeline is None:
+        raise HTTPException(
+            status_code=503,
+            detail="主 pipeline 未就绪 — 请检查 worker / Qdrant 是否在线",
+        )
+    pipeline = pm.pipeline
+
+    if not body.messages:
+        raise HTTPException(status_code=400, detail="messages 不能为空")
 
     # Get or create session
     session = None
@@ -39,10 +48,12 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
 
     # Extract last user message for retrieval
     last_user_msg = next(
-        (m for m in reversed(body.messages) if m.get("role") == "user"), None
+        (m for m in reversed(body.messages)
+         if isinstance(m, dict) and m.get("role") == "user" and str(m.get("content", "")).strip()),
+        None
     )
     if not last_user_msg:
-        raise HTTPException(status_code=400, detail="No user message found in messages")
+        raise HTTPException(status_code=400, detail="未找到非空 user 消息")
 
     # Retrieve relevant pages from the query
     t0 = time.perf_counter()

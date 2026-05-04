@@ -545,14 +545,20 @@ def main():
     os.makedirs(config.storage.upload_dir, exist_ok=True)
     os.makedirs(config.storage.images_dir, exist_ok=True)
 
-    # Ensure Qdrant collection
+    # Ensure Qdrant collection — bounded so a stalled tunnel can't block
+    # startup forever. If Qdrant is unreachable, we still bring up the API
+    # and surface the failure via /health rather than refusing to start.
     try:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        loop.run_until_complete(
-            _ensure_qdrant_collection(qdrant_client, config.qdrant.collection_name)
-        )
+        loop.run_until_complete(asyncio.wait_for(
+            _ensure_qdrant_collection(qdrant_client, config.qdrant.collection_name),
+            timeout=30.0,
+        ))
         loop.close()
+    except asyncio.TimeoutError:
+        logger.warning("Qdrant collection setup timed out (>30s) — continuing; "
+                       "/health will report the issue once it surfaces")
     except Exception as e:
         logger.warning("Could not ensure Qdrant collection: %s", e)
 

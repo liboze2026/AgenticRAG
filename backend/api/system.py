@@ -2,6 +2,8 @@ import asyncio
 
 from fastapi import APIRouter, Request
 
+from backend.services.qdrant_resilient import ResilientAsyncQdrantClient
+
 router = APIRouter()
 
 
@@ -32,7 +34,7 @@ async def health(request: Request):
         # Bypass the resilient retry wrapper for /health — we want a single
         # short-timeout probe. _inner.get_collections is the raw qdrant client
         # method so a network blip surfaces immediately.
-        inner = getattr(qdrant_client, "_inner", qdrant_client)
+        inner = qdrant_client._inner if isinstance(qdrant_client, ResilientAsyncQdrantClient) else qdrant_client
         try:
             await inner.get_collections()
             return {"status": "ok"}

@@ -22,7 +22,7 @@ async def test_upload_document(mock_deps):
     app = create_app(**mock_deps)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        resp = await client.post("/api/documents/upload", files={"file": ("test.pdf", b"fake pdf", "application/pdf")})
+        resp = await client.post("/api/documents/upload", files={"file": ("test.pdf", b"%PDF fake", "application/pdf")})
     assert resp.status_code == 200
     assert resp.json()["filename"] == "test.pdf"
 

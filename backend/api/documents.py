@@ -28,9 +28,12 @@ async def upload_document(
     content = await file.read()
     if not content:
         raise HTTPException(status_code=400, detail="File is empty")
-    # Fix B: reject non-PDF files
+    # Fix B: reject non-PDF files (extension OR content-type may be spoofed,
+    # so also require the PDF magic header bytes.)
     if not (file.filename or "").lower().endswith(".pdf") and file.content_type not in ("application/pdf",):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
+    if not content[:4] == b"%PDF":
+        raise HTTPException(status_code=400, detail="文件不是有效 PDF (缺少 %PDF 文件头)")
     doc_info = await doc_service.upload(filename=file.filename, content=content, dataset_id=dataset_id)
     background_tasks.add_task(_bounded_index, doc_service, doc_info.id)
     return doc_info.model_dump()

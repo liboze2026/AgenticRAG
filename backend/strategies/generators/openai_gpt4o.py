@@ -37,7 +37,9 @@ class OpenAIGPT4oGenerator(BaseGenerator):
         response = await self.client.chat.completions.create(
             model=self.model, messages=messages, max_tokens=2048
         )
-        text = response.choices[0].message.content
+        if not response.choices:
+            raise RuntimeError("OpenAI 返回空 choices")
+        text = response.choices[0].message.content or ""
 
         if self.generation_cache is not None:
             self.generation_cache.set(cache_key, text)
@@ -62,7 +64,9 @@ class OpenAIGPT4oGenerator(BaseGenerator):
         response = await self.client.chat.completions.create(
             model=self.model, messages=openai_messages, max_tokens=2048
         )
-        text = response.choices[0].message.content
+        if not response.choices:
+            raise RuntimeError("OpenAI 返回空 choices")
+        text = response.choices[0].message.content or ""
         return Answer(text=text, sources=context)
 
     def _cache_key(self, query: str, context: List[RetrievalResult]) -> str:
@@ -80,6 +84,6 @@ class OpenAIGPT4oGenerator(BaseGenerator):
                 with open(result.image_path, "rb") as f:
                     b64 = base64.b64encode(f.read()).decode()
                 content.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}})
-            except FileNotFoundError:
+            except (FileNotFoundError, PermissionError, OSError):
                 pass
         return content
