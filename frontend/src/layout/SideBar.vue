@@ -35,10 +35,19 @@ const groups: NavGroup[] = [
     ],
   },
   {
+    label: '增强组件',
+    items: [
+      { path: '/lab/graph',     label: '关系图增强', icon: 'sparkles', chap: 'E' },
+      { path: '/lab/feedback',  label: '反馈补检索', icon: 'flask',    chap: 'F' },
+      { path: '/lab/unified',   label: '统一编排',   icon: 'doc',      chap: 'G' },
+    ],
+  },
+  {
     label: '评　测',
     items: [
       { path: '/experiments', label: '实验评测', icon: 'flask',    chap: '5' },
       { path: '/visdom',      label: 'VisDoM 复现', icon: 'sparkles', chap: 'X' },
+      { path: '/lab/benchmark', label: '基准评测',   icon: 'gauge',    chap: 'H' },
       { path: '/lab/health',  label: '实验台状态', icon: 'gauge',    chap: 'L' },
       { path: '/system',      label: '系统状态', icon: 'gauge',    chap: '6' },
     ],

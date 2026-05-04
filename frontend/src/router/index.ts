@@ -15,6 +15,11 @@ const routes = [
   { path: '/lab/gmm',     name: 'LabGmm',    component: () => import('../views/lab/LabGmmView.vue') },
   { path: '/lab/region',  name: 'LabRegion', component: () => import('../views/lab/LabRegionView.vue') },
   { path: '/lab/health',  name: 'LabHealth', component: () => import('../views/lab/LabHealthView.vue') },
+  // Lab — Phase 6-9
+  { path: '/lab/graph',     name: 'LabGraph',     component: () => import('../views/lab/LabGraphView.vue') },
+  { path: '/lab/feedback',  name: 'LabFeedback',  component: () => import('../views/lab/LabFeedbackView.vue') },
+  { path: '/lab/unified',   name: 'LabUnified',   component: () => import('../views/lab/LabUnifiedView.vue') },
+  { path: '/lab/benchmark', name: 'LabBenchmark', component: () => import('../views/lab/LabBenchmarkView.vue') },
 ]
 
 const router = createRouter({ history: createWebHistory(), routes })

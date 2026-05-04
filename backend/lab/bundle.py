@@ -10,8 +10,10 @@ import logging
 from dataclasses import dataclass
 from typing import Optional
 
+from backend.lab.graph import LabGraphService
 from backend.lab.hybrid import LabHybridService
 from backend.lab.region import LabRegionService
+from backend.lab.unified import LabUnifiedService
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +24,9 @@ class LabBundle:
     aren't met (e.g. region service can't initialize without a worker)."""
     hybrid: LabHybridService
     region: Optional[LabRegionService]
+    graph: LabGraphService
     documents_db_path: str
+    unified: Optional[LabUnifiedService] = None
 
 
 def build_lab_bundle(
@@ -55,8 +59,18 @@ def build_lab_bundle(
     except Exception:
         logger.exception("lab region service init failed — region features disabled")
 
-    return LabBundle(
+    graph = LabGraphService(qdrant_client=qdrant_client)
+
+    bundle = LabBundle(
         hybrid=hybrid,
         region=region,
+        graph=graph,
+        unified=None,  # set below — needs reference to bundle itself
         documents_db_path=documents_db_path,
     )
+    bundle.unified = LabUnifiedService(
+        lab_bundle=bundle,
+        qdrant_client=qdrant_client,
+        region_service=region,
+    )
+    return bundle

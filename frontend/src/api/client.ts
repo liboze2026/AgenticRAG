@@ -367,6 +367,172 @@ export const labApi = {
   regionDelete: (docId: string) => api.delete(`/lab/region/${docId}`),
   health: () => api.get<LabHealth>('/lab/health'),
   info: () => api.get<LabInfo>('/lab/info'),
+
+  // Phase 6 — local relation graph
+  graph: (query: string, opts: { topK?: number; includeNeighbours?: boolean } = {}) =>
+    api.post<GraphResponse>('/lab/graph', {
+      query,
+      top_k: opts.topK ?? 5,
+      include_neighbours: opts.includeNeighbours ?? true,
+    }),
+
+  // Phase 7 — feedback-driven supplementary retrieval
+  feedback: (query: string, opts: { topK?: number; candidates?: number; maxRounds?: number; doGenerate?: boolean } = {}) =>
+    api.post<FeedbackResponse>('/lab/feedback', {
+      query,
+      top_k: opts.topK ?? 5,
+      candidates: opts.candidates ?? 20,
+      max_rounds: opts.maxRounds ?? 3,
+      do_generate: opts.doGenerate ?? true,
+    }),
+
+  // Phase 8 — unified orchestration
+  unified: (query: string, opts: UnifiedOpts = {}) =>
+    api.post<UnifiedResponse>('/lab/unified', {
+      query,
+      top_k: opts.topK ?? 5,
+      candidates: opts.candidates ?? 20,
+      use_hybrid: opts.useHybrid ?? true,
+      use_gmm: opts.useGmm ?? false,
+      use_feedback: opts.useFeedback ?? false,
+      use_visa: opts.useVisa ?? true,
+      use_region: opts.useRegion ?? false,
+      use_graph: opts.useGraph ?? false,
+      do_generate: opts.doGenerate ?? true,
+    }),
+
+  // Phase 9 — benchmark
+  benchmark: (queries: BenchmarkQueryItem[], opts: { channels?: string[]; topK?: number; timeoutSec?: number } = {}) =>
+    api.post<BenchmarkResponse>('/lab/benchmark', {
+      queries,
+      channels: opts.channels ?? ['colpali'],
+      top_k: opts.topK ?? 10,
+      timeout_per_query_sec: opts.timeoutSec ?? 30,
+    }),
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6/7/8/9 type definitions
+// ---------------------------------------------------------------------------
+
+export interface GraphSeed { document_id: string; page_number: number }
+
+export interface GraphNode {
+  id: string
+  document_id: string
+  page_number: number
+  element_index: number
+  element_type: string
+  bbox: BoundingBox
+  text: string
+}
+
+export interface GraphEdge {
+  source: string
+  target: string
+  edge_type: 'caption_of' | 'heading_to_text' | 'cross_page_continuation' | 'text_to_figure_ref' | string
+  score: number
+  note: string
+}
+
+export interface GraphResponse {
+  query: string
+  seeds: GraphSeed[]
+  nodes: GraphNode[]
+  edges: GraphEdge[]
+  timing_ms: Record<string, number>
+  note: string
+}
+
+export interface FeedbackRound {
+  round_index: number
+  trigger_reason: string
+  query_used: string
+  candidate_count: number
+  high_score_count: number
+  new_pages_added: number
+  note: string
+}
+
+export interface FeedbackResponse {
+  query: string
+  rounds: FeedbackRound[]
+  final_results: RetrievalResult[]
+  answer?: string | null
+  evidence_regions: EvidenceRegion[]
+  converged: boolean
+  max_rounds_hit: boolean
+  timing_ms: Record<string, number>
+  note: string
+}
+
+export interface UnifiedStage {
+  name: string
+  ok: boolean
+  note: string
+  timing_ms: number
+  summary: Record<string, any>
+}
+
+export interface UnifiedResponse {
+  query: string
+  stages: UnifiedStage[]
+  final_results: RetrievalResult[]
+  answer?: string | null
+  evidence_regions: EvidenceRegion[]
+  graph_nodes: GraphNode[]
+  graph_edges: GraphEdge[]
+  region_hits: RegionHit[]
+  timing_ms: Record<string, number>
+  note: string
+}
+
+export interface UnifiedOpts {
+  topK?: number
+  candidates?: number
+  useHybrid?: boolean
+  useGmm?: boolean
+  useFeedback?: boolean
+  useVisa?: boolean
+  useRegion?: boolean
+  useGraph?: boolean
+  doGenerate?: boolean
+}
+
+export interface BenchmarkQueryItem {
+  query: string
+  relevant_pages: GraphSeed[]
+}
+
+export interface BenchmarkPerQuery {
+  query: string
+  channel: string
+  retrieved: GraphSeed[]
+  relevant: GraphSeed[]
+  rr: number
+  recall_at_5: number
+  recall_at_10: number
+  hit_at_1: number
+  note: string
+}
+
+export interface BenchmarkChannelMetrics {
+  channel: string
+  queries: number
+  mrr: number
+  recall_at_5: number
+  recall_at_10: number
+  hit_at_1: number
+  avg_latency_ms: number
+}
+
+export interface BenchmarkResponse {
+  metrics: BenchmarkChannelMetrics[]
+  per_query: BenchmarkPerQuery[]
+  total_queries: number
+  channels: string[]
+  timing_ms: Record<string, number>
+  note: string
 }
 
 export default api

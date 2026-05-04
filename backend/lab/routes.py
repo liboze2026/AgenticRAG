@@ -3,17 +3,22 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from backend.lab.benchmark import run_benchmark
+from backend.lab.feedback import feedback_retrieve
 from backend.lab.gmm import gmm_query
 from backend.lab.health import collect_lab_health
 from backend.lab.hybrid import LabHybridService
 from backend.lab.region import LabRegionService
 from backend.lab.schemas import (
-    GmmResponse, HybridCompareResponse, LabHealth, RegionResponse, VisaResponse,
+    BenchmarkQueryItem, BenchmarkResponse,
+    FeedbackResponse, GmmResponse, GraphResponse,
+    HybridCompareResponse, LabHealth, RegionResponse,
+    UnifiedResponse, VisaResponse,
 )
 from backend.lab.visa import visa_query
 
@@ -48,6 +53,40 @@ class GmmRequest(BaseModel):
 class RegionQueryRequest(BaseModel):
     query: str
     top_k: int = Field(8, ge=1, le=30)
+
+
+class GraphRequest(BaseModel):
+    query: str
+    top_k: int = Field(5, ge=1, le=20)
+    include_neighbours: bool = True
+
+
+class FeedbackRequest(BaseModel):
+    query: str
+    top_k: int = Field(5, ge=1, le=20)
+    candidates: int = Field(20, ge=4, le=100)
+    max_rounds: int = Field(3, ge=1, le=6)
+    do_generate: bool = True
+
+
+class UnifiedRequest(BaseModel):
+    query: str
+    top_k: int = Field(5, ge=1, le=20)
+    candidates: int = Field(20, ge=4, le=100)
+    use_hybrid: bool = True
+    use_gmm: bool = False
+    use_feedback: bool = False
+    use_visa: bool = True
+    use_region: bool = False
+    use_graph: bool = False
+    do_generate: bool = True
+
+
+class BenchmarkRequest(BaseModel):
+    queries: List[BenchmarkQueryItem]
+    channels: List[str] = Field(default_factory=lambda: ["colpali"])
+    top_k: int = Field(10, ge=1, le=50)
+    timeout_per_query_sec: float = Field(30.0, ge=1.0, le=120.0)
 
 
 # ---------------------------------------------------------------------------
@@ -263,5 +302,98 @@ async def lab_info():
              "desc": "高斯混合模型自适应 top-k，可视化分数分布与截断阈值"},
             {"id": "region",  "title": "区域级检索",   "endpoint": "/api/lab/region/query", "method": "POST",
              "desc": "Layout-level 检索：按文本块/表格/图表粒度返回命中"},
+            {"id": "graph",   "title": "局部关系图",   "endpoint": "/api/lab/graph",   "method": "POST",
+             "desc": "在候选页+邻接页内推导 caption / heading / 跨页续表 / 正文-图引用 等关系边"},
+            {"id": "feedback","title": "反馈式补检索","endpoint": "/api/lab/feedback","method": "POST",
+             "desc": "GMM 判定证据稳定度，必要时触发邻接页扩展或类型补检索，输出多轮轨迹"},
+            {"id": "unified", "title": "统一编排",     "endpoint": "/api/lab/unified", "method": "POST",
+             "desc": "一键串联 hybrid / gmm / feedback / visa / region / graph，逐阶段输出 ok 状态"},
+            {"id": "benchmark","title": "基准评测",   "endpoint": "/api/lab/benchmark","method": "POST",
+             "desc": "对一组带标注的 query 跑 MRR / Recall@K / Hit@1，比较 colpali / bm25 / rrf 通道"},
         ],
     }
+
+
+# ---------------------------------------------------------------------------
+# Phase 6 — Local relation graph
+# ---------------------------------------------------------------------------
+
+@router.post("/graph", response_model=GraphResponse)
+async def graph_build(request: Request, body: GraphRequest):
+    query = _validate_query(body.query)
+    pipeline = _get_pipeline(request)
+    lab = _get_lab(request)
+    return await lab.graph.build_for_query(
+        pipeline, query=query, top_k=body.top_k,
+        include_neighbours=body.include_neighbours,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 7 — Feedback-driven supplementary retrieval
+# ---------------------------------------------------------------------------
+
+@router.post("/feedback", response_model=FeedbackResponse)
+async def feedback_loop(request: Request, body: FeedbackRequest):
+    query = _validate_query(body.query)
+    pipeline = _get_pipeline(request)
+    return await feedback_retrieve(
+        pipeline,
+        query=query,
+        top_k=body.top_k,
+        candidates=body.candidates,
+        max_rounds=body.max_rounds,
+        do_generate=body.do_generate,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 8 — Unified orchestration
+# ---------------------------------------------------------------------------
+
+@router.post("/unified", response_model=UnifiedResponse)
+async def unified_run(request: Request, body: UnifiedRequest):
+    query = _validate_query(body.query)
+    pipeline = _get_pipeline(request)
+    lab = _get_lab(request)
+    if lab.unified is None:
+        raise HTTPException(status_code=503, detail="统一编排服务未挂载")
+    return await lab.unified.run(
+        pipeline,
+        query=query,
+        top_k=body.top_k,
+        candidates=body.candidates,
+        use_hybrid=body.use_hybrid,
+        use_gmm=body.use_gmm,
+        use_feedback=body.use_feedback,
+        use_visa=body.use_visa,
+        use_region=body.use_region,
+        use_graph=body.use_graph,
+        do_generate=body.do_generate,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 9 — Benchmark
+# ---------------------------------------------------------------------------
+
+@router.post("/benchmark", response_model=BenchmarkResponse)
+async def benchmark_run(request: Request, body: BenchmarkRequest):
+    if not body.queries:
+        raise HTTPException(status_code=400, detail="queries 不能为空")
+    if len(body.queries) > 200:
+        raise HTTPException(status_code=400, detail="单次评测最多 200 个问题，请分批运行")
+    pipeline = _get_pipeline(request)
+    lab = _get_lab(request)
+    try:
+        return await run_benchmark(
+            pipeline=pipeline,
+            lab_bundle=lab,
+            items=body.queries,
+            channels=body.channels,
+            top_k=body.top_k,
+            timeout_per_query_sec=body.timeout_per_query_sec,
+        )
+    except Exception as e:
+        logger.exception("benchmark crashed")
+        raise HTTPException(status_code=500, detail=f"评测失败: {type(e).__name__}: {e}")
