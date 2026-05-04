@@ -68,27 +68,6 @@ ssh_servers:
       hf_home: "/root/autodl-tmp/liboze/hf_cache"
       visdom_data: "/root/autodl-tmp/liboze/data/VisDoM-main"
 
-  - name: "fallback-ustc"
-    bastion_host: "vlab.ustc.edu.cn"
-    bastion_port: 22
-    bastion_user: "ubuntu"
-    bastion_key: '${SSH_BASTION_KEY}'
-    target_host: "202.38.68.70"
-    target_port: 2266
-    target_user: "bzli"
-    target_password: '${SSH_TARGET_PASSWORD}'
-    forwards:
-      - { local: 8001, remote: 8001 }
-      - { local: 6333, remote: 6333 }
-    deployment:
-      remote_base: "/home/bzli/mrag_app"
-      conda_env: "mrag_worker"
-      qdrant_path: "~/qdrant"
-      qdrant_storage: "~/qdrant/storage"
-      gpu_devices: "1"
-      hf_home: ""
-      visdom_data: "/home/bzli/lbz/data/VisDoM-main"
-
 # --- Resilience knobs ---
 resilience:
   health_check_interval_sec: 8        # frontend polls /health every N sec

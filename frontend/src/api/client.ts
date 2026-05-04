@@ -246,4 +246,127 @@ export const systemApi = {
   health: () => api.get('/health'),
 }
 
+// ---------------------------------------------------------------------------
+// Lab feature types (Phase 1-5)
+// ---------------------------------------------------------------------------
+
+export interface ChannelResult {
+  channel: 'bm25' | 'colpali' | 'rrf' | string
+  results: RetrievalResult[]
+  timing_ms: number
+  note: string
+}
+
+export interface HybridCompareResponse {
+  query: string
+  channels: ChannelResult[]
+  answer?: string | null
+  fused_channel: string
+}
+
+export interface EvidenceRegion {
+  document_id: string
+  page_number: number
+  bbox: BoundingBox
+  label: string
+  score: number
+  quote: string
+  citation: number
+}
+
+export interface VisaResponse {
+  query: string
+  answer: string
+  sources: RetrievalResult[]
+  evidence_regions: EvidenceRegion[]
+  timing_ms: Record<string, number>
+  note: string
+}
+
+export interface ScoreBucket { bin_start: number; bin_end: number; count: number }
+export interface GmmComponent { mean: number; variance: number; weight: number }
+
+export interface GmmResponse {
+  query: string
+  fixed_top_k: number
+  dynamic_top_k: number
+  cutoff_score: number
+  histogram: ScoreBucket[]
+  components: GmmComponent[]
+  results: RetrievalResult[]
+  note: string
+  timing_ms: Record<string, number>
+}
+
+export interface RegionHit {
+  document_id: string
+  page_number: number
+  element_index: number
+  element_type: string
+  bbox: BoundingBox
+  score: number
+  image_path: string
+  text: string
+}
+
+export interface RegionResponse {
+  query: string
+  hits: RegionHit[]
+  timing_ms: Record<string, number>
+  note: string
+}
+
+export interface LabHealth {
+  bm25_ready: boolean
+  bm25_doc_count: number
+  layout_ready: boolean
+  sklearn_available: boolean
+  region_collection_ready: boolean
+  region_point_count: number
+  main_pipeline_ok: boolean
+  notes: string[]
+}
+
+export interface LabPhaseInfo {
+  id: string; title: string; endpoint: string; method: string; desc: string
+}
+export interface LabInfo { phases: LabPhaseInfo[] }
+
+export const labApi = {
+  hybrid: (query: string, opts: { topK?: number; candidates?: number; rrfK?: number; doGenerate?: boolean } = {}) =>
+    api.post<HybridCompareResponse>('/lab/hybrid', {
+      query,
+      top_k: opts.topK ?? 5,
+      candidates: opts.candidates ?? 20,
+      rrf_k: opts.rrfK ?? 60,
+      do_generate: opts.doGenerate ?? false,
+    }),
+  visa: (query: string, topK = 5) =>
+    api.post<VisaResponse>('/lab/visa', { query, top_k: topK }),
+  gmm: (query: string, topK = 5, candidates = 20) =>
+    api.post<GmmResponse>('/lab/gmm', { query, top_k: topK, candidates }),
+  regionQuery: (query: string, topK = 8) =>
+    api.post<RegionResponse>('/lab/region/query', { query, top_k: topK }),
+  regionIndexOne: (docId: string, sync = false) =>
+    api.post<{ state?: string; indexed?: number; skipped?: number; errors?: number; note: string; doc_id?: string }>(
+      `/lab/region/index/${docId}`,
+      undefined,
+      { params: sync ? { sync: true } : {} },
+    ),
+  regionIndexAll: (sync = false) =>
+    api.post<{ state?: string; indexed?: number; skipped?: number; errors?: number; documents?: number; note: string }>(
+      `/lab/region/index_all`,
+      undefined,
+      { params: sync ? { sync: true } : {} },
+    ),
+  regionStatus: (docId: string) => api.get<{
+    doc_id: string; state: string; indexed?: number; skipped?: number; errors?: number;
+    current_page?: number; total_pages?: number; note?: string;
+  }>(`/lab/region/status/${docId}`),
+  regionJobs: () => api.get<Record<string, any>>(`/lab/region/jobs`),
+  regionDelete: (docId: string) => api.delete(`/lab/region/${docId}`),
+  health: () => api.get<LabHealth>('/lab/health'),
+  info: () => api.get<LabInfo>('/lab/info'),
+}
+
 export default api

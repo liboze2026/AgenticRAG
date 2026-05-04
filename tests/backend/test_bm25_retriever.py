@@ -4,7 +4,17 @@ from backend.strategies.retrievers.bm25 import BM25Retriever, _tokenize, _BM25_A
 
 
 def test_tokenize():
-    assert _tokenize("Hello, World! 123") == ["hello", "world", "123"]
+    # Bilingual tokenizer: latin words must start with a letter (digits-only
+    # tokens are filtered as low-signal); CJK runs emit unigrams + bigrams.
+    out = _tokenize("Hello, World! 123")
+    assert "hello" in out
+    assert "world" in out
+
+
+def test_tokenize_chinese():
+    out = _tokenize("文档检索")
+    assert "文" in out and "档" in out and "检" in out
+    assert "文档" in out and "档检" in out and "检索" in out
 
 
 @pytest.mark.skipif(not _BM25_AVAILABLE, reason="rank-bm25 not installed")

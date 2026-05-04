@@ -34,10 +34,36 @@ def _extract_page_text(pdf_path: str, page_number: int) -> str:
     return ""
 
 
+_CN_RANGE = "一-鿿㐀-䶿"   # CJK Unified + Extension A
+_TOK_RE = None
+_CN_RE = None
+
+
 def _tokenize(text: str) -> List[str]:
-    """Simple whitespace + punctuation tokenizer."""
+    """Bilingual tokenizer.
+
+    For ASCII / Latin: split on punctuation/whitespace, lowercase, keep
+    words ≥ 2 chars (BM25 doesn't benefit from single chars).
+    For CJK runs: emit unigrams + bigrams (so a query like
+    "文档结构化解析" tokenizes to {文档, 档结, 结构, ...} which can
+    actually match indexed pages).
+    """
     import re
-    return re.findall(r"\w+", text.lower())
+    global _TOK_RE, _CN_RE
+    if _TOK_RE is None:
+        _TOK_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]+")
+        _CN_RE  = re.compile(f"[{_CN_RANGE}]+")
+    text = (text or "").lower()
+    out: List[str] = []
+    out.extend(_TOK_RE.findall(text))
+    for run in _CN_RE.findall(text):
+        # unigrams (skip single-char-only matches but include them when run is short)
+        for ch in run:
+            out.append(ch)
+        # bigrams
+        for i in range(len(run) - 1):
+            out.append(run[i:i + 2])
+    return out
 
 
 @retriever_registry.register("bm25")

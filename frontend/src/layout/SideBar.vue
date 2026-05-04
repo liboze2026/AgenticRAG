@@ -26,10 +26,20 @@ const groups: NavGroup[] = [
     ],
   },
   {
+    label: '方法对比',
+    items: [
+      { path: '/lab/hybrid',  label: '双通道融合', icon: 'flask',    chap: 'A' },
+      { path: '/lab/visa',    label: '证据归因',   icon: 'search',   chap: 'B' },
+      { path: '/lab/gmm',     label: '动态深度',   icon: 'sparkles', chap: 'C' },
+      { path: '/lab/region',  label: '区域级检索', icon: 'archive',  chap: 'D' },
+    ],
+  },
+  {
     label: '评　测',
     items: [
       { path: '/experiments', label: '实验评测', icon: 'flask',    chap: '5' },
       { path: '/visdom',      label: 'VisDoM 复现', icon: 'sparkles', chap: 'X' },
+      { path: '/lab/health',  label: '实验台状态', icon: 'gauge',    chap: 'L' },
       { path: '/system',      label: '系统状态', icon: 'gauge',    chap: '6' },
     ],
   },

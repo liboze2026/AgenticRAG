@@ -24,6 +24,7 @@ from backend.services.qdrant_resilient import ResilientAsyncQdrantClient
 from backend.services.visdom_bootstrap import bootstrap_visdom_if_empty
 from backend.services.worker_client import WorkerClient
 from backend.strategies import ALL_REGISTRIES, import_all_strategies
+from backend.lab.bundle import build_lab_bundle
 from backend.main import create_app
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -611,6 +612,21 @@ def main():
                 top_n=3,
             )
 
+    # Build lab bundle (Phase 1-5 features). Best-effort: never block startup.
+    try:
+        lab_bundle = build_lab_bundle(
+            upload_dir=config.storage.upload_dir,
+            documents_db_path=os.path.join(config.storage.upload_dir, "documents.db"),
+            images_dir=config.storage.images_dir,
+            qdrant_client=qdrant_client,
+            worker_client=worker_client,
+            pipeline=pipeline_manager.pipeline,
+        )
+        logger.info("Lab bundle ready (region=%s)", "yes" if lab_bundle.region else "no")
+    except Exception:
+        logger.exception("Lab bundle init failed — /api/lab/* endpoints will return 503")
+        lab_bundle = None
+
     app = create_app(
         worker_client=worker_client,
         pipeline_manager=pipeline_manager,
@@ -623,6 +639,7 @@ def main():
         query_cache=query_cache,
         generation_cache=generation_cache,
         bootstrap_hook=bootstrap_hook,
+        lab_bundle=lab_bundle,
         collection_name=config.qdrant.collection_name,
         images_dir=config.storage.images_dir,
     )
