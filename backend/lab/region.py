@@ -137,13 +137,21 @@ class LabRegionService:
             return []
 
     async def _fetch_layout_via_qdrant(self, doc_id: str, page_number: int) -> Optional[PageLayout]:
-        """Read PageLayout payload back from main collection (set by indexer)."""
+        """Read PageLayout payload back from main collection (set by indexer).
+
+        Hard 20s ceiling so a stalled tunnel cannot pin the indexer before it
+        even gets to encoding. Without this, ResilientAsyncQdrantClient retries
+        bury the page in 30s+ blocks of layout fetches with no progress visible.
+        """
         try:
             point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{doc_id}:{page_number}"))
-            res = await self.qdrant.retrieve(
-                collection_name="documents",
-                ids=[point_id],
-                with_payload=True,
+            res = await asyncio.wait_for(
+                self.qdrant.retrieve(
+                    collection_name="documents",
+                    ids=[point_id],
+                    with_payload=True,
+                ),
+                timeout=20.0,
             )
             if not res:
                 return None
@@ -152,6 +160,9 @@ class LabRegionService:
             if not layout_dict:
                 return None
             return PageLayout(**layout_dict)
+        except asyncio.TimeoutError:
+            logger.warning("region layout fetch TIMEOUT 20s for %s p%d", doc_id, page_number)
+            return None
         except Exception:
             return None
 

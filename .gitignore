@@ -33,6 +33,7 @@ Thumbs.db
 # Logs
 *.log
 qa_deep.out
+scripts/.e2e_*.out
 
 # Node
 node_modules/
