@@ -72,3 +72,4 @@ from . import closed_set_dense  # noqa: E402,F401
 from . import closed_set_hybrid, closed_set_hyde  # noqa: E402,F401
 from . import closed_set_ensemble  # noqa: E402,F401
 from . import closed_set_cross_rerank  # noqa: E402,F401
+from . import closed_set_text_rrf  # noqa: E402,F401
