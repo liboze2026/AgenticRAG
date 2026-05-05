@@ -20,8 +20,11 @@ logger = logging.getLogger(__name__)
 
 
 class VisDomCorpus:
-    def __init__(self, root: str):
+    def __init__(self, root: str, ocr_root: Optional[str] = None):
         self.root = root
+        # OCR-extracted text (e.g. for slidevqa whose PDFs are image-only)
+        # is loaded from this directory and unioned into the same maps.
+        self.ocr_root = ocr_root or os.path.join(os.path.dirname(root), "corpus_ocr")
         self._text_lock = threading.Lock()
         self._loaded: Dict[str, bool] = {}
         # (subset, doc_id) → concatenated page text
@@ -32,9 +35,41 @@ class VisDomCorpus:
     def _path(self, subset: str) -> str:
         return os.path.join(self.root, f"{subset}.jsonl")
 
+    def _ocr_path(self, subset: str) -> str:
+        return os.path.join(self.ocr_root, f"{subset}.jsonl")
+
     def is_available(self, subset: str) -> bool:
         p = self._path(subset)
-        return os.path.exists(p) and os.path.getsize(p) > 0
+        op = self._ocr_path(subset)
+        return (os.path.exists(p) and os.path.getsize(p) > 0) or \
+               (os.path.exists(op) and os.path.getsize(op) > 0)
+
+    def _load_one_file(self, subset: str, path: str) -> int:
+        """Append one jsonl into the in-memory maps. Returns # new docs."""
+        if not os.path.exists(path):
+            return 0
+        seen_before = {k for k in self._text_by_doc.keys() if k[0] == subset}
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                try:
+                    row = json.loads(line)
+                except Exception:
+                    continue
+                doc = str(row.get("doc_id", ""))
+                pg = int(row.get("page_number", 0) or 0)
+                text = str(row.get("text", ""))
+                if not doc:
+                    continue
+                key = (subset, doc)
+                self._pages_by_doc.setdefault(key, []).append((pg, text))
+                if key in self._text_by_doc:
+                    self._text_by_doc[key] += "\n" + text
+                else:
+                    self._text_by_doc[key] = text
+        seen_after = {k for k in self._text_by_doc.keys() if k[0] == subset}
+        return len(seen_after - seen_before)
 
     def load_subset(self, subset: str) -> int:
         with self._text_lock:
@@ -42,33 +77,14 @@ class VisDomCorpus:
                 return sum(
                     1 for k in self._text_by_doc.keys() if k[0] == subset
                 )
-            p = self._path(subset)
-            if not os.path.exists(p):
-                self._loaded[subset] = True
-                return 0
-            count = 0
-            with open(p, "r", encoding="utf-8") as f:
-                for line in f:
-                    if not line.strip():
-                        continue
-                    try:
-                        row = json.loads(line)
-                    except Exception:
-                        continue
-                    doc = str(row.get("doc_id", ""))
-                    pg = int(row.get("page_number", 0) or 0)
-                    text = str(row.get("text", ""))
-                    if not doc:
-                        continue
-                    key = (subset, doc)
-                    self._pages_by_doc.setdefault(key, []).append((pg, text))
-                    if key in self._text_by_doc:
-                        self._text_by_doc[key] += "\n" + text
-                    else:
-                        self._text_by_doc[key] = text
-                        count += 1
+            n_text = self._load_one_file(subset, self._path(subset))
+            n_ocr = self._load_one_file(subset, self._ocr_path(subset))
             self._loaded[subset] = True
-            logger.info("[corpus] %s loaded: %d docs", subset, count)
+            count = sum(1 for k in self._text_by_doc.keys() if k[0] == subset)
+            logger.info(
+                "[corpus] %s loaded: %d docs (text=%d, ocr=%d)",
+                subset, count, n_text, n_ocr,
+            )
             return count
 
     def doc_text(self, subset: str, doc_id: str) -> Optional[str]:
