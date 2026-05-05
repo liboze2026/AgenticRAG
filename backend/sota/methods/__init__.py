@@ -70,3 +70,4 @@ from . import closed_set_random, closed_set_titlematch, closed_set_rrf  # noqa: 
 from . import closed_set_bm25_text, closed_set_bm25_page  # noqa: E402,F401
 from . import closed_set_dense  # noqa: E402,F401
 from . import closed_set_hybrid, closed_set_hyde  # noqa: E402,F401
+from . import closed_set_ensemble  # noqa: E402,F401
