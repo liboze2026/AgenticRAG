@@ -1,3 +1,8 @@
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 """Pull whatever sota_text/*.jsonl files are currently complete on remote.
 Skips .tmp files (in-progress)."""
 import os, re, paramiko, yaml

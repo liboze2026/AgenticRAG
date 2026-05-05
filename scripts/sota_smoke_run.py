@@ -1,12 +1,8 @@
-"""End-to-end smoke run via TestClient against real VisDoM metadata.
+"""End-to-end smoke run via offline executor against real VisDoM metadata.
 
-Spins up create_app() with a SOTA bundle pointed at data/sota_runs/datasets,
-launches a Quick run (50/subset) using the 3 closed-set methods (which need
-no main pipeline / Qdrant), waits for completion, prints metrics.
-
-Used for offline Phase 0 verification — does not depend on the main FastAPI
-server being up or the SSH tunnel.
+Configurable: pass --subsets / --methods / --n via CLI (defaults Quick).
 """
+import argparse
 import asyncio
 import json
 import os
@@ -15,13 +11,24 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from backend.main import create_app
 from backend.sota.runs import RunRegistry
-from backend.sota.schemas import RunConfig, RunStatus
+from backend.sota.schemas import RunConfig
 from backend.sota.service import build_sota_bundle
 
 
 async def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--subsets", nargs="+",
+                    default=["feta_tab", "paper_tab", "scigraphvqa", "slidevqa", "spiqa"])
+    ap.add_argument("--methods", nargs="+",
+                    default=["closed_set_random", "closed_set_titlematch",
+                             "closed_set_rrf", "closed_set_bm25_text",
+                             "closed_set_bm25_page"])
+    ap.add_argument("--n", type=int, default=50)
+    ap.add_argument("--top_k", type=int, default=10)
+    ap.add_argument("--notes", default="smoke run")
+    args = ap.parse_args()
+
     sota_data_root = os.path.join("data", "sota_runs", "datasets")
     runs_root = os.path.join("data", "sota_runs")
     bundle = build_sota_bundle(
@@ -32,15 +39,10 @@ async def main():
     )
 
     cfg = RunConfig(
-        subsets=["feta_tab", "paper_tab", "scigraphvqa", "slidevqa", "spiqa"],
-        methods=["closed_set_random", "closed_set_titlematch", "closed_set_rrf"],
-        top_k=10,
-        n_queries_per_subset=50,
-        notes="Phase 0 smoke run — offline closed-set baselines",
+        subsets=args.subsets, methods=args.methods,
+        top_k=args.top_k, n_queries_per_subset=args.n, notes=args.notes,
     )
-    print("starting smoke run, config =")
-    print(json.dumps(cfg.model_dump(), indent=2))
-
+    print("config =", json.dumps(cfg.model_dump(), indent=2))
     run_id = await bundle.registry.create_run(cfg)
     t0 = time.time()
     await bundle.executor.execute(run_id, cfg)
@@ -49,11 +51,22 @@ async def main():
 
     summary = await bundle.registry.get_run(run_id)
     print(f"status: {summary.status.value}")
-    print(f"\n{'method':<28} {'subset':<14} {'metric':<10} {'value':<8} {'CI':<24} {'n':<5}")
-    print("-" * 95)
+    pivot = {}
     for c in summary.metrics:
-        ci = f"[{c.ci_low:.2f}, {c.ci_high:.2f}]" if c.ci_low is not None else "—"
-        print(f"{c.method:<28} {c.subset:<14} {c.metric:<10} {c.value:<8.3f} {ci:<24} {c.n_queries:<5}")
+        pivot.setdefault(c.metric, {}).setdefault(c.method, {})[c.subset] = c
+    for metric in ("recall@1", "recall@3", "mrr"):
+        if metric not in pivot: continue
+        print(f"\n{metric}:")
+        all_subsets = sorted({s for d in pivot[metric].values() for s in d})
+        head = f"{'method':<28}" + " ".join(f"{s:<13}" for s in all_subsets)
+        print(head)
+        for m in sorted(pivot[metric].keys()):
+            row = pivot[metric][m]
+            cells = []
+            for s in all_subsets:
+                c = row.get(s)
+                cells.append(f"{c.value:.3f}        " if c else "—            ")
+            print(f"{m:<28}" + " ".join(cells))
 
 
 if __name__ == "__main__":

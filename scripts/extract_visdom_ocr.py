@@ -1,3 +1,8 @@
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 """OCR-extract slidevqa decks.
 
 slidevqa PDFs are image-only (pdfplumber extracts 0 text). This uploads a

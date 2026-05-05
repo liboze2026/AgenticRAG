@@ -1,3 +1,8 @@
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 import os, re, paramiko, yaml
 def _r(v):
     if not isinstance(v, str): return v

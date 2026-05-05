@@ -4,6 +4,11 @@ import re
 import sys
 import paramiko
 import yaml
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 
 def _resolve_env(value: str) -> str:

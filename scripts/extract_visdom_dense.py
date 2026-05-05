@@ -24,6 +24,11 @@ import sys
 
 import paramiko
 import yaml
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 
 REMOTE_SCRIPT = r'''#!/usr/bin/env python

@@ -1,3 +1,8 @@
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 """Install sentence-transformers on remote mrag_worker conda env."""
 import os, re, paramiko, yaml
 

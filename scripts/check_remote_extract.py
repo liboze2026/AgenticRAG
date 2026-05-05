@@ -1,3 +1,8 @@
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 """Quick check: list remote sota_text dir to see extraction progress."""
 import os, re, sys, paramiko, yaml
 
