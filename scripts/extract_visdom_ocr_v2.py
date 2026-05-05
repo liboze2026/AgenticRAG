@@ -104,36 +104,24 @@ def main():
     # Remove any prior empty slidevqa.jsonl so the new run actually writes
     ssh.exec_command(f"rm -f {visdom_root}/sota_text_ocr/slidevqa.jsonl")
 
+    log_path = "/tmp/easyocr_slidevqa.log"
+    # Wrap in setsid so the child fully detaches; redirect stdin to /dev/null
     cmd = (
+        "bash -c 'setsid bash -c \""
         "source ~/miniconda3/etc/profile.d/conda.sh && "
         "conda activate mrag_worker && "
         "HF_ENDPOINT=https://hf-mirror.com HF_HUB_OFFLINE=0 TRANSFORMERS_OFFLINE=0 "
-        f"python -u {remote_script}"
+        f"python -u {remote_script}\" "
+        f"</dev/null > {log_path} 2>&1 & disown; sleep 0.5; echo launched'"
     )
-    print("[run]")
-    chan = ssh.get_transport().open_session(); chan.set_combine_stderr(True); chan.exec_command(cmd)
-    while True:
-        if chan.recv_ready():
-            d = chan.recv(4096).decode("utf-8", errors="replace")
-            sys.stdout.write(d); sys.stdout.flush()
-        if chan.exit_status_ready():
-            while chan.recv_ready():
-                d = chan.recv(4096).decode("utf-8", errors="replace")
-                sys.stdout.write(d); sys.stdout.flush()
-            break
-    print(f"[exit] {chan.recv_exit_status()}")
-
-    out_local = "data/sota_runs/corpus_ocr"
-    os.makedirs(out_local, exist_ok=True)
-    sftp = ssh.open_sftp()
-    rp = f"{visdom_root}/sota_text_ocr/slidevqa.jsonl"
-    lp = os.path.join(out_local, "slidevqa.jsonl")
+    print("[launch detached]")
+    _, stdout, stderr = ssh.exec_command(cmd, timeout=10)
     try:
-        sftp.get(rp, lp)
-        print(f"[pull] slidevqa.jsonl ({os.path.getsize(lp)} B)")
-    except Exception as e:
-        print(f"[warn] pull failed: {e}")
-    sftp.close(); ssh.close()
+        out = stdout.read(timeout=8) if hasattr(stdout, 'read') else b""
+    except Exception:
+        out = b""
+    print(f"  log: {log_path}")
+    ssh.close()
 
 
 if __name__ == "__main__":
