@@ -39,6 +39,7 @@ class RunExecutor:
         lab_bundle,
         qdrant_client,
         worker_client,
+        corpus=None,
     ):
         self.registry = registry
         self.sota_data_root = sota_data_root
@@ -46,6 +47,7 @@ class RunExecutor:
         self.lab_bundle = lab_bundle
         self.qdrant_client = qdrant_client
         self.worker_client = worker_client
+        self.corpus = corpus
         self._cancelled: Dict[str, bool] = {}
 
     def cancel(self, run_id: str) -> None:
@@ -61,6 +63,7 @@ class RunExecutor:
             pipeline=self.pipeline, lab_bundle=self.lab_bundle,
             qdrant_client=self.qdrant_client, worker_client=self.worker_client,
             cancelled_flag=lambda: self._is_cancelled(run_id),
+            extras={"corpus": self.corpus},
         )
         any_partial = False
         any_ok = False
