@@ -23,20 +23,39 @@ class PerQueryResult:
 
 
 def score_query(gold_pages: List[PageKey], ranked_pages: List[PageKey]) -> PerQueryResult:
-    """Return per-query metrics. RR = 1/(rank of first gold), 0 if absent."""
+    """Return per-query metrics. RR = 1/(rank of first gold), 0 if absent.
+
+    Match semantics:
+      * Page-level gold (multiple gold pages or gold page > 1): strict
+        (doc_id, page_number) match required.
+      * Doc-level gold (single gold pair with page == 1, the placeholder
+        used for VisDoM subsets without page-level annotation): match on
+        doc_id only — any page from the gold doc counts. This avoids
+        penalizing methods that legitimately retrieve a different page of
+        the right document on doc-level subsets.
+    """
     gold = set(gold_pages)
     if not gold or not ranked_pages:
         return PerQueryResult(query_id="", hit_at_1=0.0, hit_at_3=0.0, rr=0.0, latency_ms=0)
 
+    is_doc_level = (
+        len(gold) == 1 and next(iter(gold))[1] == 1
+    )
+    if is_doc_level:
+        gold_docs = {d for (d, _p) in gold}
+        def hit(key: PageKey) -> bool:
+            return key[0] in gold_docs
+    else:
+        def hit(key: PageKey) -> bool:
+            return key in gold
+
     rr = 0.0
     for i, key in enumerate(ranked_pages):
-        if key in gold:
+        if hit(key):
             rr = 1.0 / (i + 1)
             break
-    top1 = ranked_pages[:1]
-    top3 = ranked_pages[:3]
-    hit1 = 1.0 if any(k in gold for k in top1) else 0.0
-    hit3 = 1.0 if any(k in gold for k in top3) else 0.0
+    hit1 = 1.0 if any(hit(k) for k in ranked_pages[:1]) else 0.0
+    hit3 = 1.0 if any(hit(k) for k in ranked_pages[:3]) else 0.0
     return PerQueryResult(query_id="", hit_at_1=hit1, hit_at_3=hit3, rr=rr, latency_ms=0)
 
 
