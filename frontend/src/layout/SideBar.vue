@@ -52,6 +52,15 @@ const groups: NavGroup[] = [
       { path: '/system',      label: '系统状态', icon: 'gauge',    chap: '6' },
     ],
   },
+  {
+    label: 'SOTA 实验',
+    items: [
+      { path: '/sota/datasets',    label: 'VisDoM 数据集', icon: 'archive',  chap: 'S0' },
+      { path: '/sota/methods',     label: '方法库',        icon: 'flask',    chap: 'S1' },
+      { path: '/sota/run',         label: '实验台',        icon: 'sparkles', chap: 'S2' },
+      { path: '/sota/leaderboard', label: '排行榜',        icon: 'gauge',    chap: 'S3' },
+    ],
+  },
 ]
 </script>
 

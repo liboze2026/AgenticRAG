@@ -20,6 +20,12 @@ const routes = [
   { path: '/lab/feedback',  name: 'LabFeedback',  component: () => import('../views/lab/LabFeedbackView.vue') },
   { path: '/lab/unified',   name: 'LabUnified',   component: () => import('../views/lab/LabUnifiedView.vue') },
   { path: '/lab/benchmark', name: 'LabBenchmark', component: () => import('../views/lab/LabBenchmarkView.vue') },
+  // SOTA — Phase 0+
+  { path: '/sota/datasets',    name: 'SotaDatasets',    component: () => import('../views/sota/SotaDatasetsView.vue') },
+  { path: '/sota/methods',     name: 'SotaMethods',     component: () => import('../views/sota/SotaMethodsView.vue') },
+  { path: '/sota/run',         name: 'SotaRunStudio',   component: () => import('../views/sota/SotaRunStudioView.vue') },
+  { path: '/sota/leaderboard', name: 'SotaLeaderboard', component: () => import('../views/sota/SotaLeaderboardView.vue') },
+  { path: '/sota/runs/:id',    name: 'SotaRunDetail',   component: () => import('../views/sota/SotaRunDetailView.vue') },
 ]
 
 const router = createRouter({ history: createWebHistory(), routes })
