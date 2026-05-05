@@ -29,6 +29,36 @@ logger = logging.getLogger(__name__)
 _INDEX: Dict[str, Optional[Tuple[object, List[Tuple[str, int]], List[int]]]] = {}
 _INDEX_LOCK = threading.Lock()
 _ROOT = os.path.join("data", "sota_runs", "colpali")
+_QENCODE_CACHE: Dict[str, Dict[str, object]] = {}
+_QENCODE_LOCK = threading.Lock()
+
+
+def _load_query_cache(subset: str):
+    if subset in _QENCODE_CACHE:
+        return _QENCODE_CACHE[subset]
+    with _QENCODE_LOCK:
+        if subset in _QENCODE_CACHE:
+            return _QENCODE_CACHE[subset]
+        npz = os.path.join(_ROOT, f"{subset}_queries.npz")
+        keys_p = os.path.join(_ROOT, f"{subset}_queries.keys.jsonl")
+        out: Dict[str, object] = {}
+        if not (os.path.exists(npz) and os.path.exists(keys_p)):
+            _QENCODE_CACHE[subset] = out
+            return out
+        try:
+            import numpy as np
+        except ImportError:
+            _QENCODE_CACHE[subset] = out
+            return out
+        embs = np.load(npz)["embs"]
+        with open(keys_p, "r", encoding="utf-8") as f:
+            for i, line in enumerate(f):
+                row = json.loads(line)
+                n = int(row.get("n_patches", embs.shape[1]))
+                out[str(row["query_id"])] = embs[i, :n].astype("float32")
+        _QENCODE_CACHE[subset] = out
+        logger.info("[colpali] %s pre-encoded queries: %d", subset, len(out))
+        return out
 
 
 def _load_subset_index(subset: str):
@@ -102,7 +132,11 @@ async def _run(query, top_k: int, ctx: MethodContext) -> List[Tuple[str, int, fl
     if not sel:
         return []
 
-    q_vec = await _encode_query_via_worker(ctx.worker_client, query.query)
+    # Try pre-encoded query cache first (no worker needed)
+    qcache = _load_query_cache(query.subset)
+    q_vec = qcache.get(str(query.query_id))
+    if q_vec is None:
+        q_vec = await _encode_query_via_worker(ctx.worker_client, query.query)
     if q_vec is None:
         from backend.sota.methods.closed_set_clip import _run as _clip
         return await _clip(query, top_k, ctx)
