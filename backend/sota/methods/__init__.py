@@ -79,3 +79,9 @@ from . import closed_set_vlm_judge  # noqa: E402,F401
 from . import closed_set_router  # noqa: E402,F401
 from . import closed_set_graph  # noqa: E402,F401
 from . import closed_set_colpali  # noqa: E402,F401
+from . import closed_set_xmi_cal  # noqa: E402,F401
+from . import closed_set_csc_eig  # noqa: E402,F401
+from . import closed_set_cdpr  # noqa: E402,F401
+from . import closed_set_sqr  # noqa: E402,F401
+from . import closed_set_escape  # noqa: E402,F401
+from . import closed_set_taf  # noqa: E402,F401
