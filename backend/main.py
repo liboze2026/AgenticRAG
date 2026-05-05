@@ -9,6 +9,7 @@ from fastapi.responses import FileResponse, Response
 from backend.api import documents, query, experiments, system, datasets, cache as cache_api
 from backend.api import chat as chat_api
 from backend.lab.routes import router as lab_router
+from backend.sota.routes import router as sota_router
 
 
 def _make_placeholder_png(width: int = 120, height: int = 90) -> bytes:
@@ -43,6 +44,7 @@ def create_app(
     generation_cache=None,
     bootstrap_hook=None,
     lab_bundle=None,
+    sota_bundle=None,
     collection_name: str = "documents",
     images_dir: str = "data/images",
 ) -> FastAPI:
@@ -64,6 +66,7 @@ def create_app(
     app.state.query_cache = query_cache
     app.state.generation_cache = generation_cache
     app.state.lab_bundle = lab_bundle
+    app.state.sota_bundle = sota_bundle
 
     app.include_router(system.router, prefix="/api")
     app.include_router(documents.router, prefix="/api/documents")
@@ -73,6 +76,7 @@ def create_app(
     app.include_router(cache_api.router, prefix="/api/cache")
     app.include_router(chat_api.router, prefix="/api")
     app.include_router(lab_router, prefix="/api/lab")
+    app.include_router(sota_router, prefix="/api/sota")
 
     # Serve page images — return placeholder PNG (200) when file missing.
     # images_dir is injected by run.py from config.storage.images_dir so it

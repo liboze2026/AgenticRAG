@@ -25,6 +25,7 @@ from backend.services.visdom_bootstrap import bootstrap_visdom_if_empty
 from backend.services.worker_client import WorkerClient
 from backend.strategies import ALL_REGISTRIES, import_all_strategies
 from backend.lab.bundle import build_lab_bundle
+from backend.sota.service import build_sota_bundle
 from backend.main import create_app
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -453,6 +454,61 @@ def _start_keepalive_monitor(active_srv: dict, tunnel_state, interval_sec: int =
     return state
 
 
+async def _auto_prewarm(lab_bundle, pipeline_manager) -> None:
+    """Best-effort warmup at startup so the first user query lands hot.
+
+    Three sub-steps, each independently bounded:
+    * preload PageLayout cache for every completed document
+    * fire one cheap query through the worker so its model is paged in
+    * sync the BM25 index against documents on disk
+
+    Logs a single summary line; failures of individual sub-steps are
+    logged at warning level but never raised.
+    """
+    import sqlite3 as _sqlite3
+    import time as _time
+    t0 = _time.perf_counter()
+    pages_loaded = 0
+    worker_status = "skipped"
+    bm25_status = "skipped"
+
+    # PageLayout warmup
+    try:
+        with _sqlite3.connect(lab_bundle.documents_db_path) as conn:
+            conn.row_factory = _sqlite3.Row
+            rows = conn.execute(
+                "SELECT id, total_pages FROM documents WHERE status = 'completed'"
+            ).fetchall()
+        results = await asyncio.gather(
+            *[lab_bundle.layout_cache.preload(r["id"], int(r["total_pages"] or 0)) for r in rows],
+            return_exceptions=True,
+        )
+        pages_loaded = sum(int(n) for n in results if not isinstance(n, BaseException))
+    except Exception:
+        logger.exception("auto prewarm: layout cache step failed")
+
+    # Worker warmup
+    pipeline = pipeline_manager.pipeline if pipeline_manager else None
+    if pipeline is not None and getattr(pipeline, "query_encoder", None) is not None:
+        try:
+            await asyncio.wait_for(pipeline.query_encoder.encode_query("warmup"), timeout=20.0)
+            worker_status = "ok"
+        except Exception as e:
+            worker_status = f"failed: {type(e).__name__}"
+
+    # BM25 warmup
+    try:
+        await lab_bundle.hybrid._ensure_bm25_synced()
+        bm25_status = f"ok ({len(lab_bundle.hybrid._indexed_keys)} pages)"
+    except Exception as e:
+        bm25_status = f"failed: {type(e).__name__}"
+
+    logger.info(
+        "auto prewarm complete: layouts=%d, worker=%s, bm25=%s, took=%.2fs",
+        pages_loaded, worker_status, bm25_status, _time.perf_counter() - t0,
+    )
+
+
 async def _ensure_qdrant_collection(qdrant_client, collection_name: str, vector_size: int = 128):
     """Create Qdrant collection if missing."""
     from qdrant_client import models
@@ -606,18 +662,6 @@ def main():
         db_path=os.path.join(config.storage.upload_dir, "chat.db"),
     )
 
-    bootstrap_hook = None
-    if resilience.get("bootstrap_visdom", False):
-        async def bootstrap_hook():  # noqa: E306 — closure over locals
-            await bootstrap_visdom_if_empty(
-                active_srv=active_srv,
-                ssh_connect_fn=_ssh_connect,
-                document_service=document_service,
-                qdrant_client=qdrant_client,
-                collection_name=config.qdrant.collection_name,
-                top_n=3,
-            )
-
     # Build lab bundle (Phase 1-5 features). Best-effort: never block startup.
     try:
         lab_bundle = build_lab_bundle(
@@ -633,6 +677,55 @@ def main():
         logger.exception("Lab bundle init failed — /api/lab/* endpoints will return 503")
         lab_bundle = None
 
+    # Build SOTA bundle — independent of lab; never blocks startup.
+    try:
+        sota_data_root = os.path.join("data", "sota_runs", "datasets")
+        sota_runs_root = os.path.join("data", "sota_runs")
+        os.makedirs(sota_data_root, exist_ok=True)
+        os.makedirs(sota_runs_root, exist_ok=True)
+        sota_bundle = build_sota_bundle(
+            sota_data_root=sota_data_root,
+            runs_root=sota_runs_root,
+            pipeline=pipeline_manager.pipeline,
+            lab_bundle=lab_bundle,
+            qdrant_client=qdrant_client,
+            worker_client=worker_client,
+            collection_name=config.qdrant.collection_name,
+        )
+        logger.info("SOTA bundle ready")
+    except Exception:
+        logger.exception("SOTA bundle init failed — /api/sota/* will surface errors via envelope")
+        sota_bundle = None
+
+    # Bootstrap hook chain — runs once on uvicorn startup. Each step is
+    # best-effort; failure of one never blocks the rest.
+    visdom_enabled = resilience.get("bootstrap_visdom", False)
+    auto_prewarm = resilience.get("auto_prewarm", True)
+
+    async def bootstrap_hook():  # noqa: E306 — closure over locals
+        if visdom_enabled:
+            try:
+                await bootstrap_visdom_if_empty(
+                    active_srv=active_srv,
+                    ssh_connect_fn=_ssh_connect,
+                    document_service=document_service,
+                    qdrant_client=qdrant_client,
+                    collection_name=config.qdrant.collection_name,
+                    top_n=3,
+                )
+            except Exception:
+                logger.exception("bootstrap visdom failed")
+        if auto_prewarm and lab_bundle is not None:
+            try:
+                await _auto_prewarm(lab_bundle, pipeline_manager)
+            except Exception:
+                logger.exception("auto prewarm failed")
+
+    # If neither sub-step would do anything, leave the hook off so create_app
+    # doesn't register an empty startup callback.
+    if not (visdom_enabled or (auto_prewarm and lab_bundle is not None)):
+        bootstrap_hook = None
+
     app = create_app(
         worker_client=worker_client,
         pipeline_manager=pipeline_manager,
@@ -646,6 +739,7 @@ def main():
         generation_cache=generation_cache,
         bootstrap_hook=bootstrap_hook,
         lab_bundle=lab_bundle,
+        sota_bundle=sota_bundle,
         collection_name=config.qdrant.collection_name,
         images_dir=config.storage.images_dir,
     )
