@@ -90,3 +90,4 @@ from . import closed_set_nirr  # noqa: E402,F401
 from . import closed_set_ascend  # noqa: E402,F401
 from . import closed_set_pcbr  # noqa: E402,F401
 from . import closed_set_ccc  # noqa: E402,F401
+from . import closed_set_wdpr  # noqa: E402,F401

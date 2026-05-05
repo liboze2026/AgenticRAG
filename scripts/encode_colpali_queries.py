@@ -92,7 +92,11 @@ def _r(v):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=None,
-                    help="if set, only encode the first N test queries (for smoke)")
+                    help="if set, only encode the first N queries (for smoke)")
+    ap.add_argument("--split", default="test", choices=["test", "train"],
+                    help="which split to encode")
+    ap.add_argument("--out_suffix", default="",
+                    help="suffix for output files (e.g. _train)")
     args = ap.parse_args()
 
     cfg = yaml.safe_load(open("config/default.yaml", encoding="utf-8"))
@@ -105,23 +109,25 @@ def main():
     if not os.path.exists(local_q):
         print(f"missing {local_q}"); sys.exit(1)
 
-    # Filter to test split (deterministic SHA1) + optional limit
+    # Filter by split (deterministic SHA1) + optional limit
     import hashlib
     def split(qid):
         h = int(hashlib.sha1(qid.encode("utf-8")).hexdigest()[:4], 16)
         return "train" if h < 32768 else "test"
-    test_rows = []
+    target_split = getattr(args, "split", "test")
+    rows_kept = []
     with open(local_q, "r", encoding="utf-8") as f:
         for line in f:
             row = json.loads(line)
-            if split(str(row.get("query_id", ""))) == "test":
-                test_rows.append(row)
-                if args.limit and len(test_rows) >= args.limit:
+            if split(str(row.get("query_id", ""))) == target_split:
+                rows_kept.append(row)
+                if args.limit and len(rows_kept) >= args.limit:
                     break
-    print(f"staging {len(test_rows)} test queries → remote")
+    test_rows = rows_kept
+    print(f"staging {len(test_rows)} {target_split}-split queries → remote")
 
-    remote_queries = "/tmp/slidevqa_test_queries.jsonl"
-    remote_out = f"{visdom_root}/sota_colpali_q"
+    remote_queries = f"/tmp/slidevqa_{args.split}_queries.jsonl"
+    remote_out = f"{visdom_root}/sota_colpali_q{args.out_suffix}"
     remote_script = "/tmp/encode_colpali_queries.py"
 
     payload = REMOTE_SCRIPT.format(queries_path=remote_queries, out_dir=remote_out)
@@ -159,10 +165,18 @@ def main():
     sftp = ssh.open_sftp()
     out_local = "data/sota_runs/colpali"
     os.makedirs(out_local, exist_ok=True)
+    suffix = args.out_suffix
     for f in sftp.listdir(remote_out):
-        rp = f"{remote_out}/{f}"; lp = os.path.join(out_local, f)
+        rp = f"{remote_out}/{f}"
+        # Append suffix before file extension to avoid overwriting test cache
+        if suffix and f.startswith("slidevqa_queries"):
+            base, ext = (f.split(".", 1)[0], "." + f.split(".", 1)[1]) if "." in f else (f, "")
+            local_name = base + suffix + ext
+        else:
+            local_name = f
+        lp = os.path.join(out_local, local_name)
         sftp.get(rp, lp)
-        print(f"[pull] {f} ({os.path.getsize(lp)} B)")
+        print(f"[pull] {f} → {local_name} ({os.path.getsize(lp)} B)")
     sftp.close(); ssh.close()
 
 
