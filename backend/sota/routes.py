@@ -50,6 +50,14 @@ async def list_datasets(request: Request):
     return {"ok": True, "subsets": integ.subsets, "expected": list(SUBSETS)}
 
 
+@router.get("/corpus")
+@wrap_response
+async def corpus_stats(request: Request):
+    """Per-subset corpus health: text + OCR availability, doc count."""
+    bundle = _bundle(request)
+    return {"ok": True, "stats": bundle.corpus.stats()}
+
+
 @router.post("/datasets/{subset}/check")
 @wrap_response
 async def check_dataset(subset: str, request: Request):
