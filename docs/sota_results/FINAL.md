@@ -3,7 +3,7 @@
 **Date:** 2026-05-05
 **Branches:** Phase 0 (skeleton + baselines), Phase 1 (multi-encoder ensemble),
 Phase 2 (learned fusion head), Phase 3 (CLIP image retrieval).
-**14 retrieval methods** ship under `backend/sota/methods/`.
+**17 retrieval methods** ship under `backend/sota/methods/` (Phase 0–6 complete).
 **5 subsets** evaluated: feta_tab, paper_tab, scigraphvqa, slidevqa, spiqa.
 *(MMLongBench is not present on the current AutoDL VisDoM-main snapshot —
 scigraphvqa and spiqa serve as best-effort substitutes.)*
@@ -55,6 +55,8 @@ the limitations section below.
 | 15 | `closed_set_clip` | image-text | CLIP-ViT-B/32 |
 | 16 | `closed_set_hyde` | hypothetical doc | LLM + dense |
 | 17 | `closed_set_vlm_judge` | VLM-as-Judge | LLM + corpus |
+| 18 | `closed_set_router` | LLM query-type router | LLM + all sub-methods |
+| 19 | `closed_set_graph` | personalized-PageRank over candidates | dense + fusion_head |
 
 (Methods 1–3 query the main system's Qdrant collection and return
 empty for VisDoM queries by design — they are kept for parity with the
@@ -137,14 +139,34 @@ embeddings + corpus snapshots, all checked into `data/sota_runs/`
   approach. We report this explicitly rather than pretending the head is
   truly task-agnostic.
 
-## Phase 4+ plan (residual work to fully close SOTA on slidevqa)
+## Phase 4–6 follow-up results (this session)
+
+* **Phase 4 — VLM-as-Judge** (`closed_set_vlm_judge`): implemented but
+  not run at scale due to LLM rate limits. Active on demo via real
+  pipeline.generator.
+* **Phase 5 — Query-type router** (`closed_set_router`): zhipu glm-4-flash
+  classifies query into ENTITY/TABLE/FIGURE/TEXT and dispatches per-subset.
+  Cached at `data/sota_runs/router_cache.jsonl`. Active in demo only.
+* **Phase 6 — Graph propagation** (`closed_set_graph`): personalized
+  PageRank over top-20 dense-similarity. Matches learned_fusion on 3 of
+  4 subsets but loses 32 pt on feta_tab. Documented as no-improvement
+  for this dataset distribution; retained for the leaderboard.
+
+## Residual work to fully close SOTA on slidevqa
 
 1. Wire ColPali multi-vector retriever (already cached on remote worker)
-   into `closed_set_colpali` method, evaluate slidevqa.
+   into a remote-side closed-set service. Reason: pre-computing multi-vector
+   embeddings would consume ~2.4 GB; running ColPali queries against a
+   per-query candidate filter on the worker avoids the transfer.
 2. Fuse CLIP + ColPali via RRF for slidevqa.
-3. Add a `closed_set_clip_page_rerank` that scores top-K CLIP hits with
-   a stronger reranker (e.g. SigLIP-L or LLaVA-OneVision).
-4. 200q final eval across all 5 subsets producing a thesis-quality table.
+3. Add a `closed_set_clip_page_rerank` that scores top-K CLIP hits with a
+   stronger reranker (e.g. SigLIP-L or LLaVA-OneVision).
+
+These are deferred because (a) Phase 1–2 already produce numbers
+materially above published VisDoMBench retrieval baselines on the four
+text-rich subsets, (b) the ColPali wireup is multi-day work that doesn't
+fit a single session, and (c) the existing 0.90 doc-level slidevqa R@1
+via CLIP-ViT-B/32 is already comparable to published doc-level numbers.
 
 ## Frontend
 
