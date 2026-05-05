@@ -2,6 +2,16 @@
 
 Academic-integrity rule: a method cannot expose `uses_test_labels=True`.
 The loader rejects any module that does.
+
+Method signature:
+    async def run(query: SotaQuery, top_k: int, ctx: MethodContext)
+        -> List[Tuple[doc_id, page_number, score]]
+
+Methods can either:
+* operate corpus-wide (using main pipeline / Qdrant), e.g. `baseline_colpali`
+* operate closed-set within `query.metadata['candidate_docs']`, e.g. all
+  `closed_set_*` methods. Closed-set is the methodology used by the
+  VisDoMBench paper (Suri et al. 2025).
 """
 from __future__ import annotations
 
@@ -56,3 +66,4 @@ def get_method(name: str) -> MethodMeta:
 
 # Eager import — registers each method at module load.
 from . import baseline_colpali, baseline_bm25, baseline_rrf  # noqa: E402,F401
+from . import closed_set_random, closed_set_titlematch, closed_set_rrf  # noqa: E402,F401

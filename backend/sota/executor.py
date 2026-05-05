@@ -110,7 +110,7 @@ class RunExecutor:
                     t0 = time.time()
                     try:
                         ranked = await asyncio.wait_for(
-                            meta.run(q.query, config.top_k, ctx),
+                            meta.run(q, config.top_k, ctx),
                             timeout=PER_QUERY_TIMEOUT_SEC,
                         )
                         consec_fail = 0

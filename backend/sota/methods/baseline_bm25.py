@@ -9,13 +9,18 @@ from backend.sota.methods import MethodContext, MethodMeta, register
 logger = logging.getLogger(__name__)
 
 
-async def _run(query: str, top_k: int, ctx: MethodContext) -> List[Tuple[str, int, float]]:
+async def _run(query, top_k: int, ctx: MethodContext) -> List[Tuple[str, int, float]]:
+    """Corpus-wide BM25 retrieval against the lab's BM25 index.
+
+    Sees only docs already indexed into the main pipeline (lab.hybrid syncs
+    against documents.db). For VisDoMBench docs not in the main system,
+    returns empty — see `closed_set_*` methods for closed-set BM25.
+    """
     lab = ctx.lab_bundle
     if lab is None or lab.hybrid is None:
         raise RuntimeError("lab BM25 service unavailable")
-    # Sync BM25 once per call — cheap when already in sync, builds index when not
     await lab.hybrid._ensure_bm25_synced()
-    hits = await lab.hybrid.bm25.retrieve_text(query, top_k=top_k)
+    hits = await lab.hybrid.bm25.retrieve_text(query.query, top_k=top_k)
     return [(h.document_id, h.page_number, float(h.score)) for h in hits]
 
 

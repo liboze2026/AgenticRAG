@@ -24,7 +24,7 @@ def fake_dataset_root(tmp_path):
 @pytest.fixture
 def stub_method():
     async def _run(query, top_k, ctx):
-        # Always returns (doc, 1) at rank 0 — only q0 is correct
+        # `query` is now SotaQuery; we just emit a fixed ranking.
         return [("doc", 1, 1.0), ("doc", 2, 0.9), ("doc", 3, 0.8)]
     register(MethodMeta(
         name="stub_method", version="t",

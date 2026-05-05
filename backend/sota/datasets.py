@@ -12,7 +12,16 @@ from dataclasses import dataclass, field
 from typing import Dict, Iterator, List, Optional, Tuple
 
 PageKey = Tuple[str, int]
-SUBSETS: Tuple[str, ...] = ("fetatab", "mmlongbench", "papertab", "slidevqa")
+
+# Subset names as stored on the active server's VisDoM-main directory.
+# The published VisDoMBench paper covers FetaTab, MMLongBench, PaperTab,
+# SlideVQA. This server's copy substitutes scigraphvqa and spiqa for
+# MMLongBench (which isn't present on disk). The system reports actual
+# subsets discovered on disk; methods are subset-agnostic.
+SUBSETS: Tuple[str, ...] = ("feta_tab", "paper_tab", "scigraphvqa", "slidevqa", "spiqa")
+# Reference: subsets reported in the VisDoMBench paper (Suri et al. 2025).
+# Used only as a baseline-comparison label in reports.
+PAPER_SUBSETS: Tuple[str, ...] = ("FetaTab", "MMLongBench", "PaperTab", "SlideVQA")
 
 
 @dataclass
@@ -63,14 +72,23 @@ def load_local_queries(root: str, subset: str, limit: Optional[int] = None) -> I
                     gold.append((str(d), int(pg)))
                 except (TypeError, ValueError):
                     continue
+            # If the row already has a nested "metadata" dict (from our
+            # CSV→JSONL converter), use it directly. Otherwise fall back to
+            # collecting unknown top-level keys.
+            nested_meta = row.get("metadata")
+            if isinstance(nested_meta, dict):
+                meta = nested_meta
+            else:
+                meta = {
+                    k: v for k, v in row.items()
+                    if k not in {"query_id", "query", "gold_doc_ids", "gold_page_numbers"}
+                }
             yield SotaQuery(
                 query_id=str(row.get("query_id") or f"{subset}_{i}"),
                 subset=subset,
                 query=str(row.get("query", "")),
                 gold_pages=gold,
-                metadata={k: v for k, v in row.items() if k not in {
-                    "query_id", "query", "gold_doc_ids", "gold_page_numbers",
-                }},
+                metadata=meta,
             )
 
 

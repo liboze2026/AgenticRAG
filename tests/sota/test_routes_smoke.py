@@ -37,7 +37,7 @@ def test_datasets_returns_subset_status(client):
     r = client.get("/api/sota/datasets")
     body = r.json()
     assert body["ok"] is True
-    assert set(body["subsets"].keys()) == {"fetatab", "mmlongbench", "papertab", "slidevqa"}
+    assert set(body["subsets"].keys()) == {"feta_tab", "paper_tab", "scigraphvqa", "slidevqa", "spiqa"}
 
 
 def test_unknown_run_returns_envelope_not_500(client):

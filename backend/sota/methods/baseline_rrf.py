@@ -22,7 +22,7 @@ def _rrf_fuse(
     return [(d, p, s) for ((d, p), s) in fused]
 
 
-async def _run(query: str, top_k: int, ctx: MethodContext) -> List[Tuple[str, int, float]]:
+async def _run(query, top_k: int, ctx: MethodContext) -> List[Tuple[str, int, float]]:
     a: List[Tuple[str, int]] = []
     b: List[Tuple[str, int]] = []
     try:
