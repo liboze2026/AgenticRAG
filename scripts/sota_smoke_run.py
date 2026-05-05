@@ -11,6 +11,15 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+# Ensure HF mirror is honored before transformers/sentence_transformers import
+os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
+
 from backend.sota.runs import RunRegistry
 from backend.sota.schemas import RunConfig
 from backend.sota.service import build_sota_bundle

@@ -108,7 +108,14 @@ async def _run(query, top_k: int, ctx: MethodContext) -> List[Tuple[str, int, fl
 
     inputs = processor(text=[query.query[:300]], return_tensors="pt", padding=True, truncation=True)
     with torch.no_grad():
-        q_feat = model.get_text_features(**inputs)
+        out = model.get_text_features(**inputs)
+        # transformers 5.x returns BaseModelOutputWithPooling; older returns tensor
+        if hasattr(out, "pooler_output"):
+            q_feat = out.pooler_output
+        elif torch.is_tensor(out):
+            q_feat = out
+        else:
+            q_feat = out["pooler_output"] if "pooler_output" in out else out["last_hidden_state"][:, 0]
         q_feat = torch.nn.functional.normalize(q_feat, dim=-1).cpu().numpy()[0]
     sims = cand_embs @ q_feat
     order = sims.argsort()[::-1][:top_k]
