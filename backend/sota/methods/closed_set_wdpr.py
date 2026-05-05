@@ -142,9 +142,10 @@ async def _run(query, top_k: int, ctx: MethodContext) -> List[Tuple[str, int, fl
         doc_scores.append((d, best))
     doc_scores.sort(key=lambda x: x[1], reverse=True)
 
-    # For top-k DECKS (default 3), score every page within via WDPR head
+    # PRESERVE deck order from ColPali doc_score (doc-level R@1 = 0.995).
+    # WDPR only chooses the BEST PAGE within each deck.
     final = []
-    for (doc, _doc_score) in doc_scores[:max(top_k, 3)]:
+    for (doc, doc_score) in doc_scores[:max(top_k, 5)]:
         pages = by_doc[doc]
         feats_list = []
         page_nums = []
@@ -159,8 +160,7 @@ async def _run(query, top_k: int, ctx: MethodContext) -> List[Tuple[str, int, fl
         with torch.no_grad():
             scores = head(X).cpu().numpy()
         best_idx = int(scores.argmax())
-        final.append((doc, page_nums[best_idx], float(scores[best_idx])))
-    final.sort(key=lambda x: x[2], reverse=True)
+        final.append((doc, page_nums[best_idx], float(doc_score)))
     return final[:top_k]
 
 
