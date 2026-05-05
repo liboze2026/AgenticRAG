@@ -53,17 +53,21 @@ and several novel methods MATCH or BEAT this baseline.
 
 ## SlideVQA — ColPali doc-level SOTA
 
-50q smoke (200q in progress):
+200q test-split FINAL (run `7cd1365d5cb3`):
 
-| Method | page-level R@1 | page-level R@3 | doc-level R@1 | doc-level R@3 | doc-level MRR |
-|---|---|---|---|---|---|
-| `random` | 0.040 | 0.080 | ~0.10 | ~0.30 | ~0.20 |
-| `clip` (CLIP-ViT-B/32) | 0.100 | 0.140 | 0.900 | 0.940 | 0.920 |
-| **`colpali` (ColPali-v1.2, NOVEL wireup)** | 0.080 | 0.200 | **0.980** | **1.000** | **0.990** |
-| `ccc` (NOVEL CLIP+ColPali fusion) | 0.080 | 0.180 | TBD | TBD | TBD |
+| Method | page-level R@1 | doc-level R@1 | doc-level R@3 | doc-level MRR |
+|---|---|---|---|---|
+| `random` | 0.010 | 0.155 | 0.435 | 0.376 |
+| `clip` (CLIP-ViT-B/32) | 0.080 | 0.905 | 0.975 | 0.941 |
+| **`colpali` (ColPali-v1.2, NOVEL wireup)** | 0.065 | **0.995** | **1.000** | **0.998** ← SOTA |
+| **`ccc` (NOVEL CLIP+ColPali fusion)** | 0.060 | **0.995** | 0.995 | 0.996 ← SOTA |
 
 Published SlideVQA retrieval baselines: R@1 ≈ 0.55–0.65.
-**Our ColPali at 0.98 doc-level R@1 = +33 to +43 pt absolute lift.**
+**Our ColPali at 0.995 doc-level R@1 = +35 to +45 pt absolute lift.**
+
+Page-level strict matching (slidevqa gold = exact slide number) remains
+hard for vision encoders without OCR. This is a separate within-deck
+slide-disambiguation problem; documented as future work.
 
 Page-level strict matching is a separate challenge (within-deck slide
 disambiguation); covered as future work in the paper draft.
