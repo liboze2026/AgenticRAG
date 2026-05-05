@@ -86,6 +86,11 @@ async def _run(query, top_k: int, ctx: MethodContext) -> List[Tuple[str, int, fl
     base = await _lf(query, max(top_k, 20), ctx)
     if not base:
         return []
+    # Title-regime bypass: skip SQR's specificity pass on confident queries
+    if len(base) > 1:
+        m = (base[0][2] - base[1][2]) / (abs(base[0][2]) + 1e-6)
+        if m > 0.3:
+            return base[:top_k]
     idx = _load_subset_index(query.subset)
     decoy = _load_decoy(query.subset)
     if idx is None or decoy is None:

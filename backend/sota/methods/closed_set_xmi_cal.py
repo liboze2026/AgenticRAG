@@ -91,6 +91,14 @@ async def _safe_run(label, fn, query, k, ctx):
 
 async def _run(query, top_k: int, ctx: MethodContext) -> List[Tuple[str, int, float]]:
     K = max(20, top_k * 4)
+    # Confidence guard: when learned_fusion is decisive, skip XMI-Cal pass.
+    from backend.sota.methods.closed_set_learned_fusion import _run as _lf
+    lf_res = await _lf(query, top_k, ctx)
+    if lf_res and len(lf_res) > 1:
+        m = (lf_res[0][2] - lf_res[1][2]) / (abs(lf_res[0][2]) + 1e-6)
+        if m > 0.3:
+            return lf_res[:top_k]
+
     a, b, c, d = await asyncio.gather(
         _safe_run("bm25_text", _bm_text, query, K, ctx),
         _safe_run("bm25_page", _bm_page, query, K, ctx),

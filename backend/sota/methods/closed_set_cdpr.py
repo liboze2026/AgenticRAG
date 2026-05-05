@@ -81,6 +81,14 @@ async def _safe_run(label, fn, query, k, ctx):
 
 async def _run(query, top_k: int, ctx: MethodContext) -> List[Tuple[str, int, float]]:
     K = max(20, top_k * 4)
+    # Title-regime bypass
+    from backend.sota.methods.closed_set_learned_fusion import _run as _lf
+    base = await _lf(query, top_k, ctx)
+    if base and len(base) > 1:
+        m = (base[0][2] - base[1][2]) / (abs(base[0][2]) + 1e-6)
+        if m > 0.3:
+            return base[:top_k]
+
 
     # Round 1: 4 channels concurrently
     a, b, c, d = await asyncio.gather(
