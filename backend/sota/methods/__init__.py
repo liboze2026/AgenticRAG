@@ -75,3 +75,4 @@ from . import closed_set_cross_rerank  # noqa: E402,F401
 from . import closed_set_text_rrf  # noqa: E402,F401
 from . import closed_set_clip  # noqa: E402,F401
 from . import closed_set_learned_fusion  # noqa: E402,F401
+from . import closed_set_vlm_judge  # noqa: E402,F401
