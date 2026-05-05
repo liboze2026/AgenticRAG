@@ -59,9 +59,14 @@ SUBSETS = ["feta_tab", "paper_tab", "scigraphvqa", "slidevqa", "spiqa"]
 
 for subset in SUBSETS:
     src = os.path.join(TXT, subset + ".jsonl")
-    if not os.path.exists(src):
-        print(f"[skip] {{subset}}: no text file at {{src}}")
-        continue
+    if not os.path.exists(src) or os.path.getsize(src) == 0:
+        # also try the OCR fallback corpus for slidevqa
+        ocr_src = os.path.join(ROOT, "sota_text_ocr", subset + ".jsonl")
+        if os.path.exists(ocr_src) and os.path.getsize(ocr_src) > 0:
+            src = ocr_src
+        else:
+            print(f"[skip] {{subset}}: no text file at {{src}} or {{ocr_src}}")
+            continue
     out_npz = os.path.join(OUT, subset + ".npz")
     out_keys = os.path.join(OUT, subset + ".keys.jsonl")
     if os.path.exists(out_npz) and os.path.getsize(out_npz) > 0:
@@ -133,7 +138,11 @@ def main():
     cmd = (
         "source ~/miniconda3/etc/profile.d/conda.sh && "
         "conda activate mrag_worker && "
-        f"python {remote_script}"
+        # Force HF mirror (worker container's default config has TRANSFORMERS_OFFLINE
+        # set globally; override per-process for this download).
+        "HF_ENDPOINT=https://hf-mirror.com "
+        "HF_HUB_OFFLINE=0 TRANSFORMERS_OFFLINE=0 "
+        f"python -u {remote_script}"
     )
     _, stdout, stderr = ssh.exec_command(cmd, timeout=7200)
     while True:
