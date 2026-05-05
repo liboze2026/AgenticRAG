@@ -93,6 +93,7 @@ class RunExecutor:
                 queries = list(load_local_queries(
                     self.sota_data_root, subset,
                     limit=config.n_queries_per_subset,
+                    split=config.split,
                 ))
                 if not queries:
                     await self.registry.append_error(

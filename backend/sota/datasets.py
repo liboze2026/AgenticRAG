@@ -50,20 +50,44 @@ def count_local_queries(root: str, subset: str) -> int:
     return n
 
 
-def load_local_queries(root: str, subset: str, limit: Optional[int] = None) -> Iterator[SotaQuery]:
+def _query_split(query_id: str) -> str:
+    """Deterministic train/test split.
+
+    Hash query_id; bottom half (h<32768) → train, top half → test.
+    Stable across runs; an individual query is always in the same split.
+    """
+    import hashlib
+    h = int(hashlib.sha1(query_id.encode("utf-8")).hexdigest()[:4], 16)
+    return "train" if h < 32768 else "test"
+
+
+def load_local_queries(
+    root: str, subset: str, limit: Optional[int] = None,
+    split: Optional[str] = None,
+) -> Iterator[SotaQuery]:
+    """Iterate SotaQuery records.
+
+    split=None: return all queries.
+    split="train" / "test": filter by deterministic hash of query_id.
+    """
     p = os.path.join(root, subset, "queries.jsonl")
     if not os.path.exists(p):
         return
+    emitted = 0
     with open(p, "r", encoding="utf-8") as f:
         for i, line in enumerate(f):
-            if limit is not None and i >= limit:
-                break
             if not line.strip():
                 continue
             try:
                 row = json.loads(line)
             except Exception:
                 continue
+            qid = str(row.get("query_id") or f"{subset}_{i}")
+            if split not in (None, "all") and _query_split(qid) != split:
+                continue
+            if limit is not None and emitted >= limit:
+                break
+            emitted += 1
             doc_ids = row.get("gold_doc_ids") or []
             pages = row.get("gold_page_numbers") or []
             gold: List[PageKey] = []
@@ -84,7 +108,7 @@ def load_local_queries(root: str, subset: str, limit: Optional[int] = None) -> I
                     if k not in {"query_id", "query", "gold_doc_ids", "gold_page_numbers"}
                 }
             yield SotaQuery(
-                query_id=str(row.get("query_id") or f"{subset}_{i}"),
+                query_id=qid,
                 subset=subset,
                 query=str(row.get("query", "")),
                 gold_pages=gold,

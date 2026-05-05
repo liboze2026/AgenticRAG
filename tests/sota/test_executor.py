@@ -11,7 +11,7 @@ from backend.sota.schemas import RunConfig, RunStatus
 @pytest.fixture
 def fake_dataset_root(tmp_path):
     sub = tmp_path / "fetatab"
-    sub.mkdir()
+    sub.mkdir()  # mismatched name vs SUBSETS is fine; executor doesn't validate here
     with open(sub / "queries.jsonl", "w") as f:
         for i in range(3):
             f.write(json.dumps({
@@ -39,7 +39,7 @@ async def test_executor_runs_and_writes_metrics(tmp_path, fake_dataset_root, stu
     registry = RunRegistry(root=str(tmp_path / "runs"))
     cfg = RunConfig(
         subsets=["fetatab"], methods=[stub_method],
-        n_queries_per_subset=3, top_k=5,
+        n_queries_per_subset=3, top_k=5, split="all",
     )
     run_id = await registry.create_run(cfg)
     ex = RunExecutor(

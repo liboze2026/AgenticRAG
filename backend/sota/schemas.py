@@ -29,7 +29,7 @@ class RunConfig(BaseModel):
     methods: List[str] = Field(default_factory=lambda: ["baseline_colpali", "baseline_bm25", "baseline_rrf"])
     top_k: int = Field(10, ge=1, le=50)
     n_queries_per_subset: Optional[int] = Field(50, ge=1, le=10000)
-    split: Literal["test"] = "test"
+    split: Literal["test", "train", "all"] = "test"
     notes: str = ""
 
 
