@@ -67,4 +67,6 @@ def get_method(name: str) -> MethodMeta:
 # Eager import — registers each method at module load.
 from . import baseline_colpali, baseline_bm25, baseline_rrf  # noqa: E402,F401
 from . import closed_set_random, closed_set_titlematch, closed_set_rrf  # noqa: E402,F401
-from . import closed_set_bm25_text  # noqa: E402,F401
+from . import closed_set_bm25_text, closed_set_bm25_page  # noqa: E402,F401
+from . import closed_set_dense  # noqa: E402,F401
+from . import closed_set_hybrid, closed_set_hyde  # noqa: E402,F401
