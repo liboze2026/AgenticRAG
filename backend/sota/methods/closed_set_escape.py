@@ -160,7 +160,11 @@ async def _run(query, top_k: int, ctx: MethodContext) -> List[Tuple[str, int, fl
             log_p += math.log(p)
         final[k] = log_p
     ranked = sorted(final.items(), key=lambda kv: kv[1], reverse=True)[:top_k]
-    return [(d, p, float(s)) for ((d, p), s) in ranked]
+    esc_res = [(dd, pp, float(s)) for ((dd, pp), s) in ranked]
+    # Trust-defer to lf if disagree
+    if base and esc_res and base[0][:2] != esc_res[0][:2]:
+        return base[:top_k]
+    return esc_res
 
 
 register(MethodMeta(

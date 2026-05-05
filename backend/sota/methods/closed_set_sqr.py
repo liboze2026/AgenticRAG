@@ -141,7 +141,11 @@ async def _run(query, top_k: int, ctx: MethodContext) -> List[Tuple[str, int, fl
     final = -base_rank + 1.5 * spec_z                  # higher better
 
     order = final.argsort()[::-1][:top_k]
-    return [(cand_keys[i][0], cand_keys[i][1], float(final[i])) for i in order]
+    sqr_res = [(cand_keys[i][0], cand_keys[i][1], float(final[i])) for i in order]
+    # Trust-defer: if SQR top-1 disagrees with lf top-1, prefer lf
+    if base and sqr_res and base[0][:2] != sqr_res[0][:2]:
+        return base[:top_k]
+    return sqr_res
 
 
 register(MethodMeta(

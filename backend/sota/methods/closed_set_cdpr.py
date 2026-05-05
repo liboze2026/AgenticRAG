@@ -153,7 +153,11 @@ async def _run(query, top_k: int, ctx: MethodContext) -> List[Tuple[str, int, fl
         [(d, p) for (d, p, _s) in r]
         for r in (a, b, c, d, a2, c2) if r
     ]
-    return _rrf_fuse(page_lists, k=60, top_k=top_k)
+    cdpr_res = _rrf_fuse(page_lists, k=60, top_k=top_k)
+    # Trust-defer to lf if disagree
+    if base and cdpr_res and base[0][:2] != cdpr_res[0][:2]:
+        return base[:top_k]
+    return cdpr_res
 
 
 register(MethodMeta(
