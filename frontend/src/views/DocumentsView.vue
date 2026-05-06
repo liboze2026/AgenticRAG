@@ -10,13 +10,26 @@ const documents = ref<DocumentInfo[]>([])
 const allDatasets = ref<DatasetInfo[]>([])
 const filterDataset = ref<number | null>(null)
 const loading = ref(false)
+// Surface load failures to the UI. The previous `catch {}` swallowed
+// errors so the user saw "暂无文档" even when the backend was down,
+// with no way to retry without a hard refresh.
+const loadError = ref<string | null>(null)
+
+function _describeError(e: any): string {
+  const status = e?.response?.status
+  const detail = e?.response?.data?.detail || e?.message || '未知错误'
+  return status ? `[${status}] ${detail}` : detail
+}
 
 async function loadDocuments() {
   loading.value = true
+  loadError.value = null
   try {
     const resp = await documentsApi.list(filterDataset.value ?? undefined)
     documents.value = resp.data
-  } catch {}
+  } catch (e) {
+    loadError.value = _describeError(e)
+  }
   loading.value = false
 }
 
@@ -24,7 +37,10 @@ async function loadDatasets() {
   try {
     const resp = await datasetsApi.list()
     allDatasets.value = resp.data
-  } catch {}
+  } catch {
+    // Datasets are an optional sidebar filter — failing to load them
+    // shouldn't blank the page, just leave the filter empty.
+  }
 }
 
 async function handleDelete(id: string) {
@@ -96,7 +112,17 @@ onMounted(() => {
           </AppButton>
         </div>
       </div>
-      <DocumentList :documents="documents" @delete="handleDelete" @retry="handleRetry" />
+      <div v-if="loadError" class="dv__error">
+        <div class="dv__error-text">
+          <span class="dv__error-label">加载失败</span>
+          <span class="dv__error-detail">{{ loadError }}</span>
+        </div>
+        <AppButton variant="primary" size="sm" :loading="loading" @click="loadDocuments">
+          <Icon name="reload" :size="13" />
+          重试
+        </AppButton>
+      </div>
+      <DocumentList v-else :documents="documents" @delete="handleDelete" @retry="handleRetry" />
     </section>
   </div>
 </template>
@@ -148,4 +174,31 @@ onMounted(() => {
   gap: var(--gap-3);
 }
 .dv__filter { width: 220px; }
+
+.dv__error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-4);
+  padding: var(--gap-4) var(--gap-5);
+  border: 1px solid var(--red);
+  background: rgba(255, 60, 60, 0.04);
+  border-left-width: 4px;
+}
+.dv__error-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dv__error-label {
+  font-family: var(--serif);
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: 0.06em;
+}
+.dv__error-detail {
+  font-family: var(--mono);
+  font-size: var(--fz-mono-sm);
+  color: var(--ink-mute);
+}
 </style>

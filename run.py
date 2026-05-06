@@ -33,6 +33,14 @@ from backend.main import create_app
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
+# Quiet down paramiko.transport — its 'Secsh channel N open FAILED:
+# Connection refused' ERRORs fire on every transient SSH-tunnel hiccup.
+# WorkerClient retries the request and the worker keeps serving, so the
+# ERROR is noise that obscures real issues. WARNING is enough to surface
+# auth failures and tunnel collapse, which are the only paramiko events
+# that actually need attention.
+logging.getLogger("paramiko.transport").setLevel(logging.WARNING)
+
 
 def _wait_for_port(host: str, port: int, timeout: float = 30.0) -> bool:
     deadline = time.time() + timeout
@@ -240,7 +248,11 @@ def _forward_tunnel(local_port: int, remote_port: int, transport: paramiko.Trans
                 client_sock.getpeername(),
             )
         except Exception as e:
-            logger.error("Forward channel open failed: %s", e)
+            # autodl's sshd occasionally rejects a new direct-tcpip
+            # request mid-traffic. WorkerClient retries the request and
+            # the worker keeps serving, so this is noise — DEBUG only.
+            # Real tunnel collapse surfaces via the keepalive monitor.
+            logger.debug("Forward channel open failed: %s", e)
             client_sock.close()
             return
 
