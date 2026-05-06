@@ -22,15 +22,25 @@ if not defined NPM (
 )
 echo   npm: %NPM%
 
-echo [2/4] Verifying Python deps (probe critical imports, install only if missing)...
-%PYTHON% -c "import aiosqlite, fastapi, paramiko, qdrant_client, yaml, dotenv, openai, anthropic" 2>nul
+echo [2/4] Verifying Python deps (full requirements.txt probe)...
+REM Probe every package backend imports at runtime. If any are missing,
+REM run 'pip install -r requirements.txt' before launching backend.
+REM Lesson learned: aiosqlite + sklearn + PyMuPDF have all silently
+REM gone missing from the venv after schema/branch shifts; the smaller
+REM probe used to ship missed sklearn entirely, so Phase 3 (GMM) was
+REM running degraded without anyone noticing.
+%PYTHON% -c "import fastapi, uvicorn, pydantic, yaml, httpx, multipart, qdrant_client, pdf2image, PIL, openai, anthropic, pdfplumber, rank_bm25, dotenv, paramiko, fitz, sklearn, aiosqlite" 2>nul
 if errorlevel 1 (
-    echo   At least one core dependency is missing — running 'pip install -r requirements.txt'.
+    echo   At least one dependency is missing — running 'pip install -r requirements.txt'.
     %PYTHON% -m pip install -r requirements.txt
     if errorlevel 1 (
-        echo [ERROR] pip install failed. Backend will not start. See errors above.
-        pause
-        exit /b 1
+        echo   Default index failed (often SSL flakes on tuna). Retrying via aliyun mirror...
+        %PYTHON% -m pip install -i https://mirrors.aliyun.com/pypi/simple/ -r requirements.txt
+        if errorlevel 1 (
+            echo [ERROR] pip install failed on both indexes. Backend will not start.
+            pause
+            exit /b 1
+        )
     )
 )
 
