@@ -235,13 +235,19 @@ class LabGraphService:
     Reads PageLayout payloads back from the main collection. No writes.
     """
 
-    def __init__(self, qdrant_client, collection_name: str = "documents"):
+    def __init__(self, qdrant_client, collection_name: str = "documents",
+                 layout_cache=None):
         self.qdrant = qdrant_client
         self.collection_name = collection_name
+        self.layout_cache = layout_cache  # shared LayoutCache (optional)
 
     _FETCH_TIMEOUT_SEC = 10.0
 
     async def _fetch_layout(self, doc_id: str, page: int) -> Optional[PageLayout]:
+        # Prefer the shared in-memory cache when one is wired in — avoids
+        # hitting Qdrant on every graph build.
+        if self.layout_cache is not None:
+            return await self.layout_cache.fetch(doc_id, page)
         try:
             point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{doc_id}:{page}"))
             res = await asyncio.wait_for(

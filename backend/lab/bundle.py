@@ -12,6 +12,7 @@ from typing import Optional
 
 from backend.lab.graph import LabGraphService
 from backend.lab.hybrid import LabHybridService
+from backend.lab.layout_cache import LayoutCache
 from backend.lab.region import LabRegionService
 from backend.lab.unified import LabUnifiedService
 
@@ -25,7 +26,11 @@ class LabBundle:
     hybrid: LabHybridService
     region: Optional[LabRegionService]
     graph: LabGraphService
+    layout_cache: LayoutCache
     documents_db_path: str
+    qdrant_client: object = None
+    worker_client: object = None
+    pipeline: object = None
     unified: Optional[LabUnifiedService] = None
 
 
@@ -45,6 +50,8 @@ def build_lab_bundle(
         images_dir=images_dir,
     )
 
+    layout_cache = LayoutCache(qdrant_client=qdrant_client)
+
     region: Optional[LabRegionService] = None
     try:
         if pipeline is not None and pipeline.document_encoder is not None:
@@ -55,18 +62,23 @@ def build_lab_bundle(
                 query_encoder=pipeline.query_encoder,
                 documents_db_path=documents_db_path,
                 images_dir=images_dir,
+                layout_cache=layout_cache,
             )
     except Exception:
         logger.exception("lab region service init failed — region features disabled")
 
-    graph = LabGraphService(qdrant_client=qdrant_client)
+    graph = LabGraphService(qdrant_client=qdrant_client, layout_cache=layout_cache)
 
     bundle = LabBundle(
         hybrid=hybrid,
         region=region,
         graph=graph,
+        layout_cache=layout_cache,
         unified=None,  # set below — needs reference to bundle itself
         documents_db_path=documents_db_path,
+        qdrant_client=qdrant_client,
+        worker_client=worker_client,
+        pipeline=pipeline,
     )
     bundle.unified = LabUnifiedService(
         lab_bundle=bundle,

@@ -38,7 +38,14 @@ MIN_CROP_PX = 24       # skip elements smaller than this on either axis
 # Per-page hard cap: encode + upsert must finish within this window or the
 # page is logged as a failure and the loop moves on. Without it, a stuck
 # tunnel transfer can pin one page for hours and starve the whole job.
-PAGE_BUDGET_SEC = 90.0
+# Empirically 90s was tight for tunnel-bound upserts of pages with 10+
+# multi-vector regions; 180s gives headroom while still aborting truly
+# stuck pages.
+PAGE_BUDGET_SEC = 180.0
+# Pause between successive region pages so concurrent /api/health probes
+# and ad-hoc queries get a chance to take the SSH tunnel. Without this the
+# tunnel spends ~100% of its time pumping multi-vector upserts.
+INTER_PAGE_BREATHING_SEC = 0.5
 
 
 class LabRegionService:
@@ -54,6 +61,7 @@ class LabRegionService:
         images_dir: str,
         regions_dir: str = "data/regions",
         collection_name: str = REGION_COLLECTION_NAME,
+        layout_cache=None,
     ):
         self.qdrant = qdrant_client
         self.worker_client = worker_client
@@ -63,6 +71,7 @@ class LabRegionService:
         self.images_dir = images_dir
         self.regions_dir = regions_dir
         self.collection_name = collection_name
+        self.layout_cache = layout_cache
         os.makedirs(regions_dir, exist_ok=True)
         self._index_lock = asyncio.Lock()
         # Job progress tracking — keyed by doc_id (or "*" for index_all)
@@ -137,12 +146,14 @@ class LabRegionService:
             return []
 
     async def _fetch_layout_via_qdrant(self, doc_id: str, page_number: int) -> Optional[PageLayout]:
-        """Read PageLayout payload back from main collection (set by indexer).
+        """Read PageLayout payload, going through the shared cache when available.
 
         Hard 20s ceiling so a stalled tunnel cannot pin the indexer before it
         even gets to encoding. Without this, ResilientAsyncQdrantClient retries
         bury the page in 30s+ blocks of layout fetches with no progress visible.
         """
+        if self.layout_cache is not None:
+            return await self.layout_cache.fetch(doc_id, page_number)
         try:
             point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{doc_id}:{page_number}"))
             res = await asyncio.wait_for(
@@ -329,6 +340,10 @@ class LabRegionService:
                         indexed -= len(points)
                 # Update job snapshot at end of each page
                 self._set_job(doc_id, indexed=indexed, skipped=skipped, errors=errors)
+                # Yield the tunnel for a moment so concurrent requests don't
+                # starve while the indexer is heavy.
+                if INTER_PAGE_BREATHING_SEC > 0:
+                    await asyncio.sleep(INTER_PAGE_BREATHING_SEC)
 
             note = f"区域索引完成: {indexed} 个区域, 跳过 {skipped}"
             if errors:

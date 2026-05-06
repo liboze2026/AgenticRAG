@@ -78,6 +78,7 @@ resilience:
   index_retry_attempts: 2             # background index_document retry count
   index_retry_delay_sec: 5            # initial delay between index retries
   bootstrap_visdom: false             # auto-index VisDoM SPIQA top-3 on first start (off for demo: existing 3 docs already indexed)
+  auto_prewarm: true                  # on startup, preload PageLayouts + warm worker model + sync BM25
 
 api_keys:
   openai: "${OPENAI_API_KEY}"
@@ -85,6 +86,8 @@ api_keys:
   zhipu: "${ZHIPU_API_KEY}"
 
 cache:
-  enabled: false
+  # Enable disk caches by default — turns repeat queries / repeat generation
+  # into instant lookups. Critical for live demos.
+  enabled: true
   query_cache_dir: "data/cache/query"
   generation_cache_dir: "data/cache/generation"

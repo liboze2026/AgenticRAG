@@ -289,10 +289,93 @@ async def lab_health(request: Request):
     )
 
 
+@router.post("/prewarm")
+async def lab_prewarm(request: Request):
+    """Demo-friendly one-shot warmup.
+
+    Pre-loads every completed document's PageLayout into the shared cache,
+    primes the worker query encoder, and primes the BM25 index. After this
+    returns, every Lab endpoint should hit warm caches and respond in well
+    under a second on cached queries.
+
+    Safe to call repeatedly. Each sub-task is best-effort and reports its own
+    status in the response so a partial failure does not block the rest.
+    """
+    import sqlite3
+    import time
+    lab = _get_lab(request)
+    pm = getattr(request.app.state, "pipeline_manager", None)
+    pipeline = pm.pipeline if (pm is not None and pm.pipeline is not None) else None
+
+    summary: dict = {"layout_cache": {}, "worker": {}, "bm25": {}, "timing_ms": {}}
+    t0 = time.perf_counter()
+
+    # --- 1. Preload PageLayouts -----------------------------------------
+    t = time.perf_counter()
+    try:
+        with sqlite3.connect(lab.documents_db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                "SELECT id, total_pages FROM documents WHERE status = 'completed'"
+            ).fetchall()
+        loaded = 0
+        # Preload all docs in parallel — each preload internally fans out
+        # over its pages, which is also parallel.
+        results = await asyncio.gather(
+            *[lab.layout_cache.preload(r["id"], int(r["total_pages"] or 0)) for r in rows],
+            return_exceptions=True,
+        )
+        for r, n in zip(rows, results):
+            if isinstance(n, BaseException):
+                continue
+            loaded += int(n)
+        summary["layout_cache"] = {
+            "documents": len(rows),
+            "pages_loaded_now": loaded,
+            "cache_size": lab.layout_cache.count(),
+        }
+    except Exception as e:
+        summary["layout_cache"] = {"error": f"{type(e).__name__}: {e}"}
+    summary["timing_ms"]["layout_cache_ms"] = (time.perf_counter() - t) * 1000
+
+    # --- 2. Warm worker query encoder -----------------------------------
+    t = time.perf_counter()
+    if pipeline is not None and getattr(pipeline, "query_encoder", None) is not None:
+        try:
+            await asyncio.wait_for(pipeline.query_encoder.encode_query("warmup"), timeout=20.0)
+            summary["worker"] = {"status": "ok"}
+        except asyncio.TimeoutError:
+            summary["worker"] = {"status": "timeout (>20s)"}
+        except Exception as e:
+            summary["worker"] = {"status": "error", "detail": f"{type(e).__name__}: {e}"}
+    else:
+        summary["worker"] = {"status": "pipeline unavailable"}
+    summary["timing_ms"]["worker_ms"] = (time.perf_counter() - t) * 1000
+
+    # --- 3. Warm BM25 index ---------------------------------------------
+    t = time.perf_counter()
+    try:
+        note = await lab.hybrid._ensure_bm25_synced()
+        summary["bm25"] = {"status": "ok", "note": note,
+                           "docs": len(lab.hybrid._indexed_keys)}
+    except Exception as e:
+        summary["bm25"] = {"status": "error", "detail": f"{type(e).__name__}: {e}"}
+    summary["timing_ms"]["bm25_ms"] = (time.perf_counter() - t) * 1000
+
+    summary["timing_ms"]["total_ms"] = (time.perf_counter() - t0) * 1000
+    return summary
+
+
+_LAB_INFO_CACHE: Optional[dict] = None
+
+
 @router.get("/info")
 async def lab_info():
     """Static info: which features are mounted and what they do."""
-    return {
+    global _LAB_INFO_CACHE
+    if _LAB_INFO_CACHE is not None:
+        return _LAB_INFO_CACHE
+    _LAB_INFO_CACHE = {
         "phases": [
             {"id": "hybrid",  "title": "双通道融合",   "endpoint": "/api/lab/hybrid",  "method": "POST",
              "desc": "BM25 文本通道 + ColPali 视觉通道 + RRF 融合，三路并排展示"},
@@ -312,6 +395,7 @@ async def lab_info():
              "desc": "对一组带标注的 query 跑 MRR / Recall@K / Hit@1，比较 colpali / bm25 / rrf 通道"},
         ],
     }
+    return _LAB_INFO_CACHE
 
 
 # ---------------------------------------------------------------------------
