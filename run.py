@@ -23,6 +23,7 @@ from backend.services.experiment_service import ExperimentService
 from backend.services.qdrant_resilient import ResilientAsyncQdrantClient
 from backend.services.visdom_bootstrap import bootstrap_visdom_if_empty
 from backend.services.worker_client import WorkerClient
+from backend.services.worker_launcher import launch_worker
 from backend.services.worker_watchdog import WorkerWatchdog
 from backend.strategies import ALL_REGISTRIES, import_all_strategies
 from backend.lab.bundle import build_lab_bundle
@@ -201,22 +202,15 @@ def _start_remote_services(ssh: dict, deploy: dict):
         logger.info("Worker code upload complete.")
 
         # --- 3. Start Worker (skip if already running) ---
+        # Use the shared, fully-detached launcher (setsid + stdin/stdout
+        # disconnected). Inline `nohup ... &` here used to leave the
+        # worker in this SSH session's process group; autodl's sshd then
+        # cleaned the group asynchronously after target.close() below,
+        # silently killing the worker minutes later. See
+        # backend/services/worker_launcher.py for the full reasoning.
         logger.info("Checking Worker on remote server (GPU %s)...", gpu_devices)
         if not _wait_for_remote_port(target, 8001, timeout=3):
-            _remote_run(target, "pkill -f 'uvicorn worker.main:app' 2>/dev/null || true", show=False)
-            # Always run worker offline (model is preloaded into HF_HOME). Set
-            # HF_HOME explicitly when configured so cache lookup hits the right path.
-            hf_env = f"HF_HOME={hf_home} " if hf_home else ""
-            start_cmd = (
-                f"cd {remote_base} && "
-                "source ~/miniconda3/etc/profile.d/conda.sh && "
-                f"conda activate {conda_env} && "
-                f"WORKER_STANDALONE=1 CUDA_VISIBLE_DEVICES={gpu_devices} "
-                f"{hf_env}HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 "
-                "nohup python -m uvicorn worker.main:app "
-                f"--host 0.0.0.0 --port 8001 > {remote_base}/worker.log 2>&1 &"
-            )
-            _remote_run(target, start_cmd, show=False)
+            launch_worker(target, deploy, kill_existing=True)
             logger.info("Worker process launched (model loading takes ~2 min).")
         else:
             logger.info("Worker already running on port 8001, skipping restart.")

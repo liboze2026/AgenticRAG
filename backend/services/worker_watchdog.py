@@ -37,6 +37,7 @@ from typing import Any, Dict, Optional
 import paramiko
 
 from backend.services.worker_client import WorkerClient
+from backend.services.worker_launcher import launch_worker
 
 logger = logging.getLogger(__name__)
 
@@ -198,12 +199,7 @@ class WorkerWatchdog:
         user = self._ssh_cfg.get("target_user")
         pwd = _resolve_env(self._ssh_cfg.get("target_password", ""))
 
-        remote_base = self._deploy_cfg.get("remote_base", "")
-        conda_env = self._deploy_cfg.get("conda_env", "mrag_worker")
-        gpu = self._deploy_cfg.get("gpu_devices", "0")
-        hf_home = self._deploy_cfg.get("hf_home", "")
-
-        if not (host and user and pwd and remote_base):
+        if not (host and user and pwd and self._deploy_cfg.get("remote_base")):
             logger.error("worker watchdog: incomplete SSH config — cannot restart")
             return
 
@@ -217,50 +213,10 @@ class WorkerWatchdog:
             return
 
         try:
-            # Kill any zombie listener on 8001 so the new launch can bind.
-            self._exec(c, "pkill -9 -f 'uvicorn worker.main:app' 2>/dev/null || true", timeout=10)
-
-            # Write the launcher script (idempotent).
-            hf_env = f"HF_HOME={hf_home} " if hf_home else ""
-            launcher = (
-                "#!/bin/bash\n"
-                f"cd {remote_base}\n"
-                "source ~/miniconda3/etc/profile.d/conda.sh\n"
-                f"conda activate {conda_env}\n"
-                f"export WORKER_STANDALONE=1 CUDA_VISIBLE_DEVICES={gpu} "
-                f"{hf_env}HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1\n"
-                "exec python -m uvicorn worker.main:app --host 0.0.0.0 --port 8001 "
-                f">> {remote_base}/worker.log 2>&1\n"
-            )
-            sftp = c.open_sftp()
-            launch_path = f"{remote_base}/start_worker.sh"
-            with sftp.open(launch_path, "w") as f:
-                f.write(launcher)
-            sftp.chmod(launch_path, 0o755)
-            sftp.close()
-
-            # Fire the launcher in a detached session so closing this SSH
-            # connection does not propagate SIGHUP to the worker process.
-            transport = c.get_transport()
-            chan = transport.open_session()
-            chan.exec_command(
-                f"setsid nohup {launch_path} </dev/null >/dev/null 2>&1 & echo $!; disown"
-            )
-            chan.settimeout(3)
-            try:
-                pid_out = chan.recv(200).decode(errors="replace").strip()
-            except Exception:
-                pid_out = ""
-            chan.close()
-            logger.warning("worker watchdog: relaunched remote worker (pid=%s)", pid_out or "?")
+            pid = launch_worker(c, self._deploy_cfg, kill_existing=True)
+            logger.warning("worker watchdog: relaunched remote worker (pid=%s)", pid or "?")
+        except Exception:
+            logger.exception("worker watchdog: launch_worker failed")
         finally:
             try: c.close()
             except Exception: pass
-
-    @staticmethod
-    def _exec(client: paramiko.SSHClient, cmd: str, timeout: float = 30.0) -> str:
-        _, out, _ = client.exec_command(cmd, timeout=timeout)
-        try:
-            return out.read().decode(errors="replace")
-        except Exception:
-            return ""
