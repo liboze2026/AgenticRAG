@@ -54,4 +54,10 @@ async def health(request: Request):
         _bounded(_probe_qdrant()),
     )
 
-    return {"status": "ok", "worker": worker_status, "qdrant": qdrant_status}
+    # Surface worker watchdog state when one is running, so the user can see
+    # whether the backend has been auto-restarting the worker behind their back.
+    watchdog = getattr(request.app.state, "worker_watchdog", None)
+    body = {"status": "ok", "worker": worker_status, "qdrant": qdrant_status}
+    if watchdog is not None:
+        body["worker_watchdog"] = watchdog.status()
+    return body

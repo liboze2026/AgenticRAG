@@ -23,6 +23,7 @@ from backend.services.experiment_service import ExperimentService
 from backend.services.qdrant_resilient import ResilientAsyncQdrantClient
 from backend.services.visdom_bootstrap import bootstrap_visdom_if_empty
 from backend.services.worker_client import WorkerClient
+from backend.services.worker_watchdog import WorkerWatchdog
 from backend.strategies import ALL_REGISTRIES, import_all_strategies
 from backend.lab.bundle import build_lab_bundle
 from backend.sota.service import build_sota_bundle
@@ -697,6 +698,21 @@ def main():
         logger.exception("SOTA bundle init failed — /api/sota/* will surface errors via envelope")
         sota_bundle = None
 
+    # Worker watchdog — relaunches the remote worker when autodl silently
+    # kills it. Runs only when SSH config is available; needs an asyncio loop,
+    # so we kick off .start() inside the bootstrap hook.
+    worker_watchdog: Optional[WorkerWatchdog] = None
+    if active_srv is not None:
+        try:
+            worker_watchdog = WorkerWatchdog(
+                worker_client=worker_client,
+                ssh_cfg=active_srv,
+                deploy_cfg=active_srv.get("deployment", {}) or {},
+            )
+        except Exception:
+            logger.exception("worker watchdog init failed — disabled")
+            worker_watchdog = None
+
     # Bootstrap hook chain — runs once on uvicorn startup. Each step is
     # best-effort; failure of one never blocks the rest.
     visdom_enabled = resilience.get("bootstrap_visdom", False)
@@ -720,10 +736,15 @@ def main():
                 await _auto_prewarm(lab_bundle, pipeline_manager)
             except Exception:
                 logger.exception("auto prewarm failed")
+        if worker_watchdog is not None:
+            try:
+                worker_watchdog.start()
+            except Exception:
+                logger.exception("worker watchdog start failed")
 
     # If neither sub-step would do anything, leave the hook off so create_app
     # doesn't register an empty startup callback.
-    if not (visdom_enabled or (auto_prewarm and lab_bundle is not None)):
+    if not (visdom_enabled or (auto_prewarm and lab_bundle is not None) or worker_watchdog):
         bootstrap_hook = None
 
     app = create_app(
@@ -740,6 +761,7 @@ def main():
         bootstrap_hook=bootstrap_hook,
         lab_bundle=lab_bundle,
         sota_bundle=sota_bundle,
+        worker_watchdog=worker_watchdog,
         collection_name=config.qdrant.collection_name,
         images_dir=config.storage.images_dir,
     )

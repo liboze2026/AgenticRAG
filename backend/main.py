@@ -45,6 +45,7 @@ def create_app(
     bootstrap_hook=None,
     lab_bundle=None,
     sota_bundle=None,
+    worker_watchdog=None,
     collection_name: str = "documents",
     images_dir: str = "data/images",
 ) -> FastAPI:
@@ -67,6 +68,7 @@ def create_app(
     app.state.generation_cache = generation_cache
     app.state.lab_bundle = lab_bundle
     app.state.sota_bundle = sota_bundle
+    app.state.worker_watchdog = worker_watchdog
 
     app.include_router(system.router, prefix="/api")
     app.include_router(documents.router, prefix="/api/documents")
