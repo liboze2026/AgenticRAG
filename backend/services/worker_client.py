@@ -78,10 +78,14 @@ class WorkerClient:
         return response.json()["vectors"]
 
     async def health(self) -> dict:
-        # Health check uses a short timeout and a single attempt — callers
-        # expect fast feedback, not a stalled response.
-        response = await self._client.get("/health", timeout=5.0)
-        response.raise_for_status()
+        # Health checks share the same retry logic as data requests. The
+        # paramiko-based SSH forward tunnel inside run.py occasionally
+        # resets a connection mid-transfer (autodl sshd channel cleanup,
+        # most likely), so a single attempt would falsely flag the
+        # worker as down even when it is fully healthy. Retry budget is
+        # bounded by retry_attempts × retry_backoff_sec, so a real
+        # outage still surfaces within a few seconds.
+        response = await self._request("GET", "/health", timeout=5.0)
         return response.json()
 
     async def close(self):
